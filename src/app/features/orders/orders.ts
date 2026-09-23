@@ -8,15 +8,20 @@ import {
   type IsFullWidthRowParams,
   type PostSortRowsParams,
 } from 'ag-grid-community';
-import { Component, computed, inject, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { CdkConnectedOverlay, CdkOverlayOrigin, type ConnectedPosition } from '@angular/cdk/overlay';
+import { MatBottomSheet } from '@angular/material/bottom-sheet';
+import { Component, ElementRef, computed, inject, signal, viewChild } from '@angular/core';
 import { EmptyState } from '../../shared/empty-state/empty-state';
-import { formatMoney } from '../../shared/format-money';
-import { OrdersStore } from '../../core/orders/orders-store';
+import { Icon } from '../../shared/icon/icon';
 import { PageHeader } from '../../shared/page-header/page-header';
 import { Skeleton } from '../../shared/skeleton/skeleton';
 import { StatusChip } from '../../shared/status-chip/status-chip';
+import { Viewport } from '../../shared/viewport/viewport';
 import { VoyageLine } from '../../shared/voyage-line/voyage-line';
+import { OrdersStore } from '../../core/orders/orders-store';
+import { ActiveFilterChips } from './active-filter-chips/active-filter-chips';
+import { OrderFilters } from './order-filters/order-filters';
+import { OrdersFilterState, type StatusTabValue } from './orders-filter-state';
 import { StatusCellRenderer } from './status-cell-renderer';
 import { VoyageCellRenderer } from './voyage-cell-renderer';
 import { OrderDrawer } from './order-drawer/order-drawer';
@@ -26,14 +31,7 @@ import {
   type GroupRowData,
   type OrderGroupRowParams,
 } from './order-group-row/order-group-row';
-import {
-  EMPTY_FILTERS,
-  activeFilterCount,
-  buildOrderView,
-  displayedText,
-  type GroupBy,
-  type OrderFilters,
-} from './order-view';
+import { GROUP_BY_OPTIONS, displayedText, type GroupBy } from './order-view';
 import type { OrderStatus, OrderSummary } from '../../core/api/models';
 
 type ColId = 'orderNo' | 'orderedOn' | 'status' | 'progress' | 'itemCount' | 'total' | 'shipTo';
@@ -47,14 +45,21 @@ function isGroupRow(row: GridRow): row is GroupRowData {
   return row.rowKind === 'group';
 }
 
-const STATUS_OPTIONS: Array<'All' | OrderStatus> = ['All', 'Shipped', 'Awaiting dispatch', 'Late'];
+function controlValue(event: Event): string {
+  return (event.target as HTMLInputElement | HTMLSelectElement).value;
+}
 
-const GROUP_BY_OPTIONS: { value: GroupBy; label: string }[] = [
-  { value: 'none', label: 'None' },
-  { value: 'status', label: 'Status' },
-  { value: 'orderedMonth', label: 'Ordered month' },
-  { value: 'itemCount', label: 'Items' },
-  { value: 'shipTo', label: 'Ship to' },
+const STATUS_DOT_CLASS: Record<OrderStatus, string> = {
+  Late: 'late',
+  'Awaiting dispatch': 'await',
+  Shipped: 'ship',
+};
+
+// Right edge of the trigger to the right edge of the popover if it fits,
+// left-aligned as a fallback near the viewport's right edge.
+const FILTERS_POSITIONS: ConnectedPosition[] = [
+  { originX: 'end', originY: 'bottom', overlayX: 'end', overlayY: 'top', offsetY: 8 },
+  { originX: 'start', originY: 'bottom', overlayX: 'start', overlayY: 'top', offsetY: 8 },
 ];
 
 // Verbatim design Revision 2 copy — pinned by e2e/orders-table.spec.ts.
@@ -73,7 +78,6 @@ const HEADER_TOOLTIPS: Record<ColId, string> = {
 @Component({
   selector: 'app-orders',
   imports: [
-    FormsModule,
     PageHeader,
     StatusChip,
     VoyageLine,
@@ -82,42 +86,37 @@ const HEADER_TOOLTIPS: Record<ColId, string> = {
     OrderDrawer,
     OrderGroupHeader,
     AgGridAngular,
+    Icon,
+    ActiveFilterChips,
+    OrderFilters,
+    CdkConnectedOverlay,
+    CdkOverlayOrigin,
   ],
   templateUrl: './orders.html',
   styleUrl: './orders.css',
 })
 export class Orders {
   protected readonly store = inject(OrdersStore);
+  protected readonly filterState = inject(OrdersFilterState);
+  protected readonly viewport = inject(Viewport);
+  private readonly bottomSheet = inject(MatBottomSheet);
 
-  protected readonly search = signal('');
-  protected readonly filters = signal<OrderFilters>(EMPTY_FILTERS);
-  protected readonly filtersOpen = signal(false);
-  protected readonly groupBy = signal<GroupBy>('none');
-  protected readonly collapsedGroups = signal<ReadonlySet<string>>(new Set());
-
-  protected readonly statusOptions = STATUS_OPTIONS;
   protected readonly groupByOptions = GROUP_BY_OPTIONS;
-  protected readonly filterCount = computed(() => activeFilterCount(this.filters()));
+  protected readonly filtersPositions = FILTERS_POSITIONS;
+  protected readonly filtersOpen = signal(false);
+  protected readonly statusDotClass = STATUS_DOT_CLASS;
+  protected readonly controlValue = controlValue;
+  protected readonly displayedText = displayedText;
 
-  protected readonly orderView = computed(() =>
-    buildOrderView(this.store.orders(), {
-      search: this.search(),
-      filters: this.filters(),
-      groupBy: this.groupBy(),
-    }),
-  );
-
-  protected readonly visibleOrderCount = computed(() =>
-    this.orderView().groups.reduce((sum, group) => sum + group.orders.length, 0),
-  );
+  private readonly filtersTriggerEl = viewChild<ElementRef<HTMLButtonElement>>('filtersTriggerEl');
 
   // groupBy 'none' -> a single unlabelled group (spec R3); no header rows.
   protected readonly gridRows = computed<GridRow[]>(() => {
-    const { groups } = this.orderView();
-    if (this.groupBy() === 'none') {
+    const { groups } = this.filterState.orderView();
+    if (this.filterState.groupBy() === 'none') {
       return (groups[0]?.orders ?? []).map((order) => ({ ...order, groupKey: 'all' }));
     }
-    const collapsed = this.collapsedGroups();
+    const collapsed = this.filterState.collapsedGroups();
     const rows: GridRow[] = [];
     for (const group of groups) {
       rows.push({ rowKind: 'group', group });
@@ -192,8 +191,8 @@ export class Orders {
       tooltipValueGetter: (p) => orderRowText(p.data).itemCount,
       minWidth: 90,
       flex: 1,
-      cellClass: 'align-right',
-      headerClass: 'align-right',
+      cellClass: 'mono align-right',
+      headerClass: 'mono align-right',
     },
     {
       colId: 'total',
@@ -203,10 +202,13 @@ export class Orders {
       valueGetter: (p) => (p.data as OrderRow).total,
       valueFormatter: (p) => orderRowText(p.data).total,
       tooltipValueGetter: (p) => orderRowText(p.data).total,
-      minWidth: 110,
+      // Wider than the other narrow columns: now that R15 makes `mono`
+      // actually reach AG Grid's DOM (see orders.css), monospace digits
+      // need more room than 110px for a 5-figure total like "£12,615.05".
+      minWidth: 130,
       flex: 1,
       cellClass: 'mono align-right',
-      headerClass: 'align-right',
+      headerClass: 'mono align-right',
     },
     {
       colId: 'shipTo',
@@ -221,7 +223,6 @@ export class Orders {
     },
   ];
 
-  protected readonly formatMoney = formatMoney;
   protected readonly getRowId = (params: GetRowIdParams<GridRow>) =>
     isGroupRow(params.data) ? `group:${params.data.group.key}` : String(params.data.id);
   protected readonly gridTheme = themeQuartz;
@@ -235,14 +236,14 @@ export class Orders {
     OrderGroupRowParams,
     'isCollapsed' | 'toggleGroup'
   > = {
-    isCollapsed: (key) => this.collapsedGroups().has(key),
-    toggleGroup: (key) => this.toggleGroup(key),
+    isCollapsed: (key) => this.filterState.collapsedGroups().has(key),
+    toggleGroup: (key) => this.filterState.toggleGroup(key),
   };
 
   protected readonly postSortRows = (params: PostSortRowsParams<GridRow>) => {
-    if (this.groupBy() === 'none') return;
+    if (this.filterState.groupBy() === 'none') return;
 
-    const order = this.orderView().groups.map((group) => group.key);
+    const order = this.filterState.orderView().groups.map((group) => group.key);
     const headerByKey = new Map<string, IRowNode<GridRow>>();
     const ordersByKey = new Map<string, IRowNode<GridRow>[]>();
     for (const node of params.nodes) {
@@ -276,36 +277,34 @@ export class Orders {
     }
   }
 
-  protected toggleGroup(key: string): void {
-    const next = new Set(this.collapsedGroups());
-    if (next.has(key)) {
-      next.delete(key);
+  protected statusTabName(value: StatusTabValue, count: number): string {
+    return `${value} ${count}`;
+  }
+
+  protected filtersButtonLabel(): string {
+    const count = this.filterState.filterCount();
+    return count > 0 ? `Filters (${count})` : 'Filters';
+  }
+
+  protected toggleFilters(): void {
+    if (this.filtersOpen()) {
+      this.closeFilters();
     } else {
-      next.add(key);
+      this.filtersOpen.set(true);
     }
-    this.collapsedGroups.set(next);
   }
 
-  protected setGroupBy(value: GroupBy): void {
-    this.groupBy.set(value);
-    this.collapsedGroups.set(new Set());
+  protected closeFilters(): void {
+    this.filtersOpen.set(false);
+    this.filtersTriggerEl()?.nativeElement.focus();
   }
 
-  protected updateFilter<K extends keyof OrderFilters>(key: K, value: OrderFilters[K]): void {
-    this.filters.update((current) => ({ ...current, [key]: value }));
+  protected openFiltersSheet(): void {
+    this.bottomSheet.open(OrderFilters);
   }
 
-  protected toggleFiltersPanel(): void {
-    this.filtersOpen.update((open) => !open);
-  }
-
-  protected clearFilters(): void {
-    this.filters.set(EMPTY_FILTERS);
-  }
-
-  protected clearSearchAndFilters(): void {
-    this.search.set('');
-    this.filters.set(EMPTY_FILTERS);
+  protected onGroupByChange(event: Event): void {
+    this.filterState.setGroupBy(controlValue(event) as GroupBy);
   }
 }
 

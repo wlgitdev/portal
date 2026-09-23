@@ -1,0 +1,268 @@
+@if (viewport.isPhone()) {
+  <div class="grab-handle" aria-hidden="true"></div>
+}
+
+<div class="head">
+  <h2>Filters</h2>
+  <button type="button" class="close-button" aria-label="Close filters" (click)="close()">
+    <app-icon name="close" [size]="16" />
+  </button>
+</div>
+
+<div class="body">
+  @if (viewport.isPhone()) {
+    <section class="section">
+      <h3>Group by</h3>
+      <div class="choice-row" role="radiogroup" aria-label="Group by">
+        @for (option of groupByOptions; track option.value) {
+          <label class="choice" [class.on]="filterState.groupBy() === option.value">
+            <input
+              type="radio"
+              name="order-filters-group-by"
+              [checked]="filterState.groupBy() === option.value"
+              (change)="filterState.setGroupBy(option.value)"
+            />
+            {{ option.label }}
+          </label>
+        }
+      </div>
+    </section>
+  }
+
+  <section class="section">
+    <h3>
+      Ordered
+      @if (filterState.filters().orderedPreset !== 'any') {
+        <button type="button" class="reset" (click)="filterState.removeChip('ordered')">Reset</button>
+      }
+    </h3>
+    <div class="choice-row" role="radiogroup" aria-label="Ordered">
+      @for (option of orderedPresetOptions; track option.value) {
+        <label class="choice" [class.on]="filterState.filters().orderedPreset === option.value">
+          <input
+            type="radio"
+            name="order-filters-ordered-preset"
+            [checked]="filterState.filters().orderedPreset === option.value"
+            (change)="filterState.updateFilter('orderedPreset', option.value)"
+          />
+          {{ option.label }}
+        </label>
+      }
+    </div>
+    @if (filterState.filters().orderedPreset === 'custom') {
+      <div class="field-pair">
+        <div class="field">
+          <label for="order-filters-ordered-from">Ordered from</label>
+          <input
+            id="order-filters-ordered-from"
+            type="date"
+            [value]="filterState.filters().orderedFrom"
+            (input)="filterState.updateFilter('orderedFrom', inputValue($event))"
+          />
+        </div>
+        <div class="field">
+          <label for="order-filters-ordered-to">Ordered to</label>
+          <input
+            id="order-filters-ordered-to"
+            type="date"
+            [value]="filterState.filters().orderedTo"
+            (input)="filterState.updateFilter('orderedTo', inputValue($event))"
+          />
+        </div>
+      </div>
+    }
+  </section>
+
+  <section class="section">
+    <h3>
+      Total
+      @if (filterState.filters().totalFrom || filterState.filters().totalTo) {
+        <button type="button" class="reset" (click)="filterState.removeChip('total')">Reset</button>
+      }
+    </h3>
+    <p class="hint">
+      {{ filterState.visibleOrderCount() }} of your {{ filterState.totalOrderCount() }} orders fall in
+      this range.
+    </p>
+    <div class="histogram" data-testid="total-histogram">
+      @for (bin of filterState.histogramBins(); track $index) {
+        <div
+          class="bar"
+          data-testid="total-histogram-bar"
+          [class.in]="bin.inRange"
+          [attr.data-count]="bin.count"
+          [attr.data-in-range]="bin.inRange"
+          [style.height.%]="barHeightPercent(bin.count)"
+        ></div>
+      }
+    </div>
+    <div class="range-slider">
+      <div
+        class="range-sel"
+        aria-hidden="true"
+        [style.left.%]="sliderPercent(filterState.filters().totalFrom, 0)"
+        [style.right.%]="100 - sliderPercent(filterState.filters().totalTo, filterState.totalRangeTop())"
+      ></div>
+      <input
+        type="range"
+        class="track-min"
+        aria-label="Minimum total"
+        min="0"
+        [attr.max]="filterState.totalRangeTop()"
+        step="50"
+        [value]="filterState.filters().totalFrom || 0"
+        (input)="setMinTotal($event)"
+      />
+      <input
+        type="range"
+        class="track-max"
+        aria-label="Maximum total"
+        min="0"
+        [attr.max]="filterState.totalRangeTop()"
+        step="50"
+        [value]="filterState.filters().totalTo || filterState.totalRangeTop()"
+        (input)="setMaxTotal($event)"
+      />
+    </div>
+    <div class="field-pair">
+      <div class="field money-field">
+        <label for="order-filters-total-from">Total from</label>
+        <div class="money-box">
+          <span aria-hidden="true">£</span>
+          <input
+            id="order-filters-total-from"
+            type="number"
+            min="0"
+            step="50"
+            [value]="filterState.filters().totalFrom"
+            (input)="filterState.updateFilter('totalFrom', inputValue($event))"
+          />
+        </div>
+      </div>
+      <div class="field money-field">
+        <label for="order-filters-total-to">Total to</label>
+        <div class="money-box">
+          <span aria-hidden="true">£</span>
+          <input
+            id="order-filters-total-to"
+            type="number"
+            min="0"
+            step="50"
+            [value]="filterState.filters().totalTo"
+            (input)="filterState.updateFilter('totalTo', inputValue($event))"
+          />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <h3>
+      Items
+      @if (filterState.filters().itemsFrom || filterState.filters().itemsTo) {
+        <button type="button" class="reset" (click)="filterState.removeChip('items')">Reset</button>
+      }
+    </h3>
+    <p class="hint">Different products on the order.</p>
+    <div class="stepper">
+      <label for="order-filters-items-from">Items from</label>
+      <div class="stepper-controls">
+        <button
+          type="button"
+          aria-label="Decrease Items from"
+          [disabled]="!filterState.filters().itemsFrom"
+          (click)="decreaseItems('itemsFrom')"
+        >
+          −
+        </button>
+        <input
+          id="order-filters-items-from"
+          type="number"
+          min="0"
+          placeholder="Any"
+          [value]="filterState.filters().itemsFrom"
+          (input)="filterState.updateFilter('itemsFrom', inputValue($event))"
+        />
+        <button type="button" aria-label="Increase Items from" (click)="increaseItems('itemsFrom')">+</button>
+      </div>
+    </div>
+    <div class="stepper">
+      <label for="order-filters-items-to">Items to</label>
+      <div class="stepper-controls">
+        <button
+          type="button"
+          aria-label="Decrease Items to"
+          [disabled]="!filterState.filters().itemsTo"
+          (click)="decreaseItems('itemsTo')"
+        >
+          −
+        </button>
+        <input
+          id="order-filters-items-to"
+          type="number"
+          min="0"
+          placeholder="Any"
+          [value]="filterState.filters().itemsTo"
+          (input)="filterState.updateFilter('itemsTo', inputValue($event))"
+        />
+        <button type="button" aria-label="Increase Items to" (click)="increaseItems('itemsTo')">+</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <h3>
+      Order no
+      @if (filterState.filters().orderNoContains) {
+        <button type="button" class="reset" (click)="filterState.removeChip('orderNo')">Reset</button>
+      }
+    </h3>
+    <div class="field">
+      <label for="order-filters-order-no">Order no contains</label>
+      <div class="money-box">
+        <span aria-hidden="true">#</span>
+        <input
+          id="order-filters-order-no"
+          type="text"
+          [value]="filterState.filters().orderNoContains"
+          (input)="filterState.updateFilter('orderNoContains', inputValue($event))"
+        />
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <h3>
+      Ship to
+      @if (filterState.filters().shipTo.length > 0) {
+        <button type="button" class="reset" (click)="filterState.removeChip('shipTo')">Reset</button>
+      }
+    </h3>
+    @if (filterState.shipToOptions().length >= 2) {
+      <div class="ship-to-list">
+        @for (option of filterState.shipToOptions(); track option.name) {
+          <label class="checkbox-row">
+            <input
+              type="checkbox"
+              [attr.aria-label]="option.name"
+              [checked]="filterState.filters().shipTo.includes(option.name)"
+              (change)="filterState.toggleShipTo(option.name)"
+            />
+            <span class="checkbox-label">{{ option.name }}</span>
+            <span class="checkbox-count mono">{{ option.count }}</span>
+          </label>
+        }
+      </div>
+    } @else {
+      <p class="single-ship-to">All your orders go to {{ filterState.shipToOptions()[0]?.name }}.</p>
+    }
+  </section>
+</div>
+
+<div class="foot">
+  <button type="button" class="clear-filters" (click)="filterState.clearFilters()">Clear filters</button>
+  <button type="button" class="show-orders" (click)="close()">
+    Show <span class="mono">{{ filterState.visibleOrderCount() }}</span>
+    {{ filterState.visibleOrderCount() === 1 ? 'order' : 'orders' }}
+  </button>
+</div>

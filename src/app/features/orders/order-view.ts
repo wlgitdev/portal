@@ -1,13 +1,16 @@
-// Framework-free (spec P6 R3): the single source of truth for search,
-// filtering and grouping, shared by the grid, the card list and their
-// tooltips/search so there is exactly one place that decides what an order
-// "displays as" or "matches".
+// Framework-free (spec P6 R3, extended P7 R11–R13): the single source of
+// truth for search, filtering, grouping, chips and the Total histogram, so
+// there is exactly one place that decides what an order "displays as",
+// "matches" or "falls in range".
 import type { OrderStatus, OrderSummary } from '../../core/api/models';
 
 export type GroupBy = 'none' | 'status' | 'orderedMonth' | 'itemCount' | 'shipTo';
 
+export type OrderedPreset = 'any' | '30d' | '3m' | '12m' | 'custom';
+
 export interface OrderFilters {
   orderNoContains: string;
+  orderedPreset: OrderedPreset;
   orderedFrom: string;
   orderedTo: string;
   status: 'All' | OrderStatus;
@@ -15,11 +18,28 @@ export interface OrderFilters {
   itemsTo: string;
   totalFrom: string;
   totalTo: string;
-  shipToContains: string;
+  shipTo: string[];
 }
+
+export const GROUP_BY_OPTIONS: { value: GroupBy; label: string }[] = [
+  { value: 'none', label: 'None' },
+  { value: 'status', label: 'Status' },
+  { value: 'orderedMonth', label: 'Ordered month' },
+  { value: 'itemCount', label: 'Items' },
+  { value: 'shipTo', label: 'Ship to' },
+];
+
+export const ORDERED_PRESET_OPTIONS: { value: OrderedPreset; label: string }[] = [
+  { value: 'any', label: 'Any time' },
+  { value: '30d', label: 'Last 30 days' },
+  { value: '3m', label: 'Last 3 months' },
+  { value: '12m', label: 'Last 12 months' },
+  { value: 'custom', label: 'Custom dates' },
+];
 
 export const EMPTY_FILTERS: OrderFilters = {
   orderNoContains: '',
+  orderedPreset: 'any',
   orderedFrom: '',
   orderedTo: '',
   status: 'All',
@@ -27,7 +47,7 @@ export const EMPTY_FILTERS: OrderFilters = {
   itemsTo: '',
   totalFrom: '',
   totalTo: '',
-  shipToContains: '',
+  shipTo: [],
 };
 
 export interface OrderGroup {
@@ -41,6 +61,16 @@ export interface OrderView {
   groups: OrderGroup[];
 }
 
+export interface FilterChip {
+  key: string;
+  text: string;
+}
+
+export interface HistogramBin {
+  count: number;
+  inRange: boolean;
+}
+
 export interface DisplayedText {
   orderNo: string;
   orderedOn: string;
@@ -51,7 +81,15 @@ export interface DisplayedText {
 }
 
 const money = new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' });
+// Filter/chip amounts are always whole pounds (the Total slider steps by
+// £50) — Intl's default currency formatting would otherwise print ".00".
+const wholeMoney = new Intl.NumberFormat('en-GB', {
+  style: 'currency',
+  currency: 'GBP',
+  maximumFractionDigits: 0,
+});
 const STATUS_GROUP_ORDER: OrderStatus[] = ['Late', 'Awaiting dispatch', 'Shipped'];
+export const HISTOGRAM_BIN_COUNT = 16;
 
 function ukDate(iso: string): string {
   const [year, month, day] = iso.slice(0, 10).split('-');
@@ -92,38 +130,91 @@ function matchesSearch(order: OrderSummary, term: string): boolean {
   );
 }
 
-function matchesFilters(order: OrderSummary, filters: OrderFilters): boolean {
-  const orderNo = `#${order.id}`;
-  const orderedDate = order.orderedOn.slice(0, 10);
-  const shipTo = (order.shipTo ?? '').toLowerCase();
+// The local-date cutoff a preset counts back from today, or null for "any"
+// and "custom" (which read orderedFrom/orderedTo directly instead).
+function presetCutoff(preset: OrderedPreset, today: Date): string | null {
+  const cutoff = new Date(today);
+  switch (preset) {
+    case '30d':
+      cutoff.setDate(cutoff.getDate() - 30);
+      break;
+    case '3m':
+      cutoff.setMonth(cutoff.getMonth() - 3);
+      break;
+    case '12m':
+      cutoff.setMonth(cutoff.getMonth() - 12);
+      break;
+    default:
+      return null;
+  }
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${cutoff.getFullYear()}-${pad(cutoff.getMonth() + 1)}-${pad(cutoff.getDate())}`;
+}
 
-  if (filters.orderNoContains && !orderNo.includes(filters.orderNoContains.trim())) return false;
-  if (filters.orderedFrom && orderedDate < filters.orderedFrom) return false;
-  if (filters.orderedTo && orderedDate > filters.orderedTo) return false;
-  if (filters.status !== 'All' && order.status !== filters.status) return false;
+function matchesOrdered(order: OrderSummary, filters: OrderFilters, today: Date): boolean {
+  const orderedDate = order.orderedOn.slice(0, 10);
+  if (filters.orderedPreset === 'custom') {
+    if (filters.orderedFrom && orderedDate < filters.orderedFrom) return false;
+    if (filters.orderedTo && orderedDate > filters.orderedTo) return false;
+    return true;
+  }
+  const cutoff = presetCutoff(filters.orderedPreset, today);
+  return cutoff === null || orderedDate >= cutoff;
+}
+
+function matchesOrderNo(order: OrderSummary, filters: OrderFilters): boolean {
+  return (
+    !filters.orderNoContains || `#${order.id}`.includes(filters.orderNoContains.trim())
+  );
+}
+
+function matchesStatus(order: OrderSummary, filters: OrderFilters): boolean {
+  return filters.status === 'All' || order.status === filters.status;
+}
+
+function matchesItems(order: OrderSummary, filters: OrderFilters): boolean {
   if (filters.itemsFrom && order.itemCount < Number(filters.itemsFrom)) return false;
   if (filters.itemsTo && order.itemCount > Number(filters.itemsTo)) return false;
-  if (filters.totalFrom && order.total < Number(filters.totalFrom)) return false;
-  if (filters.totalTo && order.total > Number(filters.totalTo)) return false;
-  if (filters.shipToContains && !shipTo.includes(filters.shipToContains.trim().toLowerCase()))
-    return false;
   return true;
 }
 
-// The Status select (header) plus every Filters-panel field that's set.
-export function activeFilterCount(filters: OrderFilters): number {
-  const panelFields = [
-    filters.orderNoContains,
-    filters.orderedFrom,
-    filters.orderedTo,
-    filters.itemsFrom,
-    filters.itemsTo,
-    filters.totalFrom,
-    filters.totalTo,
-    filters.shipToContains,
-  ];
-  const panelActive = panelFields.filter((value) => value !== '').length;
-  return panelActive + (filters.status !== 'All' ? 1 : 0);
+function matchesTotal(order: OrderSummary, filters: OrderFilters): boolean {
+  if (filters.totalFrom && order.total < Number(filters.totalFrom)) return false;
+  if (filters.totalTo && order.total > Number(filters.totalTo)) return false;
+  return true;
+}
+
+function matchesShipTo(order: OrderSummary, filters: OrderFilters): boolean {
+  return filters.shipTo.length === 0 || filters.shipTo.includes(order.shipTo ?? '');
+}
+
+export type PredicateField = 'orderNo' | 'ordered' | 'status' | 'items' | 'total' | 'shipTo';
+
+const PREDICATES: {
+  field: PredicateField;
+  test: (order: OrderSummary, filters: OrderFilters, today: Date) => boolean;
+}[] = [
+  { field: 'orderNo', test: matchesOrderNo },
+  { field: 'ordered', test: matchesOrdered },
+  { field: 'status', test: matchesStatus },
+  { field: 'items', test: matchesItems },
+  { field: 'total', test: matchesTotal },
+  { field: 'shipTo', test: matchesShipTo },
+];
+
+// Search plus every filter section except `exclude` — the one function
+// behind the visible list, the status tabs' counts ("search + filters, not
+// status") and the Total histogram's bars ("everything except Total").
+export function matchingOrders(
+  orders: OrderSummary[],
+  options: { search: string; filters: OrderFilters; today: Date; exclude?: PredicateField },
+): OrderSummary[] {
+  const active = PREDICATES.filter((predicate) => predicate.field !== options.exclude);
+  return orders.filter(
+    (order) =>
+      matchesSearch(order, options.search) &&
+      active.every((predicate) => predicate.test(order, options.filters, options.today)),
+  );
 }
 
 function monthLabel(iso: string): string {
@@ -179,11 +270,9 @@ function compareGroups(groupBy: GroupBy, a: GroupKey, b: GroupKey): number {
 
 export function buildOrderView(
   orders: OrderSummary[],
-  { search, filters, groupBy }: { search: string; filters: OrderFilters; groupBy: GroupBy },
+  { search, filters, groupBy, today }: { search: string; filters: OrderFilters; groupBy: GroupBy; today: Date },
 ): OrderView {
-  const matching = orders.filter(
-    (order) => matchesSearch(order, search) && matchesFilters(order, filters),
-  );
+  const matching = matchingOrders(orders, { search, filters, today });
 
   const byKey = new Map<string, { group: GroupKey; orders: OrderSummary[] }>();
   for (const order of matching) {
@@ -208,4 +297,110 @@ export function buildOrderView(
     }));
 
   return { groups };
+}
+
+function pluralRange(from: string, to: string, singular: (n: string) => string): string {
+  if (from && to) return from === to ? singular(from) : `${from}–${to}`;
+  if (from) return `${singular(from)} or more`;
+  return `up to ${to}`;
+}
+
+function orderedChip(filters: OrderFilters): FilterChip | null {
+  switch (filters.orderedPreset) {
+    case 'any':
+      return null;
+    case '30d':
+      return { key: 'ordered', text: 'Ordered last 30 days' };
+    case '3m':
+      return { key: 'ordered', text: 'Ordered last 3 months' };
+    case '12m':
+      return { key: 'ordered', text: 'Ordered last 12 months' };
+    case 'custom': {
+      const { orderedFrom, orderedTo } = filters;
+      if (orderedFrom && orderedTo) {
+        return { key: 'ordered', text: `Ordered ${ukDate(orderedFrom)}–${ukDate(orderedTo)}` };
+      }
+      if (orderedFrom) return { key: 'ordered', text: `Ordered from ${ukDate(orderedFrom)}` };
+      if (orderedTo) return { key: 'ordered', text: `Ordered until ${ukDate(orderedTo)}` };
+      return null;
+    }
+  }
+}
+
+function totalChip(filters: OrderFilters): FilterChip | null {
+  const { totalFrom, totalTo } = filters;
+  if (!totalFrom && !totalTo) return null;
+  const text = pluralRange(
+    totalFrom && wholeMoney.format(Number(totalFrom)),
+    totalTo && wholeMoney.format(Number(totalTo)),
+    (n) => n,
+  );
+  return { key: 'total', text: `Total ${text}` };
+}
+
+function itemsChip(filters: OrderFilters): FilterChip | null {
+  const { itemsFrom, itemsTo } = filters;
+  if (!itemsFrom && !itemsTo) return null;
+  const text = pluralRange(itemsFrom, itemsTo, (n) => n);
+  return { key: 'items', text: `Items ${text}` };
+}
+
+function orderNoChip(filters: OrderFilters): FilterChip | null {
+  return filters.orderNoContains
+    ? { key: 'orderNo', text: `Order no contains ${filters.orderNoContains}` }
+    : null;
+}
+
+function shipToChip(filters: OrderFilters): FilterChip | null {
+  if (filters.shipTo.length === 0) return null;
+  if (filters.shipTo.length === 1) return { key: 'shipTo', text: `Ship to ${filters.shipTo[0]}` };
+  return { key: 'shipTo', text: `Ship to ${filters.shipTo.length} places` };
+}
+
+// Plain-English chips for every active filter, in the design's section
+// order (Ordered, Total, Items, Order no, Ship to) — R13. `today` matches
+// histogram()'s signature; no chip text is actually today-relative yet.
+export function activeFilterChips(filters: OrderFilters, _today: Date): FilterChip[] {
+  return [
+    orderedChip(filters),
+    totalChip(filters),
+    itemsChip(filters),
+    orderNoChip(filters),
+    shipToChip(filters),
+  ].filter((chip): chip is FilterChip => chip !== null);
+}
+
+// The Total histogram/slider range: this customer's largest order, rounded
+// up to the next £500 (£500 when they have none, so a slider always has a
+// sensible span).
+export function histogramTop(orders: OrderSummary[]): number {
+  return Math.max(500, Math.ceil(Math.max(0, ...orders.map((order) => order.total)) / 500) * 500);
+}
+
+// 16 equal £0..top bins, counting orders that match everything except
+// Total, so the Total section shows what you'd get at every possible
+// range — R12.
+export function histogram(
+  orders: OrderSummary[],
+  search: string,
+  filters: OrderFilters,
+  today: Date,
+): HistogramBin[] {
+  const top = histogramTop(orders);
+  const binWidth = top / HISTOGRAM_BIN_COUNT;
+
+  const counts = new Array(HISTOGRAM_BIN_COUNT).fill(0);
+  for (const order of matchingOrders(orders, { search, filters, today, exclude: 'total' })) {
+    counts[Math.min(HISTOGRAM_BIN_COUNT - 1, Math.floor(order.total / binWidth))]++;
+  }
+
+  const from = filters.totalFrom ? Number(filters.totalFrom) : null;
+  const to = filters.totalTo ? Number(filters.totalTo) : null;
+  return counts.map((count, index) => {
+    const midpoint = (index + 0.5) * binWidth;
+    return {
+      count,
+      inRange: (from === null || midpoint >= from) && (to === null || midpoint <= to),
+    };
+  });
 }

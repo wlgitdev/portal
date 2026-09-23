@@ -178,8 +178,7 @@ test.describe('orders table at desktop width', () => {
     }
   });
 
-  // Pending again (DES, P7 R12): Ship to is now a checklist (orders-find.spec.ts) and dates sit behind Custom dates.
-  test.skip('each Filters field narrows the rows by its column', async ({ page, request }) => {
+  test('each Filters field narrows the rows by its column', async ({ page, request }) => {
     const orders = await fetchOrdersAs(request, 'SAVEA');
     const byDate = [...orders].sort((a, b) => a.orderedOn.localeCompare(b.orderedOn));
     const from = byDate[5].orderedOn.slice(0, 10);
@@ -229,8 +228,7 @@ test.describe('orders table at desktop width', () => {
     }
   });
 
-  // Pending again (DES, P7 R11): the count is now active chips — Items 4–5 and Total £1,000 or more make 2.
-  test.skip('filters combine, and the Filters button counts them', async ({ page, request }) => {
+  test('filters combine, and the Filters button counts them', async ({ page, request }) => {
     const orders = await fetchOrdersAs(request, 'SAVEA');
     await signInAs(page, 'customer-card-SAVEA');
     await waitForGrid(page);
@@ -401,8 +399,7 @@ test.describe('orders table when space is tight', () => {
 });
 
 test.describe('orders card list grouping on a phone', () => {
-  // Pending again (DES, P7 R12): on a phone, Group by lives in the Filters sheet.
-  test.skip('group by Status shows the same group headers as the table', async ({
+  test('group by Status shows the same group headers as the table', async ({
     page,
     request,
   }) => {
