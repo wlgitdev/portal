@@ -4,7 +4,7 @@ Status meanings: Waiting for Planning · Waiting for Dev · In Progress · Waiti
 
 ## Now — Customer portal demo (23/09/2026)
 Show sales and testers a customer portal they can click through. Done means every item below is Ready for Release before the demo.
-**Status:** Waiting for Planning (spec awaiting WL sign-off)
+**Status:** In Progress
 
 | # | Item | Status | To test |
 |---|---|---|---|
