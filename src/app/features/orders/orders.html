@@ -1,33 +1,51 @@
+<ng-template #searchFieldContent>
+  <app-icon name="search" [size]="18" />
+  <input
+    type="search"
+    data-testid="orders-search"
+    [value]="filterState.search()"
+    (input)="filterState.setSearch(controlValue($event))"
+    placeholder="Search all columns"
+    autocomplete="off"
+  />
+  @if (filterState.search()) {
+    <button type="button" class="clear-search" aria-label="Clear search" (click)="filterState.setSearch('')">
+      <app-icon name="close" [size]="14" />
+    </button>
+  }
+</ng-template>
+
+<ng-template #statusTabsContent>
+  @for (tab of filterState.statusTabs(); track tab.value) {
+    <label class="tab" [class.on]="filterState.filters().status === tab.value">
+      <input
+        type="radio"
+        name="orders-status"
+        [checked]="filterState.filters().status === tab.value"
+        (change)="filterState.setStatus(tab.value)"
+      />
+      @if (tab.value !== 'All') {
+        <span class="dot" [class]="statusDotClass[tab.value]"></span>
+      }
+      {{ tab.value }} <span class="count mono">{{ tab.count }}</span>
+    </label>
+  }
+</ng-template>
+
 @if (store.orders().length > 0) {
   @if (viewport.isPhone()) {
     <app-page-header title="Orders">
       <div class="search-row">
         <div class="search-field">
-          <app-icon name="search" [size]="18" />
-          <input
-            type="search"
-            data-testid="orders-search"
-            [value]="filterState.search()"
-            (input)="filterState.setSearch(controlValue($event))"
-            placeholder="Search all columns"
-            autocomplete="off"
-          />
-          @if (filterState.search()) {
-            <button
-              type="button"
-              class="clear-search"
-              aria-label="Clear search"
-              (click)="filterState.setSearch('')"
-            >
-              <app-icon name="close" [size]="14" />
-            </button>
-          }
+          <ng-container [ngTemplateOutlet]="searchFieldContent" />
         </div>
         <button
           type="button"
           class="filters-icon-button"
           [class.active]="filterState.filterCount() > 0"
           [attr.aria-label]="filtersButtonLabel()"
+          aria-haspopup="dialog"
+          [attr.aria-expanded]="filtersSheetOpen()"
           (click)="openFiltersSheet()"
         >
           <app-icon name="filter" [size]="20" />
@@ -39,69 +57,18 @@
     </app-page-header>
 
     <div class="status-tabs phone" role="radiogroup" aria-label="Status">
-      @for (tab of filterState.statusTabs(); track tab.value) {
-        <label class="tab" [class.on]="filterState.filters().status === tab.value">
-          <input
-            type="radio"
-            name="orders-status"
-            [checked]="filterState.filters().status === tab.value"
-            (change)="filterState.setStatus(tab.value)"
-          />
-          @if (tab.value !== 'All') {
-            <span class="dot" [class]="statusDotClass[tab.value]"></span>
-          }
-          {{ tab.value }} <span class="count mono">{{ tab.count }}</span>
-        </label>
-      }
+      <ng-container [ngTemplateOutlet]="statusTabsContent" />
     </div>
-
-    <app-active-filter-chips
-      class="chips-row"
-      [chips]="filterState.chips()"
-      (remove)="filterState.removeChip($event)"
-      (clearAll)="filterState.clearFilters()"
-    />
   } @else {
     <app-page-header title="Orders">
       <div class="search-field">
-        <app-icon name="search" [size]="18" />
-        <input
-          type="search"
-          data-testid="orders-search"
-          [value]="filterState.search()"
-          (input)="filterState.setSearch(controlValue($event))"
-          placeholder="Search all columns"
-          autocomplete="off"
-        />
-        @if (filterState.search()) {
-          <button
-            type="button"
-            class="clear-search"
-            aria-label="Clear search"
-            (click)="filterState.setSearch('')"
-          >
-            <app-icon name="close" [size]="14" />
-          </button>
-        }
+        <ng-container [ngTemplateOutlet]="searchFieldContent" />
       </div>
     </app-page-header>
 
     <div class="toolbar-row2">
       <div class="status-tabs" role="radiogroup" aria-label="Status">
-        @for (tab of filterState.statusTabs(); track tab.value) {
-          <label class="tab" [class.on]="filterState.filters().status === tab.value">
-            <input
-              type="radio"
-              name="orders-status"
-              [checked]="filterState.filters().status === tab.value"
-              (change)="filterState.setStatus(tab.value)"
-            />
-            @if (tab.value !== 'All') {
-              <span class="dot" [class]="statusDotClass[tab.value]"></span>
-            }
-            {{ tab.value }} <span class="count mono">{{ tab.count }}</span>
-          </label>
-        }
+        <ng-container [ngTemplateOutlet]="statusTabsContent" />
       </div>
 
       <div class="toolbar-tools">
@@ -114,6 +81,7 @@
           [class.active]="filterState.filterCount() > 0"
           [class.open]="filtersOpen()"
           [attr.aria-label]="filtersButtonLabel()"
+          aria-haspopup="dialog"
           [attr.aria-expanded]="filtersOpen()"
           aria-controls="order-filters-panel"
           (click)="toggleFilters()"
@@ -141,13 +109,6 @@
       </div>
     </div>
 
-    <app-active-filter-chips
-      class="chips-row"
-      [chips]="filterState.chips()"
-      (remove)="filterState.removeChip($event)"
-      (clearAll)="filterState.clearFilters()"
-    />
-
     <ng-template
       cdkConnectedOverlay
       [cdkConnectedOverlayOrigin]="filtersOrigin"
@@ -163,6 +124,14 @@
       </div>
     </ng-template>
   }
+
+  <app-active-filter-chips
+    class="chips-row"
+    [class.phone]="viewport.isPhone()"
+    [chips]="filterState.chips()"
+    (remove)="filterState.removeChip($event)"
+    (clearAll)="filterState.clearFilters()"
+  />
 }
 
 @if (store.ordersLoading()) {
@@ -224,7 +193,7 @@
                   [dueOn]="order.dueOn"
                 />
                 <div class="card-bottom">
-                  <span>{{ order.itemCount }} item{{ order.itemCount === 1 ? '' : 's' }}</span>
+                  <span>{{ order.itemCount }} {{ plural(order.itemCount, 'item') }}</span>
                   <span class="mono" data-testid="order-row-total">{{
                     displayedText(order).total
                   }}</span>

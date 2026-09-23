@@ -3,7 +3,7 @@ import { Component, computed, inject, output } from '@angular/core';
 import { Icon } from '../../../shared/icon/icon';
 import { Viewport } from '../../../shared/viewport/viewport';
 import { OrdersFilterState } from '../orders-filter-state';
-import { GROUP_BY_OPTIONS, ORDERED_PRESET_OPTIONS } from '../order-view';
+import { GROUP_BY_OPTIONS, ORDERED_PRESET_OPTIONS, plural } from '../order-view';
 
 function inputValue(event: Event): string {
   return (event.target as HTMLInputElement).value;
@@ -39,6 +39,7 @@ export class OrderFilters {
   protected readonly groupByOptions = GROUP_BY_OPTIONS;
   protected readonly orderedPresetOptions = ORDERED_PRESET_OPTIONS;
   protected readonly inputValue = inputValue;
+  protected readonly plural = plural;
 
   protected readonly maxBinCount = computed(() =>
     Math.max(1, ...this.filterState.histogramBins().map((bin) => bin.count)),

@@ -6,6 +6,7 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { CustomerSession } from '../core/auth/customer-session';
 import { Icon } from '../shared/icon/icon';
 import { Monogram } from '../shared/monogram/monogram';
+import { openTrackedBottomSheet } from '../shared/tracked-bottom-sheet';
 import { Viewport } from '../shared/viewport/viewport';
 import { AccountMenu } from './account-menu/account-menu';
 import { NavIcon, type NavIconName } from './nav-icon/nav-icon';
@@ -50,10 +51,6 @@ export class AppShell {
   }));
 
   protected openAccountSheet(): void {
-    this.accountSheetOpen.set(true);
-    this.bottomSheet
-      .open(AccountMenu)
-      .afterDismissed()
-      .subscribe(() => this.accountSheetOpen.set(false));
+    openTrackedBottomSheet(this.bottomSheet, AccountMenu, this.accountSheetOpen);
   }
 }

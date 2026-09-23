@@ -71,6 +71,11 @@ export interface HistogramBin {
   inRange: boolean;
 }
 
+export interface ShipToOption {
+  name: string;
+  count: number;
+}
+
 export interface DisplayedText {
   orderNo: string;
   orderedOn: string;
@@ -90,6 +95,10 @@ const wholeMoney = new Intl.NumberFormat('en-GB', {
 });
 const STATUS_GROUP_ORDER: OrderStatus[] = ['Late', 'Awaiting dispatch', 'Shipped'];
 export const HISTOGRAM_BIN_COUNT = 16;
+
+export function plural(count: number, word: string): string {
+  return `${word}${count === 1 ? '' : 's'}`;
+}
 
 function ukDate(iso: string): string {
   const [year, month, day] = iso.slice(0, 10).split('-');
@@ -242,7 +251,7 @@ function groupKeyFor(order: OrderSummary, groupBy: GroupBy): GroupKey {
     case 'itemCount':
       return {
         key: String(order.itemCount),
-        label: `${order.itemCount} item${order.itemCount === 1 ? '' : 's'}`,
+        label: `${order.itemCount} ${plural(order.itemCount, 'item')}`,
         sortKey: order.itemCount,
       };
     case 'shipTo': {
@@ -299,9 +308,9 @@ export function buildOrderView(
   return { groups };
 }
 
-function pluralRange(from: string, to: string, singular: (n: string) => string): string {
-  if (from && to) return from === to ? singular(from) : `${from}–${to}`;
-  if (from) return `${singular(from)} or more`;
+function rangeText(from: string, to: string): string {
+  if (from && to) return from === to ? from : `${from}–${to}`;
+  if (from) return `${from} or more`;
   return `up to ${to}`;
 }
 
@@ -330,10 +339,9 @@ function orderedChip(filters: OrderFilters): FilterChip | null {
 function totalChip(filters: OrderFilters): FilterChip | null {
   const { totalFrom, totalTo } = filters;
   if (!totalFrom && !totalTo) return null;
-  const text = pluralRange(
+  const text = rangeText(
     totalFrom && wholeMoney.format(Number(totalFrom)),
     totalTo && wholeMoney.format(Number(totalTo)),
-    (n) => n,
   );
   return { key: 'total', text: `Total ${text}` };
 }
@@ -341,8 +349,7 @@ function totalChip(filters: OrderFilters): FilterChip | null {
 function itemsChip(filters: OrderFilters): FilterChip | null {
   const { itemsFrom, itemsTo } = filters;
   if (!itemsFrom && !itemsTo) return null;
-  const text = pluralRange(itemsFrom, itemsTo, (n) => n);
-  return { key: 'items', text: `Items ${text}` };
+  return { key: 'items', text: `Items ${rangeText(itemsFrom, itemsTo)}` };
 }
 
 function orderNoChip(filters: OrderFilters): FilterChip | null {
@@ -368,6 +375,20 @@ export function activeFilterChips(filters: OrderFilters, _today: Date): FilterCh
     orderNoChip(filters),
     shipToChip(filters),
   ].filter((chip): chip is FilterChip => chip !== null);
+}
+
+// One row per distinct ship-to name across all of the customer's orders
+// (unfiltered — it's what decides whether Ship to is even a real choice,
+// R12), each with its own order count.
+export function shipToOptions(orders: OrderSummary[]): ShipToOption[] {
+  const counts = new Map<string, number>();
+  for (const order of orders) {
+    const name = order.shipTo ?? '';
+    counts.set(name, (counts.get(name) ?? 0) + 1);
+  }
+  return [...counts.entries()]
+    .map(([name, count]) => ({ name, count }))
+    .sort((a, b) => a.name.localeCompare(b.name));
 }
 
 // The Total histogram/slider range: this customer's largest order, rounded
