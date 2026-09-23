@@ -38,7 +38,7 @@
               <button
                 type="button"
                 data-testid="customer-result"
-                (click)="chooseCustomer(customer.id)"
+                (click)="chooseCustomer(customer)"
               >
                 <span class="company">{{ customer.companyName }}</span>
                 <span class="location"
@@ -56,7 +56,7 @@
             type="button"
             class="featured-card"
             [attr.data-testid]="customer.testId"
-            (click)="chooseCustomer(customer.id)"
+            (click)="chooseCustomer(customer)"
           >
             <span class="company">{{ customer.companyName }}</span>
             <span class="blurb">{{ customer.blurb }}</span>
