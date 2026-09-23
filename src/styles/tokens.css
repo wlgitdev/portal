@@ -1,0 +1,90 @@
+/*
+  portal-lite design tokens — "Harbour" palette (P3).
+  Brand presets ([data-brand]) and dark mode ([data-theme="dark"]) are
+  bundle B5's job; this file is the single Northwind/light default so
+  Material and the shared components have real tokens to read now.
+*/
+:root {
+  /* Palette */
+  --color-fjord: #1f3a5f;
+  --color-deep-water: #14202e;
+  --color-mist: #eef2f5;
+  --color-sea-glass: #3e8e7e;
+  --color-signal-amber: #e0a526;
+  --color-amber-text: #8a5a00;
+  --color-harbour-red: #c2413b;
+  --color-surface: #ffffff;
+
+  /* Type */
+  --font-display: 'Big Shoulders Display', sans-serif;
+  --font-body: 'IBM Plex Sans', sans-serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.25rem;
+  --text-xl: 1.5rem;
+  --text-2xl: 2rem;
+  --text-3xl: 2.5rem;
+
+  /* Space (4/8 scale) */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --space-8: 4rem;
+
+  /* Radius */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 16px;
+
+  /* Angular Material M3 system tokens, remapped to Harbour */
+  --mat-sys-primary: var(--color-fjord);
+  --mat-sys-on-primary: #ffffff;
+  --mat-sys-primary-container: #d9e2ec;
+  --mat-sys-on-primary-container: var(--color-deep-water);
+  --mat-sys-secondary: var(--color-sea-glass);
+  --mat-sys-on-secondary: #ffffff;
+  --mat-sys-tertiary: var(--color-signal-amber);
+  --mat-sys-on-tertiary: var(--color-deep-water);
+  --mat-sys-error: var(--color-harbour-red);
+  --mat-sys-on-error: #ffffff;
+
+  --mat-sys-background: var(--color-mist);
+  --mat-sys-on-background: var(--color-deep-water);
+  --mat-sys-surface: var(--color-surface);
+  --mat-sys-on-surface: var(--color-deep-water);
+  --mat-sys-surface-container: var(--color-mist);
+  --mat-sys-surface-container-low: #f6f8f9;
+  --mat-sys-surface-container-high: #e4e9ec;
+  --mat-sys-surface-container-highest: #dae1e5;
+  --mat-sys-surface-variant: var(--color-mist);
+  --mat-sys-on-surface-variant: #45525e;
+  --mat-sys-outline: #76838f;
+  --mat-sys-outline-variant: #c6ced3;
+
+  --mat-sys-corner-small: var(--radius-sm);
+  --mat-sys-corner-medium: var(--radius-md);
+  --mat-sys-corner-large: var(--radius-lg);
+
+  --mat-sys-display-large-font: var(--font-display);
+  --mat-sys-display-medium-font: var(--font-display);
+  --mat-sys-display-small-font: var(--font-display);
+  --mat-sys-headline-large-font: var(--font-display);
+  --mat-sys-headline-medium-font: var(--font-display);
+  --mat-sys-headline-small-font: var(--font-display);
+  --mat-sys-title-large-font: var(--font-body);
+  --mat-sys-title-medium-font: var(--font-body);
+  --mat-sys-title-small-font: var(--font-body);
+  --mat-sys-body-large-font: var(--font-body);
+  --mat-sys-body-medium-font: var(--font-body);
+  --mat-sys-body-small-font: var(--font-body);
+  --mat-sys-label-large-font: var(--font-body);
+  --mat-sys-label-medium-font: var(--font-body);
+  --mat-sys-label-small-font: var(--font-body);
+}

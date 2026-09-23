@@ -1,0 +1,108 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgb(20 32 46 / 40%);
+  z-index: 10;
+}
+
+.drawer {
+  position: fixed;
+  inset-block: 0;
+  right: 0;
+  width: min(420px, 100vw);
+  background: var(--color-surface);
+  box-shadow: -8px 0 24px rgb(20 32 46 / 15%);
+  z-index: 11;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  padding: var(--space-5);
+  gap: var(--space-5);
+}
+
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.order-number {
+  font-size: var(--text-xl);
+  font-weight: 600;
+  color: var(--color-deep-water);
+}
+
+.close {
+  border: none;
+  background: none;
+  font-size: var(--text-lg);
+  cursor: pointer;
+  color: var(--mat-sys-on-surface-variant);
+  padding: var(--space-1) var(--space-2);
+}
+
+.ship-to h2 {
+  font-size: var(--text-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--mat-sys-on-surface-variant);
+  margin: 0 0 var(--space-2);
+}
+
+.ship-to p {
+  margin: 0;
+  font-size: var(--text-sm);
+  line-height: 1.5;
+}
+
+.lines {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+}
+
+.lines th {
+  text-align: left;
+  font-size: var(--text-xs);
+  color: var(--mat-sys-on-surface-variant);
+  padding-block-end: var(--space-2);
+  border-block-end: 1px solid var(--mat-sys-outline-variant);
+}
+
+.lines td {
+  padding-block: var(--space-2);
+  border-block-end: 1px solid var(--mat-sys-outline-variant);
+}
+
+.lines th:not(:first-child),
+.lines td:not(:first-child) {
+  text-align: right;
+}
+
+.mono {
+  font-family: var(--font-mono);
+}
+
+.totals {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin-top: auto;
+  padding-top: var(--space-3);
+}
+
+.freight-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--text-sm);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.total-row {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 600;
+  color: var(--color-deep-water);
+}

@@ -1,0 +1,150 @@
+.sign-in {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 900px) {
+  .sign-in {
+    grid-template-columns: 1fr 1.2fr;
+  }
+}
+
+.brand-panel {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--space-5);
+  padding: var(--space-8);
+  background: var(--color-fjord);
+  color: white;
+}
+
+@media (min-width: 900px) {
+  .brand-panel {
+    display: flex;
+  }
+}
+
+.brand-panel .wordmark {
+  font-family: var(--font-display);
+  font-size: var(--text-3xl);
+  font-weight: 700;
+}
+
+.brand-panel .tagline {
+  font-family: var(--font-body);
+  font-size: var(--text-lg);
+  max-width: 28ch;
+  opacity: 0.9;
+}
+
+.brand-panel app-voyage-line {
+  max-width: 320px;
+}
+
+.form-panel {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--space-4);
+  padding: var(--space-6);
+  max-width: 480px;
+  margin-inline: auto;
+  width: 100%;
+}
+
+h1 {
+  font-family: var(--font-display);
+  font-size: var(--text-3xl);
+  color: var(--color-deep-water);
+  margin: 0;
+}
+
+.demo-notice {
+  font-family: var(--font-body);
+  color: var(--mat-sys-on-surface-variant);
+  margin: 0;
+}
+
+.search-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.search-label {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-deep-water);
+}
+
+input[type='search'] {
+  font: inherit;
+  font-size: var(--text-base);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--mat-sys-outline);
+}
+
+input[type='search']:focus-visible {
+  outline: 2px solid var(--color-fjord);
+  outline-offset: 1px;
+}
+
+.results {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.results .hint {
+  color: var(--mat-sys-on-surface-variant);
+  padding: var(--space-2) 0;
+}
+
+.results button,
+.featured-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
+  width: 100%;
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--mat-sys-outline-variant);
+  background: var(--color-surface);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.results button:hover,
+.results button:focus-visible,
+.featured-card:hover,
+.featured-card:focus-visible {
+  border-color: var(--color-fjord);
+  outline: none;
+}
+
+.company {
+  font-weight: 600;
+  color: var(--color-deep-water);
+}
+
+.location,
+.blurb {
+  font-size: var(--text-sm);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.featured {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}

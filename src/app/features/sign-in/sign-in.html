@@ -1,0 +1,68 @@
+<div class="sign-in">
+  <section class="brand-panel">
+    <span class="wordmark">Northwind</span>
+    <p class="tagline">Where are my goods, and what have I spent?</p>
+    <app-voyage-line
+      size="large"
+      status="Awaiting dispatch"
+      orderedOn="2026-09-01"
+      dueOn="2026-09-30"
+    />
+  </section>
+
+  <section class="form-panel">
+    <h1>Sign in</h1>
+    <p class="demo-notice">Demo sign-in — choose a customer. No password in this prototype.</p>
+
+    <label class="search-field">
+      <span class="search-label">Search customers</span>
+      <input
+        type="search"
+        data-testid="customer-search"
+        [ngModel]="search()"
+        (ngModelChange)="search.set($event)"
+        placeholder="Company name or customer ID"
+        autocomplete="off"
+      />
+    </label>
+
+    @if (search().trim()) {
+      <ul class="results" data-testid="customer-search-results">
+        @if (searchLoading()) {
+          <li class="hint">Searching…</li>
+        } @else if (searchResults().length === 0) {
+          <li class="hint">No customers match "{{ search() }}".</li>
+        } @else {
+          @for (customer of searchResults(); track customer.id) {
+            <li>
+              <button
+                type="button"
+                data-testid="customer-result"
+                (click)="chooseCustomer(customer.id)"
+              >
+                <span class="company">{{ customer.companyName }}</span>
+                <span class="location"
+                  >{{ customer.id }} · {{ customer.city }}, {{ customer.country }}</span
+                >
+              </button>
+            </li>
+          }
+        }
+      </ul>
+    } @else {
+      <div class="featured">
+        @for (customer of featured; track customer.id) {
+          <button
+            type="button"
+            class="featured-card"
+            [attr.data-testid]="customer.testId"
+            (click)="chooseCustomer(customer.id)"
+          >
+            <span class="company">{{ customer.companyName }}</span>
+            <span class="blurb">{{ customer.blurb }}</span>
+          </button>
+        }
+      </div>
+    }
+  </section>
+</div>

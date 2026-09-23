@@ -3,11 +3,7 @@ import { test, expect, type Page } from '@playwright/test';
 // Bundle B1 (roadmap item 1): sign in as a customer and browse your orders.
 // To test: sign in as Alfreds, search orders, filter "Late", open one and
 // check the lines add up to the total.
-//
-// Pending until P1-P4 land (db/portal-lite.sql, the API's customers/orders
-// endpoints, the design system shell, and the sign-in/orders/drawer screens).
-// Rule 3b: DEV may only remove this .skip, never edit the assertions below.
-test.describe.skip('sign in and browse orders', () => {
+test.describe('sign in and browse orders', () => {
   function parseMoney(text: string): number {
     return Number(text.replace(/[^0-9.-]+/g, ''));
   }
@@ -55,7 +51,10 @@ test.describe.skip('sign in and browse orders', () => {
     // Open one and check the lines add up to the total.
     await rows.first().click();
     const drawer = page.getByTestId('order-drawer');
-    await expect(drawer).toBeVisible();
+    // The total only renders once the drawer's own (separate, async) detail
+    // fetch resolves — wait for it before reading line amounts, rather than
+    // racing the loading skeleton.
+    await expect(drawer.getByTestId('order-drawer-total')).toBeVisible();
 
     const lineAmounts = await drawer.getByTestId('order-drawer-line-amount').allInnerTexts();
     expect(lineAmounts.length).toBeGreaterThan(0);
