@@ -304,11 +304,89 @@ acceptance:  # one test each, files under "Bundles"
 
 The new pending file is `e2e/orders-find.spec.ts`. DEV removes only the `.skip` markers.
 
+```yaml
+---
+phase: P8
+component: Shell layout, status tracker, toolbar surfaces (bundle B1 only) — design Revision 4
+requirements:
+  R17_nav_breakpoint:
+    - bottom nav shows below 1024px, side rail at >=1024px; exactly one visible at any width (shell CSS splits the nav on 1024px only)
+    - PHONE_QUERY (719px) is unchanged: sheets vs popovers and cards vs grid still split at 720px
+    - new token --bottom-nav-height: 56px; content clears it whenever the bottom nav shows
+  R18_sticky_and_fit:
+    - new token --top-bar-height: 64px; the top bar is exactly that high, position sticky, top 0, on every page and width
+    - z-index: the top bar sits above page content (AG Grid headers included) and below CDK overlays, bottom sheets and the order drawer; one small scale in tokens.css, no magic numbers
+    - side rail: position sticky, top 0, height 100dvh
+    - Orders at >=720px: the page is a flex column whose height is 100dvh minus --top-bar-height, minus --bottom-nav-height below 1024px;
+      header, toolbar and chips are flex none; the grid view is flex 1 with min-height 240px; the old calc(100vh - 200px) is removed
+    - phone (<720px) keeps normal page scroll under the sticky top bar
+  R19_rail_spacing:
+    - side-rail links stretch to the full rail width; the 3px indicator stays the link's inline-start border; icon and label centred
+  R20_status_tracker:
+    - new shared component src/app/shared/status-tracker/: inputs status (OrderStatus), size 'compact' | 'large'
+    - DOM contract: root data-testid status-tracker with data-status="{status}"; three stops data-testid status-tracker-stop,
+      data-state done|current|todo per the design table; label data-testid status-tracker-label containing exactly the status text;
+      the drawing is aria-hidden, the label is plain text
+    - icons: receipt (stop 1), clock or warning when Late (stop 2), ship (stop 3); drawn in src/app/shared/icon/ alongside the existing ones
+    - sizes, colours and label alignment exactly per design Revision 4 (compact 20px stops, large 32px; label centred under stop 2, end-aligned under stop 3)
+    - grid: one column colId status, headerName Status, cell renderer = the tracker (compact), minWidth 168, rowHeight 52;
+      comparator ranks Late < Awaiting dispatch < Shipped; the Progress column and colId progress are removed
+    - HEADER_TOOLTIPS.status = "Each order moves from Ordered, to Awaiting dispatch, to Shipped. Late means it hasn't shipped and is past its due date."; the progress entry is removed
+    - phone card: the tracker (compact) replaces app-status-chip and app-voyage-line; data-order-id and existing testids unchanged
+    - search text for status is unchanged (the status word)
+  R21_drawer:
+    - the large tracker replaces the large voyage line
+    - under it a definition list: Ordered / Shipped / Due, values DD/MM/YYYY; Shipped shows "Not yet" when shippedOn is null;
+      value testids order-drawer-ordered, order-drawer-shipped, order-drawer-due
+  R22_control_font:
+    - styles.css base rule: button, input, select, textarea inherit font (font: inherit); remove per-component font resets it makes redundant only in files this phase already touches
+  R23_popover_surface:
+    - one global class .popover-surface in styles.css: surface background, 14px radius, --shadow-float, 160ms fade + 4px rise (none under reduced motion);
+      it owns the single @keyframes; the copies in orders.css and app-shell.css are deleted
+    - every desktop pop-up root carries class popover-surface and data-testid popover-surface: Filters popover, Group by menu, account menu
+    - Filters overlay: cdkConnectedOverlayFlexibleDimensions true, cdkConnectedOverlayViewportMargin 16, positions below (end-aligned) then above as fallback;
+      the surface is a flex column with max-height min(70vh, 100%) of the overlay pane; the filters head and footer are flex none; only the body scrolls
+  R24_group_by_menu:
+    - >=720px: the native select and id orders-group-by are removed; a button styled with the Filters pill's class, content: group icon,
+      "Group by" (secondary ink), the current option label (600), chevron (rotates 180deg while open, 160ms, none under reduced motion)
+    - accessible name starts "Group by" and includes the current label; aria-haspopup menu; aria-expanded (from CdkMenuTrigger)
+    - menu: CdkMenu with aria-label "Group by", five CdkMenuItemRadio items (None, Status, Ordered month, Items, Ship to) with aria-checked
+      and a tick icon on the checked one; min-width 200px; right-aligned under the pill, 8px gap (same ConnectedPosition as the account menu — share the constant)
+    - choosing applies filterState.setGroupBy and closes; Esc closes and focus returns to the pill
+    - <720px unchanged (radiogroup in the Filters sheet)
+  R25_cleanup:
+    - delete StatusCellRenderer, VoyageCellRenderer and the StatusChip component once nothing imports them; VoyageLine stays (sign-in page, and B3's Overview)
+acceptance:  # one test each, files under "Bundles"
+  - given widths 390–1280 incl. 719/720/1023/1024, exactly one Primary nav is visible and its Orders link shows
+  - given phone, tablet and desktop, after scrolling to the bottom the top bar is fully on screen at the top and the nav is visible
+  - given desktop Orders at 1280x800, 1280x600 and 800x700 with a status tab chosen, the page does not scroll, the grid is fully on screen and clear of the nav
+  - given the side rail, the Orders link spans the rail and its label is >=12px right of the 3px indicator
+  - given the grid, each order's tracker carries its status, the right stop states, and the status name uncut inside the cell
+  - given Status sorted, rows run Late, Awaiting dispatch, Shipped
+  - given the phone card list, each card shows the tracker and no chip or route line
+  - given the drawer, the tracker plus Ordered, Shipped (or "Not yet") and Due dates match the API
+  - given the grid headers, they read Order no, Ordered, Status, Items, Total, Ship to, and each shows its tooltip copy
+  - given the Filters and Group by pills, their font family, size, weight, spacing and line height match, and equal the body font
+  - given a desktop window 520, 600 or 800px high, the Filters panel's Clear filters and Show buttons are fully on screen, including after scrolling to its last section
+  - given the Group by pill, it opens a "Group by" menu of five radio items with the current one checked; picking closes it and relabels the pill; Esc returns focus
+  - given Group by, Filters and the account menu, their surfaces share background, radius and shadow
+  - given the account menu on a phone, the trigger reports aria-expanded="true" while the sheet is open (test locates it by label; see design Revision 4 Stage 3)
+```
+
+**Bundle impact.** P8 feeds **B1** only. B2's nav-label test (`e2e/shell.spec.ts` "navigation is labelled (B2)") must keep passing unchanged; the bottom nav's look doesn't change, only the width it shows at.
+
+**Rule 3b.** DES has written or updated, all pending (`.skip`):
+- new: `e2e/shell-layout.spec.ts` (R17–R19), `e2e/status-tracker.spec.ts` (R20–R21), `e2e/orders-toolbar.spec.ts` (R22–R24);
+- updated to this contract: `e2e/orders-table.spec.ts` (tracker cell test replaces the chip test; header names and tooltips; the three Group by tests now use the menu), `e2e/support/grid.ts` (`progress` column id removed);
+- `e2e/shell.spec.ts` "account menu (B1)": `openAccountMenu` now finds the trigger by label after opening, so the phone half can pass. The assertion is unchanged.
+
+DEV removes only the `.skip` markers. Every other test in the suite must stay green.
+
 ## Bundles (tester-testable units → roadmap items)
 
 | Bundle | Phases | Test file (Playwright, pending) |
 |---|---|---|
-| B1 Sign in and browse my orders | P1–P4 (sign in, orders, drawer) + P6 R1–R4 + P7 R8–R16 | e2e/orders.spec.ts, e2e/orders-table.spec.ts, e2e/orders-find.spec.ts, e2e/shell.spec.ts (account) |
+| B1 Sign in and browse my orders | P1–P4 (sign in, orders, drawer) + P6 R1–R4 + P7 R8–R16 + P8 R17–R25 | e2e/orders.spec.ts, e2e/orders-table.spec.ts, e2e/orders-find.spec.ts, e2e/shell.spec.ts (account), e2e/shell-layout.spec.ts, e2e/status-tracker.spec.ts, e2e/orders-toolbar.spec.ts |
 | B2 Download a delivery note | P4 (pdf) + P6 R7 | e2e/delivery-note.spec.ts, e2e/shell.spec.ts (nav labels) |
 | B3 See spend and schedule | P4 (overview, spend, schedule) | e2e/spend-schedule.spec.ts |
 | B4 Edit my account details | P2 PUT, P4 account | e2e/account.spec.ts |

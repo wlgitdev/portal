@@ -558,3 +558,137 @@ Options weighed:
 ### Told to WL
 - The Ship-to "contains" field from Revision 2 is gone. It's replaced by a checklist that only appears when a customer really ships to more than one name.
 - Status moves from a select to tabs. The already-passing B1 test is updated to match; DES owns that change.
+
+## Revision 4 — third tester pass on item 1 (23/09/2026)
+
+Interface: **Web**. Source: roadmap "Tester Comments", seven new comments on item 1 after commit 9df37be.
+The spec phase that builds it is **P8** in `portal-lite-spec.md`.
+**Revision 4 supersedes** the Revision 2 "Status chip (T1)" section, the Progress column and its header tooltip, the Revision 3 "Group by pill", and the grid's fixed `calc(100vh - 200px)` height.
+Everything else in Revisions 2 and 3 stands.
+
+### Stage 1 — What went wrong (/design-expert, compressed)
+
+Evidence is the tester's comments plus a read of the shipped code; no interview was run (same as Revisions 2 and 3).
+
+| # | Tester said | Real problem | Root cause |
+|---|---|---|---|
+| V1 | At a certain width the nav isn't shown at all | Between 720px and 1023px there's no way to move between pages | The bottom nav hides at ≥720px, but the side rail only appears at ≥1024px. Two breakpoints, one gap. |
+| V2 | Scroll to the bottom and the top bar is gone; make it sticky or fit the screen | The account menu and brand name scroll away; on desktop the Orders page scrolls at all | The top bar scrolls with the page. The grid's height is a guess (`100vh - 200px`) that ignores the chips row and the real top-bar height. |
+| V3 | The rail's "Orders" label is too close to the highlight line on its left | The indicator bar touches the label | Each rail link shrinks to the width of its label, so the 3px indicator (the link's left border) sits right against the text instead of at the rail's edge. |
+| V4 | The progress dots mean nothing; merge them into Status as fixed stops on a line | Two columns say the same thing twice, and the one with the picture can't be read without a legend | The voyage line plots *dates* (the hull sits wherever today falls between ordered and due), so the dots move around and don't map to any word the buyer knows. The status column already says where the order is. |
+| V5 | Filters and Group by text look different | Two pills side by side in different fonts | Browsers don't let buttons inherit the page font. The Filters pill is a `<button>` (system font); the Group by pill is a `<div>` (IBM Plex Sans). |
+| V6 | Clear/Show buttons are cut off on a short desktop screen | The one way to close the panel is off-screen | The popover is capped at 70% of the window height, measured from the top of the window, but it opens ~150px down, so its footer falls off the bottom. |
+| V7 | Group by no longer matches the other dropdowns | Its list is the operating system's native select list | Revision 3 dressed the *closed* select as a pill; the *open* list is still the browser's own, unlike the Filters and account surfaces. |
+
+Also settled here: DEV's open question from the P7 build note. On a phone the account menu opens in a modal sheet, which correctly hides the rest of the app from assistive tech, so the test can't find the trigger by its role any more. The fix is in the test, not the app (see Stage 3).
+
+Options weighed:
+
+| Decision | Options | Chosen |
+|---|---|---|
+| Nav gap (V1) | Side rail from 720px · a top-bar tab row at tablet widths · **bottom nav up to 1023px** | The bottom nav. At 720–1023px a rail would squeeze the grid below its column minimums (it needs ~740px of table), forcing sideways scrolling. A bottom tab bar at tablet widths is what iPad apps do. |
+| Top bar (V2) | Content scrolls inside a fixed frame · **sticky top bar, and the desktop Orders page sized to the screen** | Both halves of the tester's "either/or". Sticky keeps normal page scrolling (and the phone browser's collapsing address bar). Orders on desktop fills exactly the space left, so only the grid scrolls. |
+| Status + Progress (V4) | Keep both · drop Progress · **one status tracker: fixed stops on a line, the current one lit, its name beneath** | The tracker, as the tester described. It's the parcel-tracking pattern people know (Royal Mail, Amazon, Domino's "pizza tracker"). |
+| Group by (V7) | Keep native select · **menu on the same surface as Filters and account** | The menu. One pop-up surface for every pill in the header. |
+
+### Stage 2 — Settled solution (/frontend-design)
+
+**Direction.** Still Harbour; no new colours or faces. The status tracker takes over from the voyage line as the list's signature: a short route with three port-of-call stops. Everything else in this revision is repair and should be invisible.
+
+**V1 — Nav at every width.**
+- Below 1024px: the bottom nav (unchanged look). At ≥1024px: the side rail. Exactly one shows at any width.
+- The 720px breakpoint keeps everything else it controls (sheets vs popovers, cards vs grid). Only the nav moves to 1024px.
+- The page leaves room for the bottom nav whenever it shows.
+
+**V2 — Top bar always in view.**
+- The top bar is sticky at the top of the window at every width, 64px high (new token `--top-bar-height`), above page content but below overlays, sheets and the order drawer.
+- The side rail is sticky too and runs the full window height.
+- **Desktop Orders fits the screen** (≥720px): the Orders page fills exactly the window height minus the top bar (and minus the bottom nav when it shows). The title, toolbar and chips take what they need and the grid takes the rest, scrolling inside itself. The page never scrolls. On a very short window the grid keeps at least 240px and the page may scroll; the sticky top bar still holds.
+- Phone: unchanged, the page scrolls under the sticky top bar.
+
+**V3 — Rail spacing.**
+- Each rail link spans the full rail width (88px). The 3px indicator runs down the rail's left edge; the icon and label stay centred in the link.
+- That leaves at least 12px between the indicator and the label (about 20px for "Orders").
+
+**V4 — Status tracker (replaces the Status chip and the Progress column).**
+
+```
+ Awaiting dispatch          Late                       Shipped
+ (■)━━━━(◷)────(⛴)        (■)━━━━(!)────(⛴)        (■)━━━━(◷)━━━━(✓⛴)
+     Awaiting dispatch           Late                          Shipped
+```
+
+- Three fixed stops, evenly spaced at the start, middle and end of the line. Each has its own icon:
+  1. **Ordered** — a receipt;
+  2. **Dispatch** — a clock (a warning triangle when Late);
+  3. **Shipped** — a ship.
+- Each stop is `done`, `current` or `to do`:
+
+| Status | Stop 1 | Stop 2 | Stop 3 | Name shown beneath |
+|---|---|---|---|---|
+| Awaiting dispatch | done | **current** (amber) | to do | "Awaiting dispatch", centred under stop 2 |
+| Late | done | **current** (red, warning icon) | to do | "Late", centred under stop 2 |
+| Shipped | done | done | **current** (sea-glass) | "Shipped", right-aligned under stop 3 |
+
+- Look:
+  - *Done:* fjord fill, white icon.
+  - *Current:* Awaiting — signal-amber fill, icon and name in amber text #8A5A00. Late — harbour-red fill, white icon, red name. Shipped — sea-glass fill, white icon, name in the existing shipped-text colour.
+  - *To do:* surface fill, 1.5px outline-variant ring, outline-coloured icon.
+  - Line segments leading into a done or current stop are fjord; into a to-do stop, outline-variant. 2px thick.
+- Sizes:
+  - *Compact* (grid and phone cards): 20px stops, 12px icons; the name in Plex Sans 600 12px, line-height 1.25, 4px under the line.
+  - *Large* (order drawer): 32px stops, 18px icons, the name at 14px.
+- The status name is real text (search, sort and screen readers read it). The drawing is decorative (`aria-hidden`); colour is never the only signal, because every stop has its own icon and the current one is named.
+- No motion. It's a list; it should be calm.
+- **Grid:** one "Status" column holds the tracker (min width 168px). The Progress column is removed. Rows grow to 52px to fit the line and the name. Sorting Status sorts by urgency: Late, then Awaiting dispatch, then Shipped (the same order as Group by Status).
+- **Status header tooltip (new copy):** "Each order moves from Ordered, to Awaiting dispatch, to Shipped. Late means it hasn't shipped and is past its due date."
+- **Phone cards:** the tracker replaces both the chip and the route line: order no on the left of the top row, the tracker full width in the middle, items and total along the bottom (as now).
+- **Order drawer:** the large tracker replaces the large voyage line. Under it, a row of three facts: **Ordered** {DD/MM/YYYY} · **Shipped** {DD/MM/YYYY, or "Not yet"} · **Due** {DD/MM/YYYY}. The dates the voyage line used to imply are now written down.
+- The status *filter tabs* keep their coloured dots: they're a legend for the tracker's current-stop colours.
+- The voyage line stays only where it's decoration (the sign-in page) and where B3's Overview is specified to use it. See "Told to WL".
+
+**V5 — Same type in every control.**
+- Every button, input, select and textarea inherits the page's font (a one-line base rule). This fixes the Filters pill and stops the same bug recurring anywhere else.
+- Filters and Group by pills then match exactly: Plex Sans 500, 14px.
+
+**V6 and V7 — One pop-up surface.**
+- Filters (desktop), Group by and the account menu (desktop) all open on one shared surface: white, 14px radius, `--shadow-float`, the 160ms fade-and-rise entry (none under reduced motion).
+- The surface never runs off the screen. It keeps a 16px margin from the window edges; if the room below the trigger is too short, it shrinks to fit. It opens upward only if there's more room above.
+- When shrunk, a surface's own header and footer stay put and only the middle scrolls. For Filters that means "Clear filters" and "Show {n} orders" are always visible.
+
+**V7 — Group by menu (≥720px).**
+- The pill is a button, styled like the Filters pill: group icon, "Group by" in secondary ink, the current choice in 600 (e.g. "Group by **Status**"), then a chevron that turns when open.
+- It opens a menu named "Group by" on the shared surface, right-aligned under the pill, at least 200px wide. The choices are None, Status, Ordered month, Items, Ship to; the current one is checked, with a tick icon (not colour alone).
+- Picking a choice applies it and closes the menu. Esc closes it and returns focus to the pill. Arrow keys move between choices.
+- Phone: unchanged, Group by stays in the Filters sheet.
+
+**Copy glossary changes.**
+- Orders columns: Order no · Ordered · Status · Items · Total · Ship to ("Progress" retired).
+- Tracker stops: Ordered · Awaiting dispatch / Late · Shipped. Drawer facts: Ordered · Shipped · Due · Not yet.
+
+### Stage 3 — Review (/design-reviewer)
+
+**Verdict:** solid after the changes below.
+
+- [x] **Visibility (H1):** the top bar and nav are reachable at every width and scroll position; the status is readable at a glance without a legend.
+- [x] **Match with the real world (H2):** the tracker is the parcel-tracker pattern; the drawer states dates in words instead of implying them by position.
+- [x] **Consistency (H4):** one pop-up surface, one control font, one status picture in grid, cards and drawer.
+- [x] **Minimalism (H8, Rams 10):** one column instead of two; no motion in the list.
+- [x] **Found in review and fixed:** a side rail from 720px would push the grid into sideways scrolling at tablet widths. Changed to the bottom nav up to 1023px.
+- [x] **Found in review and fixed:** the "Shipped" name centred under the last stop would overflow the cell. It's right-aligned to the line's end.
+- [x] **Accessibility:**
+  - the tracker's name is text, and each stop has a distinct icon, so meaning never rests on colour;
+  - red name on white ≈ 4.9:1 and amber text on white ≈ 5.8:1; white icons on the fills are graphics (≥ 3:1);
+  - the Group by menu uses menu/menuitemradio roles with `aria-checked`, with arrow keys and Esc;
+  - the Filters footer is always reachable, so the panel can always be closed without Esc.
+- [x] **The phone account-menu test (DEV's P7 question):** the modal sheet correctly hides the rest of the app from assistive tech, as Angular's dialog always does. The test now finds the trigger by its label instead of its role; the assertion itself (`aria-expanded="true"`) is unchanged.
+- [ ] Row height grows from ~42px to 52px, so fewer orders fit on screen. Acceptable for the demo's order counts (≤ 31); re-check if real customers have hundreds.
+- [ ] Dark-mode values for the tracker's fills are B5's check, as before.
+
+### Told to WL
+- The Overview page (B3, not built yet) is still specified with the voyage line as its hero. Recommend it adopts the status tracker too, so the portal speaks one status language. That's a decision for when B3 is planned.
+- The bottom nav now shows up to 1023px, not just on phones. That's a deliberate change from Revision 2's "phone only".
+
+### Pre-existing, not fixed here
+- `e2e/orders.spec.ts` still duplicates `parseMoney`/`signInAs` (noted since P6).
+- DEV reported `e2e/orders-table.spec.ts` "a cut-off cell shows its full text on hover" and `e2e/orders.spec.ts` "filter Late and open one whose lines sum to its total" as flaky (font-loading and render timing). Not reproduced or fixed here; wants its own issue.

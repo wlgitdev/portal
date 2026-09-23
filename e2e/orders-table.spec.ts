@@ -29,9 +29,7 @@ const HEADER_TOOLTIPS: Record<ColId, string> = {
   orderNo: "Northwind's reference number for this order.",
   orderedOn: 'The date you placed the order.',
   status:
-    'Shipped: on its way to you. Awaiting dispatch: not shipped yet, still on time. Late: not shipped and past its due date.',
-  progress:
-    "The order's journey from ordered, through shipped, to due. The marker shows where it is today.",
+    "Each order moves from Ordered, to Awaiting dispatch, to Shipped. Late means it hasn't shipped and is past its due date.",
   itemCount: 'How many different products are on the order.',
   total: 'Value of the goods after discounts. Freight is charged separately.',
   shipTo: 'Who the order is delivered to.',
@@ -88,6 +86,14 @@ async function chooseCustomDates(page: Page): Promise<void> {
     .click();
 }
 
+async function chooseGroupBy(page: Page, label: string): Promise<void> {
+  await page.getByRole('button', { name: /^Group by/ }).click();
+  await page
+    .getByRole('menu', { name: 'Group by' })
+    .getByRole('menuitemradio', { name: label, exact: true })
+    .click();
+}
+
 async function openFilters(page: Page): Promise<void> {
   const button = page.getByRole('button', { name: /^Filters/ });
   if ((await button.getAttribute('aria-expanded')) !== 'true') {
@@ -99,23 +105,35 @@ async function openFilters(page: Page): Promise<void> {
 test.describe('orders table at desktop width', () => {
   test.use({ viewport: TALL_DESKTOP });
 
-  test('every status chip fits inside its cell', async ({ page }) => {
+  // Pending (DES, P8 R20): the status tracker replaces the status chip.
+  test.skip('every status tracker names its status and fits inside its cell', async ({
+    page,
+    request,
+  }) => {
+    const orders = await fetchOrdersAs(request, 'SAVEA');
     await signInAs(page, 'customer-card-SAVEA');
     await waitForGrid(page);
 
-    const statusCells = cellsInColumn(page, 'status');
-    const count = await statusCells.count();
-    expect(count).toBeGreaterThan(0);
-    for (let i = 0; i < count; i++) {
-      const cellBox = (await statusCells.nth(i).boundingBox())!;
-      const chipBox = (await statusCells.nth(i).locator('app-status-chip').boundingBox())!;
-      expect(chipBox.height, `chip ${i} height`).toBeLessThanOrEqual(24);
-      expect(chipBox.y).toBeGreaterThanOrEqual(cellBox.y - 0.5);
-      expect(chipBox.y + chipBox.height).toBeLessThanOrEqual(cellBox.y + cellBox.height + 0.5);
+    for (const order of orders) {
+      const statusCell = cell(orderRow(page, order.id), 'status');
+      const tracker = statusCell.getByTestId('status-tracker');
+      await expect(tracker).toHaveCount(1);
+      await expect(tracker).toHaveAttribute('data-status', order.status);
+      await expect(tracker.getByTestId('status-tracker-label')).toHaveText(order.status);
+
+      const cellBox = (await statusCell.boundingBox())!;
+      const trackerBox = (await tracker.boundingBox())!;
+      expect(trackerBox.y, `order ${order.id} tracker top`).toBeGreaterThanOrEqual(cellBox.y - 0.5);
+      expect(
+        trackerBox.y + trackerBox.height,
+        `order ${order.id} tracker bottom`,
+      ).toBeLessThanOrEqual(cellBox.y + cellBox.height + 0.5);
+      expect(await isTruncated(statusCell), `order ${order.id} label cut off`).toBe(false);
     }
   });
 
-  test('columns are named plainly, with no "Voyage"', async ({ page }) => {
+  // Pending (DES, P8 R20): Status and Progress merge into one Status column.
+  test.skip('columns are named plainly, with no "Voyage" or "Progress"', async ({ page }) => {
     await signInAs(page, 'customer-card-SAVEA');
     await waitForGrid(page);
 
@@ -123,14 +141,14 @@ test.describe('orders table at desktop width', () => {
       'Order no',
       'Ordered',
       'Status',
-      'Progress',
       'Items',
       'Total',
       'Ship to',
     ]);
   });
 
-  test('hovering each column header explains the column', async ({ page }) => {
+  // Pending (DES, P8 R20): new Status header copy; Progress header removed.
+  test.skip('hovering each column header explains the column', async ({ page }) => {
     await signInAs(page, 'customer-card-SAVEA');
     await waitForGrid(page);
 
@@ -245,7 +263,8 @@ test.describe('orders table at desktop width', () => {
     await expect(page.getByRole('button', { name: 'Filters (2)', exact: true })).toBeVisible();
   });
 
-  test('group by Status shows urgent groups first, with counts and totals', async ({
+  // Pending (DES, P8 R24): Group by is a menu, not a native select.
+  test.skip('group by Status shows urgent groups first, with counts and totals', async ({
     page,
     request,
   }) => {
@@ -257,7 +276,7 @@ test.describe('orders table at desktop width', () => {
     await signInAs(page, 'customer-card-late-orders');
     await waitForGrid(page);
 
-    await page.getByLabel('Group by', { exact: true }).selectOption({ label: 'Status' });
+    await chooseGroupBy(page, 'Status');
 
     const headers = page.getByTestId('order-group').filter({ visible: true });
     await expect(headers).toHaveText(groups.map((g) => groupHeaderText(g.status, g.orders)));
@@ -277,12 +296,13 @@ test.describe('orders table at desktop width', () => {
     expect(currentGroup).toBe(groups.length - 1);
   });
 
-  test('collapsing a group hides its orders', async ({ page, request }) => {
+  // Pending (DES, P8 R24): Group by is a menu, not a native select.
+  test.skip('collapsing a group hides its orders', async ({ page, request }) => {
     const orders = await fetchOrdersAs(request, 'ERNSH');
     const late = orders.filter((o) => o.status === 'Late');
     await signInAs(page, 'customer-card-late-orders');
     await waitForGrid(page);
-    await page.getByLabel('Group by', { exact: true }).selectOption({ label: 'Status' });
+    await chooseGroupBy(page, 'Status');
 
     const lateHeader = page
       .getByTestId('order-group')
@@ -303,11 +323,12 @@ test.describe('orders table at desktop width', () => {
     }
   });
 
-  test('sorting a column keeps rows inside their groups', async ({ page, request }) => {
+  // Pending (DES, P8 R24): Group by is a menu, not a native select.
+  test.skip('sorting a column keeps rows inside their groups', async ({ page, request }) => {
     const orders = await fetchOrdersAs(request, 'ERNSH');
     await signInAs(page, 'customer-card-late-orders');
     await waitForGrid(page);
-    await page.getByLabel('Group by', { exact: true }).selectOption({ label: 'Status' });
+    await chooseGroupBy(page, 'Status');
 
     await headerCell(page, 'total').click();
 
@@ -332,10 +353,7 @@ test.describe('orders table at desktop width', () => {
     expect(groupIndex).toBe(expectedGroups.length - 1);
   });
 
-  test('a search that matches nothing says so, and can be cleared', async ({
-    page,
-    request,
-  }) => {
+  test('a search that matches nothing says so, and can be cleared', async ({ page, request }) => {
     const orders = await fetchOrdersAs(request, 'SAVEA');
     await signInAs(page, 'customer-card-SAVEA');
     await waitForGrid(page);
@@ -398,10 +416,7 @@ test.describe('orders table when space is tight', () => {
 });
 
 test.describe('orders card list grouping on a phone', () => {
-  test('group by Status shows the same group headers as the table', async ({
-    page,
-    request,
-  }) => {
+  test('group by Status shows the same group headers as the table', async ({ page, request }) => {
     const orders = await fetchOrdersAs(request, 'ERNSH');
     const expected = STATUS_GROUP_ORDER.map((status) => ({
       status,
