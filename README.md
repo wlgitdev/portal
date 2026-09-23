@@ -6,47 +6,65 @@ minimal API + a local SQL Server copy of Northwind. See
 `docs/plans/portal-lite-spec.md` / `-design.md` for the full spec and
 design decisions.
 
-This guide gets the app running locally so you can click through it.
-First-time setup takes a while (it installs SQL Server, the .NET SDK, Node
-and a test browser) — budget 10-15 minutes depending on your connection.
+This guide is for **native Windows** — no WSL, no Docker, no admin-level
+virtualisation features. Everything here is a normal desktop install: a
+.NET SDK, Node.js, SQL Server Express, and the app itself. Budget 20-30
+minutes the first time, most of it SQL Server installing.
 
-## Windows 11: install WSL2 first
+Already on Linux (or have WSL2 available and permitted)? Skip to
+[Already on Linux / have WSL2?](#already-on-linux--have-wsl2) — there's a
+script that does the equivalent of this whole page in one command.
 
-The setup script targets Ubuntu, so on Windows you run it inside WSL2
-(Windows Subsystem for Linux) rather than natively. This isn't a
-workaround — it's the normal way to do backend/full-stack dev on Windows,
-and WSL2 forwards `localhost` automatically, so a browser running directly
-on Windows can reach an app served from inside WSL with no extra setup.
+## 1. Install the toolchain
 
-1. Open **PowerShell as Administrator** and run:
+Install these in any order. Each is a normal installer — no admin rights
+beyond what installing any desktop app on this machine already needs.
+
+**.NET 10 SDK** — https://dotnet.microsoft.com/download — pick .NET 10,
+download the Windows x64 installer, run it.
+
+**Node.js 24** — Angular CLI 22 needs Node ^22.22.3, ^24.15.0, or newer.
+The simplest way to get an exact version is
+[nvm-windows](https://github.com/coreybutler/nvm-windows) (a version
+manager, not the WSL-only `nvm` — this one's a native Windows tool):
+
+1. Download and run the installer from that page's Releases.
+2. In a **new** PowerShell window:
    ```powershell
-   wsl --install
+   nvm install 24
+   nvm use 24
+   node --version   # should print v24.x.x
    ```
-   This enables WSL2 and installs Ubuntu. Restart when prompted.
-2. Launch **Ubuntu** from the Start menu. First run asks you to create a
-   Linux username and password (separate from your Windows login) —
-   pick anything, you'll use it for `sudo`.
-3. From here on, every command in this guide runs **inside that Ubuntu
-   window**, not PowerShell or Command Prompt.
 
-Already on native Linux (Ubuntu/Debian) or WSL2? Skip straight to
-[Clone the repo](#1-clone-the-repo). macOS and other Linux distros aren't
-supported by the automated setup script yet (it installs Microsoft's
-Ubuntu/Debian `mssql-server` package directly) — you'd need Docker or a VM
-for SQL Server, which this guide doesn't cover.
+No separate Angular CLI install needed — it's already a project dependency
+(step 5 below), run as `npm start` rather than a global `ng` command. That
+also sidesteps a common Windows gotcha: npm's global `ng` is a `.ps1`
+script, which some locked-down PowerShell execution policies refuse to
+run.
 
-**Tip:** if you use VS Code, install the "WSL" extension, then run `code .`
-from inside your cloned repo in the Ubuntu terminal — it opens a
-Windows VS Code window connected straight to the Linux files.
+**SQL Server 2022 Express** (free) —
+https://www.microsoft.com/en-us/sql-server/sql-server-downloads — pick
+**Express**, run the installer, choose **Basic** install type. Accept the
+defaults; note the instance name it finishes with (normally
+`localhost\SQLEXPRESS`) — you'll need it below. This uses your Windows
+login for database access, so there's no separate database password to
+set up or remember.
 
-## 1. Clone the repo
+**sqlcmd** — the Express installer above usually installs it as part of
+the command-line tools. Check with:
+```powershell
+sqlcmd -?
+```
+If that's not found, install it on its own:
+```powershell
+winget install sqlcmd
+```
+(or search "sqlcmd" at the SQL Server downloads page above if `winget`
+isn't available on this machine either).
 
-Clone into WSL's own filesystem, not `/mnt/c/...` — Windows-drive paths are
-noticeably slower for projects with lots of small files (like
-`node_modules`).
+## 2. Clone the repo
 
-```bash
-cd ~
+```powershell
 git clone https://github.com/wlgitdev/portal.git
 cd portal
 git checkout claude/festive-goodall-htnruv   # or main, once this is merged
@@ -55,71 +73,69 @@ git checkout claude/festive-goodall-htnruv   # or main, once this is merged
 If prompted for credentials, sign in with the GitHub account that has
 access to this repo.
 
-## 2. One-time environment setup
+## 3. Restore Northwind
 
-Pick a password for the local SQL Server instance — 8+ characters with at
-least 3 of: uppercase, lowercase, digit, symbol — and run the setup
-script:
+Replace `SQLEXPRESS` below if your install used a different instance name.
 
-```bash
-export MSSQL_SA_PASSWORD='Ch4nge-Me-Please!'
-bash scripts/dev-setup/setup.sh
+```powershell
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/microsoft/sql-server-samples/master/samples/databases/northwind-pubs/instnwnd.sql" -OutFile "instnwnd.sql"
+sqlcmd -S "localhost\SQLEXPRESS" -E -Q "CREATE DATABASE Northwind"
+sqlcmd -S "localhost\SQLEXPRESS" -E -d Northwind -i instnwnd.sql
+Remove-Item instnwnd.sql
 ```
 
-This installs the .NET 10 SDK, Node 24 + Angular CLI 22, SQL Server 2025
-(Developer edition) + `sqlcmd`, restores a stock copy of Northwind, and
-installs Playwright's browser for the automated tests. It's safe to
-re-run — steps it's already done print `SKIP` instead of repeating.
+`-E` means "use my Windows login" — the same auth the app will use, so
+there's nothing to get out of sync. (This is the same script
+`scripts/dev-setup/05_northwind.sh` runs for the Linux path, with the same
+`CREATE DATABASE` + `-d Northwind` needed first — the script itself says
+"this script does not create a database", so without that it'll happily
+write everything into whatever database you're connected to instead.)
 
-Open a **new Ubuntu terminal** (or run `source ~/.portal-lite-env`) so the
-new tools land on your `PATH`.
+Quick check it worked:
+```powershell
+sqlcmd -S "localhost\SQLEXPRESS" -E -d Northwind -Q "SELECT COUNT(*) FROM dbo.Orders"
+```
+Should print **830**.
 
-The last step prints a connection-string template with your password
-redacted — keep that terminal output handy for the next step.
+## 4. Connect the API to the database
 
-**Every new terminal session after today:** just re-run
-`bash scripts/dev-setup/setup.sh` with the same password — it starts SQL
-Server if it isn't running and confirms everything's in place, in a few
-seconds once already installed.
-
-## 3. Connect the API to the database
-
-The connection string is kept out of the repo via .NET's user-secrets
-(never committed, never logged):
-
-```bash
-cd src/PortalLite.Api
+```powershell
+cd src\PortalLite.Api
 dotnet user-secrets init
-dotnet user-secrets set "ConnectionStrings:Northwind" "Server=localhost,1433;Database=Northwind;User Id=sa;Password=Ch4nge-Me-Please!;Encrypt=True;TrustServerCertificate=True"
-cd ../..
+dotnet user-secrets set "ConnectionStrings:Northwind" "Server=localhost\SQLEXPRESS;Database=Northwind;Trusted_Connection=True;TrustServerCertificate=True"
+cd ..\..
 ```
 
-Use the same password you exported as `MSSQL_SA_PASSWORD` above. You only
-need to do this once — it's saved outside the repo.
+This is saved outside the repo (never committed), and only needs doing
+once.
 
-## 4. Install frontend dependencies
+## 5. Install frontend dependencies
 
-```bash
+```powershell
 npm install
+npx playwright install chromium
 ```
 
-## 5. Run it
+(The second line is only needed if you want to run the automated tests in
+step 7 — skip it if you just want to click through the app.)
 
-Two terminals, both inside WSL, both from the repo root (`~/portal`):
+## 6. Run it
 
-```bash
-# Terminal A — the API, on :5080
-dotnet run --project src/PortalLite.Api
+Two PowerShell windows, both from the repo root (`portal\`):
+
+```powershell
+# Window A — the API, on :5080
+dotnet run --project src\PortalLite.Api
 ```
 
-```bash
-# Terminal B — the SPA, on :4200 (proxies /api to :5080 automatically)
-ng serve
+```powershell
+# Window B — the SPA, on :4200 (proxies /api to :5080 automatically)
+npm start
 ```
 
-Open **http://localhost:4200** in your normal Windows browser.
+Open **http://localhost:4200** in your browser.
 
-## 6. Try it
+## 7. Try it
 
 - Sign in as **Alfreds Futterkiste** (or search "ALFKI") — search orders,
   filter to a status, open one and check the line items add up to the
@@ -129,26 +145,44 @@ Open **http://localhost:4200** in your normal Windows browser.
 - Resize the window below ~720px (or open dev tools' device toolbar) to
   see the card list the Orders screen switches to on a phone.
 
-## 7. Run the automated tests
+## 8. Run the automated tests
 
-```bash
+```powershell
 npx playwright test
 ```
 
-This starts both servers itself if they aren't already running, so it
-also works with nothing set up in a terminal beforehand (as long as steps
-1-4 above have been done at least once).
+This starts both servers itself if they aren't already running.
 
 ## Troubleshooting
 
 | Problem | Try this |
 |---|---|
-| `wsl --install` fails / WSL won't start | Virtualisation is usually off in the BIOS/UEFI. Check Task Manager → Performance → CPU shows "Virtualization: Enabled"; if not, enable it in firmware settings. |
-| Setup script fails on the password check | It needs 8+ characters and 3 of upper/lower/digit/symbol — the example above meets this. |
-| SQL Server won't start / times out | Usually memory. WSL2 defaults to using up to half your RAM; if that's tight, close other apps or raise the limit via a `.wslconfig` file (search "WSL2 .wslconfig memory"). |
-| Ports already in use (4200 / 5080 / 1433) | Something else is using them — stop it, or check `scripts/dev-setup/lib/config.sh` for the port variables if you need to change one. |
-| Things are in a weird state | From **PowerShell**: `wsl --shutdown`, then reopen Ubuntu and re-run `bash scripts/dev-setup/setup.sh`. |
-| `ng serve` / `dotnet run` says a command isn't found | Open a new terminal so the PATH changes from setup take effect, or run `source ~/.portal-lite-env`. |
+| A "Windows Defender Firewall" (or your endpoint security tool's) prompt appears the first time you run `dotnet run` / `npm start` | Allow it for **Private networks** — these are local dev servers, nothing needs to reach the internet. |
+| `sqlcmd -S "localhost\SQLEXPRESS" ...` says it can't connect | Confirm the instance name: open **Services** (`services.msc`) and look for a service called "SQL Server (SQLEXPRESS)" or similar — use whatever's in the parentheses in place of `SQLEXPRESS` above. `sqlcmd -L` lists local instances too. |
+| `dotnet`, `npm` or `node` "not recognized" | Close and reopen PowerShell so the installer's PATH changes take effect. |
+| Setup script check for `Northwind` returns something other than 830 | The restore didn't finish cleanly — drop and redo step 3: `sqlcmd -S "localhost\SQLEXPRESS" -E -Q "DROP DATABASE Northwind"`, then the three commands in step 3 again. |
+| Ports already in use (4200 / 5080) | Something else is using them — close it, or edit `proxy.conf.json` / `src/PortalLite.Api/Properties/launchSettings.json` to change the API's port. |
+
+## Already on Linux / have WSL2?
+
+```bash
+export MSSQL_SA_PASSWORD='Ch4nge-Me-Please!'   # 8+ chars, 3 of: upper/lower/digit/symbol
+bash scripts/dev-setup/setup.sh
+```
+does steps 1, 3 and part of 5 above in one go (installs the .NET SDK,
+Node, Angular CLI, SQL Server, restores Northwind, and gets Playwright's
+browser). It's Ubuntu/Debian-only — on WSL2 that means the Ubuntu distro,
+not Windows itself. From there:
+```bash
+cd src/PortalLite.Api
+dotnet user-secrets init
+dotnet user-secrets set "ConnectionStrings:Northwind" "Server=localhost,1433;Database=Northwind;User Id=sa;Password=Ch4nge-Me-Please!;Encrypt=True;TrustServerCertificate=True"
+cd ../..
+npm install
+```
+then steps 6-8 above are identical. macOS isn't supported by the script
+(no native `mssql-server` package) — you'd need Docker or a VM, which
+this guide doesn't cover.
 
 ## Project layout
 
@@ -158,6 +192,6 @@ src/PortalLite.Api/         .NET minimal API
 src/app/                    Angular app
 src/styles/                 design tokens
 e2e/                        Playwright tests
-scripts/dev-setup/          the setup script this guide runs
+scripts/dev-setup/          Linux/WSL2 one-command setup (see above)
 docs/plans/                 spec, design doc, roadmap
 ```
