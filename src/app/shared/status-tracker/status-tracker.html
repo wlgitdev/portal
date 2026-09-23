@@ -1,0 +1,13 @@
+<div class="track" aria-hidden="true">
+  @for (stop of stops(); track $index; let first = $first) {
+    @if (!first) {
+      <span class="segment" [class.filled]="stop.state !== 'todo'"></span>
+    }
+    <span class="stop" data-testid="status-tracker-stop" [attr.data-state]="stop.state">
+      <app-icon [name]="stop.icon" [size]="iconSize()" />
+    </span>
+  }
+</div>
+<span class="label" data-testid="status-tracker-label" [class.end]="status() === 'Shipped'">{{
+  status()
+}}</span>

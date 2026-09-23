@@ -106,7 +106,7 @@ test.describe('orders table at desktop width', () => {
   test.use({ viewport: TALL_DESKTOP });
 
   // Pending (DES, P8 R20): the status tracker replaces the status chip.
-  test.skip('every status tracker names its status and fits inside its cell', async ({
+  test('every status tracker names its status and fits inside its cell', async ({
     page,
     request,
   }) => {
@@ -133,7 +133,7 @@ test.describe('orders table at desktop width', () => {
   });
 
   // Pending (DES, P8 R20): Status and Progress merge into one Status column.
-  test.skip('columns are named plainly, with no "Voyage" or "Progress"', async ({ page }) => {
+  test('columns are named plainly, with no "Voyage" or "Progress"', async ({ page }) => {
     await signInAs(page, 'customer-card-SAVEA');
     await waitForGrid(page);
 
@@ -148,7 +148,7 @@ test.describe('orders table at desktop width', () => {
   });
 
   // Pending (DES, P8 R20): new Status header copy; Progress header removed.
-  test.skip('hovering each column header explains the column', async ({ page }) => {
+  test('hovering each column header explains the column', async ({ page }) => {
     await signInAs(page, 'customer-card-SAVEA');
     await waitForGrid(page);
 
@@ -264,7 +264,7 @@ test.describe('orders table at desktop width', () => {
   });
 
   // Pending (DES, P8 R24): Group by is a menu, not a native select.
-  test.skip('group by Status shows urgent groups first, with counts and totals', async ({
+  test('group by Status shows urgent groups first, with counts and totals', async ({
     page,
     request,
   }) => {
@@ -297,7 +297,7 @@ test.describe('orders table at desktop width', () => {
   });
 
   // Pending (DES, P8 R24): Group by is a menu, not a native select.
-  test.skip('collapsing a group hides its orders', async ({ page, request }) => {
+  test('collapsing a group hides its orders', async ({ page, request }) => {
     const orders = await fetchOrdersAs(request, 'ERNSH');
     const late = orders.filter((o) => o.status === 'Late');
     await signInAs(page, 'customer-card-late-orders');
@@ -324,7 +324,7 @@ test.describe('orders table at desktop width', () => {
   });
 
   // Pending (DES, P8 R24): Group by is a menu, not a native select.
-  test.skip('sorting a column keeps rows inside their groups', async ({ page, request }) => {
+  test('sorting a column keeps rows inside their groups', async ({ page, request }) => {
     const orders = await fetchOrdersAs(request, 'ERNSH');
     await signInAs(page, 'customer-card-late-orders');
     await waitForGrid(page);

@@ -33,7 +33,7 @@ async function expectTracker(tracker: Locator, order: OrderSummary): Promise<voi
   }
 }
 
-test.describe.skip('status tracker', () => {
+test.describe('status tracker', () => {
   test('grid: each stop reflects the order status, highlighting the current one', async ({
     page,
     request,

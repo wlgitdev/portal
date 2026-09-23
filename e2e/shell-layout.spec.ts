@@ -14,7 +14,7 @@ async function scrollToBottom(page: Page): Promise<void> {
   await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
 }
 
-test.describe.skip('navigation is always reachable', () => {
+test.describe('navigation is always reachable', () => {
   for (const width of [390, 719, 720, 800, 900, 1023, 1024, 1280]) {
     test(`exactly one primary nav shows Orders at ${width}px`, async ({ page }) => {
       await page.setViewportSize({ width, height: 800 });
@@ -82,7 +82,7 @@ test.describe.skip('navigation is always reachable', () => {
   }
 });
 
-test.describe.skip('side rail spacing on desktop', () => {
+test.describe('side rail spacing on desktop', () => {
   test('the active link label keeps clear of its indicator', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 800 });
     await signInAs(page, 'customer-card-ALFKI');

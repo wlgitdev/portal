@@ -23,6 +23,18 @@
   --shadow-float: 0 24px 48px -16px rgb(20 32 46 / 0.45);
   --ease-out-sheet: cubic-bezier(0.2, 0.8, 0.2, 1);
 
+  /* Added in design Revision 4 (P8). */
+  --top-bar-height: 64px;
+  --bottom-nav-height: 56px;
+
+  /* z-index scale (R18) — page chrome above ordinary content (AG Grid
+     headers included), the order drawer above page chrome. CDK overlays
+     (Filters, Group by, account menu, bottom sheets) manage their own via
+     the Angular CDK overlay container, already well above this scale. */
+  --z-top-bar: 1;
+  --z-drawer-backdrop: 2;
+  --z-drawer: 3;
+
   /* Type */
   --font-display: 'Big Shoulders Display', sans-serif;
   --font-body: 'IBM Plex Sans', sans-serif;

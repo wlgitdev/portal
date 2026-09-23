@@ -1,22 +1,17 @@
 import { Component } from '@angular/core';
 import type { ICellRendererAngularComp } from 'ag-grid-angular';
 import type { ICellRendererParams } from 'ag-grid-community';
-import { VoyageLine } from '../../shared/voyage-line/voyage-line';
+import { StatusTracker } from '../../shared/status-tracker/status-tracker';
 import type { OrderSummary } from '../../core/api/models';
 
 @Component({
-  selector: 'app-voyage-cell',
-  imports: [VoyageLine],
+  selector: 'app-status-tracker-cell',
+  imports: [StatusTracker],
   template: `@if (order) {
-    <app-voyage-line
-      [status]="order.status"
-      [orderedOn]="order.orderedOn"
-      [shippedOn]="order.shippedOn"
-      [dueOn]="order.dueOn"
-    />
+    <app-status-tracker [status]="order.status" />
   }`,
 })
-export class VoyageCellRenderer implements ICellRendererAngularComp {
+export class StatusTrackerCellRenderer implements ICellRendererAngularComp {
   protected order?: OrderSummary;
 
   agInit(params: ICellRendererParams<OrderSummary>): void {

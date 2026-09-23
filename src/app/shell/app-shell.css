@@ -10,6 +10,9 @@
   gap: var(--space-5);
   width: 88px;
   flex: none;
+  position: sticky;
+  top: 0;
+  height: 100dvh;
   padding-block-start: var(--space-4);
   background: var(--color-fjord);
 }
@@ -28,6 +31,7 @@
 }
 
 .side-rail a {
+  width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -55,7 +59,11 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--space-3) var(--space-6);
+  height: var(--top-bar-height);
+  padding-inline: var(--space-6);
+  position: sticky;
+  top: 0;
+  z-index: var(--z-top-bar);
   background: var(--color-surface);
   border-block-end: 1px solid var(--mat-sys-outline-variant);
 }
@@ -72,7 +80,6 @@
   border: 1px solid transparent;
   border-radius: var(--radius-pill);
   background: none;
-  font: inherit;
   font-size: var(--text-sm);
   font-weight: 500;
   color: var(--color-deep-water);
@@ -119,39 +126,23 @@
   }
 }
 
+/* Chrome shared with every other desktop pop-up (background, radius,
+   shadow, entry animation) lives once in styles.css as .popover-surface
+   (R23); this only sizes this one popover's own content. */
 .account-menu-popover {
   width: 340px;
   max-width: 90vw;
   max-height: 70vh;
   overflow-y: auto;
-  background: var(--color-surface);
-  border-radius: 14px;
-  box-shadow: var(--shadow-float);
-  animation: popover-in 160ms var(--ease-out-sheet);
-}
-
-/* Runs once per fresh insertion — the overlay recreates this element each
-   time it opens, so no open/close state needs tracking here (R16). */
-@keyframes popover-in {
-  from {
-    opacity: 0;
-    transform: translateY(-4px);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .account-menu-popover {
-    animation: none;
-  }
 }
 
 .content {
   flex: 1;
   min-height: 0;
-  padding-block-end: 64px; /* clears the fixed bottom nav on small viewports */
+  padding-block-end: var(--bottom-nav-height); /* clears the fixed bottom nav wherever it shows */
 }
 
-@media (min-width: 720px) {
+@media (min-width: 1024px) {
   .content {
     padding-block-end: 0;
   }
@@ -164,12 +155,12 @@
   position: fixed;
   inset-inline: 0;
   bottom: 0;
-  height: 56px;
+  height: var(--bottom-nav-height);
   background: var(--color-surface);
   border-block-start: 1px solid var(--mat-sys-outline-variant);
 }
 
-@media (min-width: 720px) {
+@media (min-width: 1024px) {
   .bottom-nav {
     display: none;
   }

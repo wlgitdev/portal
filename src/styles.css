@@ -17,6 +17,38 @@ body {
   background: var(--color-mist);
 }
 
+/* Form controls don't inherit the page font by default (R22) — without
+   this a <button> falls back to the browser's UI font. */
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+/* Shared chrome for every desktop pop-up — Filters, Group by, the account
+   menu (R23). Each root keeps its own width/max-height for its own content;
+   this class owns only what they have in common, plus the one animation. */
+.popover-surface {
+  background: var(--color-surface);
+  border-radius: 14px;
+  box-shadow: var(--shadow-float);
+  animation: popover-in 160ms var(--ease-out-sheet);
+}
+
+@keyframes popover-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .popover-surface {
+    animation: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

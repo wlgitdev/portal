@@ -93,14 +93,16 @@ const wholeMoney = new Intl.NumberFormat('en-GB', {
   currency: 'GBP',
   maximumFractionDigits: 0,
 });
-const STATUS_GROUP_ORDER: OrderStatus[] = ['Late', 'Awaiting dispatch', 'Shipped'];
+// Urgency order, most pressing first — shared by grouping and by the grid's
+// Status column comparator (R20) so there's exactly one definition of it.
+export const STATUS_GROUP_ORDER: OrderStatus[] = ['Late', 'Awaiting dispatch', 'Shipped'];
 export const HISTOGRAM_BIN_COUNT = 16;
 
 export function plural(count: number, word: string): string {
   return `${word}${count === 1 ? '' : 's'}`;
 }
 
-function ukDate(iso: string): string {
+export function ukDate(iso: string): string {
   const [year, month, day] = iso.slice(0, 10).split('-');
   return `${day}/${month}/${year}`;
 }
