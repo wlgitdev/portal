@@ -1,0 +1,20 @@
+@if (chips().length > 0) {
+  <div class="chips" data-testid="active-filters">
+    @for (chip of chips(); track chip.key) {
+      <span class="chip">
+        <span class="chip-text">{{ chip.text }}</span>
+        <button
+          type="button"
+          class="chip-remove"
+          [attr.aria-label]="'Remove filter: ' + chip.text"
+          (click)="remove.emit(chip.key)"
+        >
+          <app-icon name="close" [size]="12" />
+        </button>
+      </span>
+    }
+    @if (chips().length >= 2) {
+      <button type="button" class="clear-all" (click)="clearAll.emit()">Clear all</button>
+    }
+  </div>
+}

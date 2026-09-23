@@ -36,8 +36,7 @@ test.describe('sign in and browse orders', () => {
     await expect(rows.first().getByTestId('order-row-number')).toHaveText(firstOrderNumber);
   });
 
-  // Pending again (DES, P7 R11): the Status select became tabs with counts.
-  test.skip('filter Late and open one whose lines sum to its total', async ({ page }) => {
+  test('filter Late and open one whose lines sum to its total', async ({ page }) => {
     await signInAs(page, 'customer-card-late-orders');
     await expect(page).toHaveURL(/\/orders$/);
 

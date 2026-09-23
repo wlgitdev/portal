@@ -70,7 +70,7 @@ async function chipTexts(page: Page): Promise<string[]> {
   return names.map((name) => (name ?? '').replace(/^Remove filter: /, '').trim());
 }
 
-test.describe.skip('finding orders on desktop', () => {
+test.describe('finding orders on desktop', () => {
   test.use({ viewport: TALL_DESKTOP });
 
   test('status tabs count what the search leaves, and filter by status', async ({
@@ -342,7 +342,7 @@ test.describe.skip('finding orders on desktop', () => {
   });
 });
 
-test.describe.skip('finding orders on a phone', () => {
+test.describe('finding orders on a phone', () => {
   test.use({ viewport: PHONE });
 
   test('Filters opens a sheet whose button shows the live result count', async ({
