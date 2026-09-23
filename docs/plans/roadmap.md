@@ -39,7 +39,9 @@ item 1:
  - the table should allow searching, grouping, filtering by every displayed column
    → Search now covers every column. A new "Filters" panel has a field for each column, and there's a new "Group by" choice (Status, Ordered month, Items, Ship to). A message now shows when nothing matches. (P6 R3–R5)
    → Not included, by design: grouping by Order no or Total (almost every group would hold one order), and a separate Progress filter (Ordered and Status already cover it). WL to confirm with the tester.
-
+ - Sign out: look at prior art for this functionality at the moment it looks pretty bad, especially on mobile
+ - List: it looks pretty bad right now when empty again look at prior art for what to display here. 
+ - Filters: it’s all pretty bad ux, esp on mobile. This won’t impress anybody again. Look at prior art that is well loved for this functionality.
 Item 2:
  - in mobile mode, the orders option just shows as a dot. it's unclear to the user what it's supposed to be.
    → Every menu item shows a picture and its name, on phone and desktop. (P6 R7)
