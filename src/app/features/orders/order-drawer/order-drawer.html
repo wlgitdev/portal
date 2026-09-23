@@ -60,12 +60,22 @@
       <footer class="totals">
         <div class="freight-row">
           <span>Freight</span>
-          <span class="mono">{{ formatMoney(order.freight) }}</span>
+          <span class="mono" data-testid="order-drawer-freight">{{
+            formatMoney(order.freight)
+          }}</span>
         </div>
         <div class="total-row">
           <span>Total</span>
           <span class="mono" data-testid="order-drawer-total">{{ formatMoney(order.total) }}</span>
         </div>
+        <button
+          type="button"
+          class="download-button"
+          [disabled]="downloadingDeliveryNote()"
+          (click)="downloadDeliveryNote()"
+        >
+          Download delivery note
+        </button>
       </footer>
     }
   </aside>

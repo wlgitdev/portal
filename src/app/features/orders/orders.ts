@@ -8,6 +8,7 @@ import {
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { EmptyState } from '../../shared/empty-state/empty-state';
+import { formatMoney } from '../../shared/format-money';
 import { OrdersStore } from '../../core/orders/orders-store';
 import { PageHeader } from '../../shared/page-header/page-header';
 import { Skeleton } from '../../shared/skeleton/skeleton';
@@ -21,7 +22,6 @@ import type { OrderStatus, OrderSummary } from '../../core/api/models';
 type StatusFilter = 'All' | OrderStatus;
 const STATUS_OPTIONS: StatusFilter[] = ['All', 'Shipped', 'Awaiting dispatch', 'Late'];
 
-const money = new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' });
 function orderNumber(order: OrderSummary): string {
   return `#${order.id}`;
 }
@@ -83,7 +83,7 @@ export class Orders {
     {
       headerName: 'Total',
       field: 'total',
-      valueFormatter: (p) => money.format(p.value),
+      valueFormatter: (p) => formatMoney(p.value),
       cellClass: 'mono',
       flex: 1,
     },
@@ -92,7 +92,7 @@ export class Orders {
 
   protected orderNumber = orderNumber;
   protected formatDate = formatDate;
-  protected formatMoney = (value: number) => money.format(value);
+  protected formatMoney = formatMoney;
   protected readonly getRowId = (params: GetRowIdParams<OrderSummary>) => String(params.data.id);
   protected readonly gridTheme = themeQuartz;
 

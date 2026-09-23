@@ -7,7 +7,7 @@ import { isA4Portrait, readPdf, withoutWhitespace } from './support/pdf';
 // To test: open an order, download its delivery note, check the PDF totals
 // match the screen.
 // Rule 3b: DEV may only remove this .skip, never edit the assertions below.
-test.describe.skip('download a delivery note', () => {
+test.describe('download a delivery note', () => {
   // ALFKI's order 10643 has a 25% discount on every line, so it proves the
   // PDF carries the discounted amounts the drawer shows, not list price x qty.
   const DISCOUNTED_ORDER_ID = 10643;

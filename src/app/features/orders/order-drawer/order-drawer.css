@@ -106,3 +106,29 @@ header {
   font-weight: 600;
   color: var(--color-deep-water);
 }
+
+.download-button {
+  font: inherit;
+  font-weight: 600;
+  margin-top: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--color-fjord);
+  color: white;
+  cursor: pointer;
+}
+
+.download-button:hover:not(:disabled) {
+  background: var(--color-deep-water);
+}
+
+.download-button:focus-visible {
+  outline: 2px solid var(--color-fjord);
+  outline-offset: 1px;
+}
+
+.download-button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
