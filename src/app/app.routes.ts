@@ -1,5 +1,6 @@
 import type { Routes } from '@angular/router';
 import { authGuard } from './core/auth/auth.guard';
+import { unsavedChangesGuard } from './core/routing/unsaved-changes.guard';
 
 export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'sign-in' },
@@ -15,6 +16,11 @@ export const routes: Routes = [
       {
         path: 'orders',
         loadComponent: () => import('./features/orders/orders').then((m) => m.Orders),
+      },
+      {
+        path: 'account',
+        loadComponent: () => import('./features/account/account').then((m) => m.Account),
+        canDeactivate: [unsavedChangesGuard],
       },
     ],
   },

@@ -103,3 +103,35 @@ FROM dbo.[Order Details] od
 JOIN dbo.Products p ON p.ProductID = od.ProductID
 WHERE od.OrderID = @orderId
 ORDER BY p.ProductName;
+
+-- ============================================================
+-- CustomerProfile — GET /api/me and PUT /api/me
+-- Params (both): @customerId nchar(5)
+-- Params (update only): @contactName nvarchar(30), @address nvarchar(60), @city nvarchar(15),
+--                        @region nvarchar(15), @postalCode nvarchar(10), @country nvarchar(15),
+--                        @phone nvarchar(24), @fax nvarchar(24)
+-- companyName is never written: the Account screen shows it read-only.
+-- ============================================================
+SELECT
+    CompanyName AS companyName,
+    ContactName AS contactName,
+    Address     AS address,
+    City        AS city,
+    Region      AS region,
+    PostalCode  AS postalCode,
+    Country     AS country,
+    Phone       AS phone,
+    Fax         AS fax
+FROM dbo.Customers
+WHERE CustomerID = @customerId;
+
+UPDATE dbo.Customers
+SET ContactName = @contactName,
+    Address     = @address,
+    City        = @city,
+    Region      = @region,
+    PostalCode  = @postalCode,
+    Country     = @country,
+    Phone       = @phone,
+    Fax         = @fax
+WHERE CustomerID = @customerId;

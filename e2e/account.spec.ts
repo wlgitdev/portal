@@ -5,7 +5,7 @@ import { navigateTo, signInBySearch } from './support/portal';
 // To test: enter letters in Phone and try saving; fix it, save, reload and
 // check it stuck.
 // Rule 3b: DEV may only remove this .skip, never edit the assertions below.
-test.describe.skip('edit account details', () => {
+test.describe('edit account details', () => {
   // These tests write to dbo.Customers. BLAUS is used so the demo customers
   // (ALFKI, SAVEA, ERNSH) are never touched, and serial mode stops two tests
   // racing on the same row.

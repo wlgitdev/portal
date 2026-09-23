@@ -17,12 +17,14 @@ interface NavItem {
   icon: NavIconName;
 }
 
-// Nav carries only the destinations that actually exist. Overview, Spend,
-// Schedule and Account land with their own bundles (B3/B4) — a link to a
-// page that isn't built yet would be a dead affordance, not a shortcut.
-// Icons for all five are drawn in NavIcon now (P6 R7) so those bundles only
-// add an entry here.
-const NAV_ITEMS: NavItem[] = [{ label: 'Orders', path: '/orders', icon: 'orders' }];
+// Nav carries only the destinations that actually exist. Overview, Spend and
+// Schedule land with bundle B3 — a link to a page that isn't built yet would
+// be a dead affordance, not a shortcut. Icons for all five are drawn in
+// NavIcon already (P6 R7) so B3 only needs to add its entries here.
+const NAV_ITEMS: NavItem[] = [
+  { label: 'Orders', path: '/orders', icon: 'orders' },
+  { label: 'Account', path: '/account', icon: 'account' },
+];
 
 // Right edge of the trigger to the right edge of the menu, opening downward
 // (design Revision 3: the account menu is right-aligned under the trigger).
@@ -32,7 +34,16 @@ const ACCOUNT_MENU_POSITIONS: ConnectedPosition[] = [
 
 @Component({
   selector: 'app-shell',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, NavIcon, Icon, Monogram, CdkMenuTrigger, AccountMenu],
+  imports: [
+    RouterOutlet,
+    RouterLink,
+    RouterLinkActive,
+    NavIcon,
+    Icon,
+    Monogram,
+    CdkMenuTrigger,
+    AccountMenu,
+  ],
   templateUrl: './app-shell.html',
   styleUrl: './app-shell.css',
 })
