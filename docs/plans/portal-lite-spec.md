@@ -128,12 +128,99 @@ proof:
   proves: "the demo itself works, not just the software"
 ```
 
+## P6 — Rework after testing (DES, 23/09/2026)
+
+Source: roadmap "Tester Comments" on items 1 and 2. Design settled in
+`portal-lite-design.md` → "Revision 2". This phase **extends** P3/P4; it doesn't replace them.
+
+```yaml
+phase: P6
+component: Orders find/group/filter, grid fixes, sign-out, labelled nav
+requirements:
+  R1_chip:        # T1 — bundle B1
+    - status-chip sets its own line-height (1.25); never inherits the grid cell's
+    - grid status cell centres the chip vertically; chip height ≤ 24px, box inside its cell
+  R2_columns:     # T2, T4 + date/number findings — bundle B1
+    - colIds pinned: orderNo, orderedOn, status, progress, itemCount, total, shipTo
+    - header names, in order: Order no, Ordered, Status, Progress, Items, Total, Ship to  # "Voyage" gone
+    - headerTooltip per column = design Revision 2 copy table, verbatim
+    - Ordered displays DD/MM/YYYY (en-GB, 2-digit day and month, 4-digit year)
+    - minWidth so Order no, Ordered, Status, Items, Total never truncate; Items + Total right-aligned
+    - tooltips: grid tooltipShowMode 'whenTruncated', tooltipShowDelay 400; every text column's tooltip value = its displayed text
+    - header tooltips must always show, but 'whenTruncated' is grid-wide and also suppresses untruncated header tooltips.
+      AG Grid skips that header check when colDef.headerComponent is set, so every column sets headerComponent: 'agColumnHeader'
+      (the built-in header, named explicitly; sorting UI unchanged). This deviates from the obvious config, so it carries a
+      why-not-the-obvious-way comment. Verified by DES against ag-grid-community 35.3 on 23/09/2026.
+    - Status and Progress (cell renderers) get no cell tooltip value: in 'whenTruncated' mode AG Grid skips the truncation check
+      for renderer cells, so any value there would show on every hover
+  R3_find:        # T5 — bundle B1; one pure module feeds both views
+    - new file src/app/features/orders/order-view.ts, framework-free, exporting:
+        OrderFilters (type), GroupBy = 'none'|'status'|'orderedMonth'|'itemCount'|'shipTo',
+        displayedText(order) -> per-column display strings (single source for grid valueFormatters, cards, search, tooltips),
+        buildOrderView(orders, { search, filters, groupBy }) -> { groups: OrderGroup[] } where OrderGroup = { key, label, orders, total }
+        (groupBy 'none' -> one group, key 'all', whose header is not rendered)
+    - search: case-insensitive substring over displayedText of Order no, Ordered, Status, Items, Total, Ship to;
+      money also matched with "£" and "," stripped from both sides
+    - filters (AND): orderNoContains, orderedFrom/orderedTo (inclusive dates), status, itemsFrom/itemsTo, totalFrom/totalTo (inclusive), shipToContains
+    - group order: status Late → Awaiting dispatch → Shipped; orderedMonth newest first, label "September 2026";
+      itemCount ascending, label "3 items" / "1 item"; shipTo A–Z; empty groups never emitted
+    - orders.ts keeps signals for search/filters/groupBy/collapsed-groups and calls buildOrderView; no filtering logic stays in the component
+  R4_grid_groups: # T5 — bundle B1
+    - grid rowData = group header rows + order rows, flattened; group rows use isFullWidthRow + a fullWidthCellRenderer
+    - group row id: "group:{key}"; order row id: String(order.id) (unchanged)
+    - group header: container with data-testid order-group holding exactly one button (aria-expanded) whose text is the whole header: "{label} · {n} order|orders · {formatMoney(total)}"
+    - collapsing removes that group's order rows; all groups re-expand when groupBy changes
+    - sorting: postSortRows re-partitions sorted rows into the fixed group order, header first — rows sort within groups
+  R5_page_header: # T5 — bundle B1
+    - order: search (placeholder "Search all columns", testid orders-search kept), Status select (testid orders-status-filter kept, now with a visible label "Status"),
+      button "Filters" / "Filters (n)" with aria-expanded + aria-controls (n = filled panel fields, +1 if Status ≠ All; panel date inputs are type="date"), select labelled "Group by" with options None / Status / Ordered month / Items / Ship to
+    - Filters panel field labels, exact: Order no contains, Ordered from, Ordered to, Items from, Items to, Total from, Total to, Ship to contains;
+      button "Clear filters" resets panel + Status only
+    - card view (<720px): same groups as section headings with the same order-group button; same filters and search
+    - no-matches: testid orders-no-matches, text "No orders match your search or filters.", button "Clear search and filters" (resets search, panel, Status; not Group by)
+    - orders-empty-state ("No orders yet…") only when the customer has zero orders
+  R6_sign_out:    # T3 — bundle B1
+    - top bar right: "Signed in as {customerId}" + text button "Sign out", visible at 360px and desktop
+    - CustomerSession.signOut(): clears storage + signal; OrdersStore drops cached list and selected order
+      (the resource must not replay the previous customer's value when the next customer signs in)
+    - navigate to /sign-in with replaceUrl
+  R7_nav:         # T6 — bundle B2
+    - every nav item (bottom nav and side rail) renders a 20px inline SVG icon (aria-hidden) + always-visible text label; accessible name = label
+    - icon set drawn now for Overview, Orders, Spend, Schedule, Account; NAV_ITEMS still lists only built pages
+    - bottom-nav link hit area ≥ 48px tall; active item: label in --mat-sys-primary + 3px indicator
+acceptance:  # each line is one test in the files named under "Bundles"
+  B1:
+    - given 1280px and SAVEA, every status chip is ≤ 24px tall and inside its cell
+    - given 800px and SAVEA, headers read Order no … Ship to in order, no "Voyage"
+    - given any header hovered, its tooltip shows the Revision 2 copy
+    - given 800px, a truncated Ship to cell hovered shows a tooltip with its full text; an untruncated cell shows none; Total and Order no cells are never truncated
+    - given SAVEA, Ordered cells show DD/MM/YYYY matching the API's orderedOn
+    - given search by a displayed date, a total (with and without £/commas), a status and a ship-to name, every remaining row contains the term and the source order remains
+    - given each Filters field, the rows left equal the API oracle's count under the same rule; Filters (n) counts active fields; Clear filters restores all rows
+    - given Group by Status, group headers appear Late → Awaiting dispatch → Shipped with oracle counts and sums; collapsing one hides its rows and sets aria-expanded=false
+    - given Group by Status at 390px, the card list shows the same group headers
+    - given filters that match nothing, orders-no-matches shows, orders-empty-state does not; Clear search and filters restores rows
+    - given Sign out, the URL is /sign-in, /orders redirects to /sign-in, and signing in as ERNSH shows exactly ERNSH's order ids
+  B2:
+    - given 390px, every bottom-nav link shows its label text and an icon, and is ≥ 48px tall
+    - given 1280px, every side-rail link shows its label text and an icon
+```
+
+**Bundle impact.** B1 and B2 re-enter at **Waiting for Dev (failed)**. P6 R1–R6
+feed B1 and R7 feeds B2. B3–B5 aren't touched, but inherit R7's nav and R6's top bar.
+
+**Rule 3b.** The new pending tests are `e2e/orders-table.spec.ts` (B1) and
+`e2e/shell.spec.ts` (B1 sign-out, B2 nav). They read grid DOM through
+`e2e/support/grid.ts`, which is the only place allowed to touch AG Grid classes. DEV
+removes only the `.skip`. The existing `orders.spec.ts` and `delivery-note.spec.ts`
+must keep passing unchanged.
+
 ## Bundles (tester-testable units → roadmap items)
 
 | Bundle | Phases | Test file (Playwright, pending) |
 |---|---|---|
-| B1 Sign in and browse my orders | P1–P4 (sign in, orders, drawer) | e2e/orders.spec.ts |
-| B2 Download a delivery note | P4 (pdf) | e2e/delivery-note.spec.ts |
+| B1 Sign in and browse my orders | P1–P4 (sign in, orders, drawer) + P6 R1–R6 | e2e/orders.spec.ts, e2e/orders-table.spec.ts, e2e/shell.spec.ts (sign out) |
+| B2 Download a delivery note | P4 (pdf) + P6 R7 | e2e/delivery-note.spec.ts, e2e/shell.spec.ts (nav labels) |
 | B3 See spend and schedule | P4 (overview, spend, schedule) | e2e/spend-schedule.spec.ts |
 | B4 Edit my account details | P2 PUT, P4 account | e2e/account.spec.ts |
 | B5 Switch brand and dark mode | P3 | e2e/branding.spec.ts |
@@ -238,3 +325,5 @@ Decisions settled here so DEV doesn't have to:
 ### Pre-existing, not fixed here
 - `e2e/orders.spec.ts` (B1) keeps its own copies of `parseMoney`/`signInAs`, now duplicated in `e2e/support/portal.ts`. Left alone because B1 is awaiting release.
 - The shell's side-rail wordmark ("NW") and top-bar wordmark are two elements; B5 needs only the top-bar one to carry `data-testid="wordmark"`.
+- (Found 23/09/2026, P6 verification.) `scripts/dev-setup` installs Node 22.22.2, but Angular CLI 22 needs ≥ 22.22.3, so `ng serve` and Playwright's webServer refuse to start on a fresh setup. DES verified P6 on Node 22.22.3.
+- (Found 23/09/2026.) The cloud environment's `MSSQL_SA_PASSWORD` fails SQL Server's complexity rule, so `setup.sh` stops at preflight until a stronger value is set.

@@ -84,8 +84,8 @@ All faces self-hosted via @fontsource (OFL); no runtime Google CDN.
 - Next due date.
 
 **3. Orders**
-- Desktop (AG Grid) columns: Order no (mono), Ordered, Status chip, mini voyage, Items, Total, Ship to.
-- Quick search, a status filter (All / Shipped / Awaiting dispatch / Late) and Export CSV.
+- Desktop (AG Grid) columns: Order no (mono), Ordered, Status chip, Progress (mini voyage line), Items, Total, Ship to. *Revised: see Revision 2.*
+- Quick search, a status filter (All / Shipped / Awaiting dispatch / Late) and Export CSV. *Extended by Revision 2 with search across all columns, a Filters panel and Group by.*
 - Row click opens a right-hand drawer: large voyage line, lines table, totals, **View delivery note** and **Download delivery note**.
 - Below 720px: card list instead of the grid.
 
@@ -108,7 +108,7 @@ All faces self-hosted via @fontsource (OFL); no runtime Google CDN.
 - Company name is read-only.
 - Inline errors, "Save changes" button, "Changes saved" toast, and an unsaved-changes guard.
 
-**Global:** header has a light/dark/system switch and a **Brand preview** menu.
+**Global:** header has a light/dark/system switch, a **Brand preview** menu and **Sign out** (Revision 2).
 
 ### Wireframes
 
@@ -141,6 +141,9 @@ One name per action, used identically everywhere.
 - **Statuses:** Shipped · Awaiting dispatch · Late
 - **Actions:** View delivery note · Download delivery note
 - **Account form:** Save changes → toast "Changes saved"
+- **Orders columns:** Order no · Ordered · Status · Progress · Items · Total · Ship to (Revision 2)
+- **Orders find:** Search all columns · Filters · Clear filters · Group by · Clear search and filters
+- **Session:** Signed in as {ID} · Sign out
 - **Errors:** say what is wrong and how to fix it, e.g. "Phone can only contain digits, spaces, +, ( ) and -".
 
 ### Angular talking points
@@ -185,3 +188,148 @@ All reversed if the demo is won:
 - PDF is rendered client-side with pdfmake, not server-side.
 - Typed client is hand-written, not NSwag.
 - No Tailwind; CSS grid plus tokens only.
+## Revision 2 — tester feedback on items 1 and 2 (23/09/2026)
+
+Interface: **Web**. Source: roadmap "Tester Comments", items 1 and 2 failed.
+Each finding below is traced to its root cause, then settled.
+The spec phase that builds it is **P6** in `portal-lite-spec.md`.
+
+### Stage 1 — What went wrong (/design-expert)
+
+| # | Tester said | Real problem | Root cause |
+|---|---|---|---|
+| T1 | Status label too tall for the cells (desktop) | The chip fills the whole row height | The grid gives each cell a line-height equal to the row height. The chip has no line-height of its own, so it inherits that. |
+| T2 | Expect a tooltip on hover when text is cut off | Cut-off text (e.g. long ship-to names) can't be read | No tooltip was designed |
+| T3 | No way to log out or switch users | A demo can't change customer without clearing browser storage | Sign-out was never designed. The top bar shows only the customer ID. |
+| T4 | "Voyage" column meaning unclear; wants header tooltips | Headers don't explain themselves. "Voyage" is our brand metaphor, not the buyer's word. | The design named the column after the signature graphic, not what it tells the buyer |
+| T5 | Search, group and filter by every displayed column | Search covers 2 of 7 columns. Filtering covers only status. There's no grouping. | The scope was set at "quick search + status filter" |
+| T6 | Mobile: the Orders option is just a dot | The bottom nav has no words and no icon | The shell stub's placeholder dot shipped as final. The wireframe's icons (▣ ≡ £ ▦ ☺) were never drawn. |
+| — | *(found while settling T5)* Ordered shows "02 Sep" with no year | Orders span more than a year, so the date is ambiguous. Date filtering and grouping can't be explained without the year. | The short date format was chosen for space |
+| — | *(found while settling T5)* Filtering everything away shows "No orders yet…" | The screen claims the customer has no orders when they do | One empty state serves two situations |
+
+Options for T5 grouping, weighed against the licence rule (MIT/Apache only):
+
+| Option | Verdict |
+|---|---|
+| AG Grid row grouping | **Rejected.** It's Enterprise-only, so it breaks the zero-licence-cost promise (demo beat 8). |
+| Our own grouping, drawn as full-width group rows in the grid and headed sections in the card list | **Chosen.** Community-only, and the same logic serves both views. |
+| Swap the grid library | Rejected. Too big a change for rework, and it discards B1's work. |
+
+Options for T5 column filters:
+
+| Option | Verdict |
+|---|---|
+| AG Grid floating filters in the header | **Rejected.** Status needs the Set Filter (Enterprise), so it would be a custom component. The built-in filters would also hide our group rows, and none of it reaches the phone card list. |
+| One "Filters" panel with a labelled field per column, feeding the same filter logic for grid and cards | **Chosen.** Single source of truth, works at 360px, and every field has a real label. |
+
+### Stage 2 — Settled solution (/frontend-design)
+
+**Status chip (T1).**
+- The chip sets its own line-height (1.25), so it's the same height in a grid cell, a card and the drawer.
+- In a grid cell it's vertically centred.
+- Height ≤ 24px, and it stays fully inside its cell.
+
+**Tooltips on cut-off cells (T2).**
+- Uses the grid's own tooltip, set to show **only when the text is truncated**, after a 400ms delay.
+- The tooltip shows the full text exactly as the cell displays it.
+- Applies to every text column: Order no, Ordered, Items, Total, Ship to.
+- Status never truncates: the column gets a minimum width that fits "Awaiting dispatch".
+- Progress is a graphic, so it doesn't get a truncation tooltip.
+- Header tooltips always show on hover, whether or not the header is cut off. The spec settles how the grid does this.
+- Numbers never truncate. Order no, Ordered, Items and Total each get a minimum width that fits their widest value, and Items and Total are right-aligned, as figures conventionally are. When space is short, Ship to is the column that gives way. (Found while probing: at 800px, "£12,615.05" was being cut off.)
+
+**Sign out (T3).**
+- The top bar's right side reads `Signed in as ALFKI` followed by a text button, **Sign out**. It's visible at every width.
+- Sign out does four things:
+  1. forgets the customer;
+  2. drops the cached order list and any open order;
+  3. goes to the sign-in page, replacing the history entry so Back doesn't return into the portal;
+  4. makes sure the next customer never sees the previous customer's orders, not even for a moment.
+- Switching customer means Sign out, then pick again. There's one path, and the sign-in page already says "choose a customer".
+- There's no confirm dialog. Nothing is unsaved in B1/B2. B4's leave-guard covers Account, because sign-out is a route change.
+
+**Column names and header tooltips (T4).**
+- "Voyage" becomes **Progress**. The voyage line stays as the picture; the brand name stays out of the UI copy.
+- Every header shows a tooltip on hover, with this copy (added to the glossary):
+
+| Column | Header tooltip |
+|---|---|
+| Order no | Northwind's reference number for this order. |
+| Ordered | The date you placed the order. |
+| Status | Shipped: on its way to you. Awaiting dispatch: not shipped yet, still on time. Late: not shipped and past its due date. |
+| Progress | The order's journey from ordered, through shipped, to due. The marker shows where it is today. |
+| Items | How many different products are on the order. |
+| Total | Value of the goods after discounts. Freight is charged separately. |
+| Ship to | Who the order is delivered to. |
+
+**Ordered date.** Shown as DD/MM/YYYY (e.g. 02/09/2026), in the grid and anywhere else the order date appears in a list.
+
+**Find orders (T5).** The page header holds, left to right:
+1. **Search**, with the placeholder "Search all columns".
+   - It matches the displayed text of Order no, Ordered, Status, Items, Total and Ship to.
+   - It ignores case and surrounding spaces. Money matches with or without the "£" and thousands commas, so "1204.5" finds £1,204.50.
+2. **Status** select: All / Shipped / Awaiting dispatch / Late. Unchanged from B1; it stays one tap away because it's the most-used filter.
+3. **Filters** button, with a count when active, e.g. "Filters (2)". It opens a panel below the header, with `aria-expanded`.
+4. **Group by** select: None / Status / Ordered month / Items / Ship to.
+
+**Filters panel.** One labelled field per column:
+
+| Column | Field(s) — exact labels |
+|---|---|
+| Order no | "Order no contains" (text) |
+| Ordered | "Ordered from", "Ordered to" (dates, inclusive) |
+| Status | the header Status select (above) |
+| Items | "Items from", "Items to" (whole numbers, inclusive) |
+| Total | "Total from", "Total to" (£, inclusive) |
+| Ship to | "Ship to contains" (text) |
+| Progress | none — see note below |
+
+Notes on the Filters panel:
+- **Progress** has no field. It's a picture of the order date, status and due date. You filter it through Ordered and Status.
+- There's a **Clear filters** button, which resets the panel fields and the Status select. Search and Group by are left alone.
+- Filters combine with AND.
+- Below 720px the panel stacks one field per row.
+
+**Group by.**
+- Group order:
+  - Status: Late, Awaiting dispatch, Shipped (urgent first).
+  - Ordered month: newest first, labelled "September 2026".
+  - Items: ascending, labelled "3 items".
+  - Ship to: A–Z.
+- Order no and Total aren't offered. Every order number is unique, and totals are continuous amounts, so a group would almost always hold one order. This is deliberate; see "Told to WL" below.
+- Each group header reads `{label} · {n} order(s) · {sum of totals}`, e.g. "Late · 3 orders · £1,234.50". It's a button that collapses and expands the group, with `aria-expanded`. Every group starts expanded, and they all expand again when Group by changes.
+- In the grid, the header is a full-width row. In the card list, it's a section heading.
+- Column sorting still works while grouped: rows sort **within** each group, and groups keep their order.
+
+**No matches.**
+- When a search or filter hides every order, the screen says "No orders match your search or filters." and shows a **Clear search and filters** button.
+- The existing "No orders yet…" state stays for customers with no orders at all.
+
+**Navigation labels (T6).**
+- Every nav item, in both the bottom nav (<720px) and the side rail (≥1024px), shows a 20px line icon **and** its text label, which is always visible.
+- Icons follow the wireframe glyphs: Overview ▣ grid, Orders ≡ list, Spend £, Schedule ▦ calendar, Account ☺ person.
+- Icons are inline SVG with `aria-hidden`, so no icon-font dependency. The label is the accessible name.
+- Tap target is at least 48px high.
+- The active item shows its label in the primary colour plus a 3px indicator bar.
+- Only nav items whose pages exist are shown, as now. The icons for later items are drawn now so B3/B4 only add entries.
+
+### Stage 3 — Review (/design-reviewer)
+
+- [x] Recognition over recall: headers explain themselves, and nav shows words, not dots.
+- [x] Honest states: the no-matches state is separate from no-orders, and sign-out never shows the previous customer's data.
+- [x] Consistency: one filter model, one grouping model, and the same glossary words in both views.
+- [x] Accessibility:
+  - every filter field has a visible label;
+  - group toggles and the Filters button expose `aria-expanded`;
+  - the chip keeps text plus icon;
+  - nav labels are the accessible names.
+- [x] Licence: no Enterprise grid feature is used (grouping and filtering are our own).
+- [x] Cognitive load: the rarely-used filters sit behind one button with a count; Status stays one tap away.
+- [ ] Hover tooltips don't exist on touch. That's acceptable: the grid is desktop-only, and cards wrap rather than truncate. Re-check if cards ever truncate.
+- [ ] Grid tooltip colours in dark mode are B5's check, not this rework's.
+
+### Told to WL
+- Grouping by Order no and Total is deliberately not offered; see the Group by notes above. Progress has no filter of its own, because it's filtered through Ordered and Status. If the tester reads "every column" literally, this is a design call for WL to confirm.
+
+### Pre-existing, not fixed here
+- `e2e/orders.spec.ts` still duplicates the `parseMoney`/`signInAs` helpers (already noted in the spec).
