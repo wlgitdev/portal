@@ -1,7 +1,7 @@
 import { test, expect, type Page } from '@playwright/test';
 import { fetchOrdersAs, signInAs } from './support/portal';
 
-// Spec P6 R6 (bundle B1) and R7 (bundle B2), design "Revision 2".
+// Spec P7 R8–R10 (bundle B1) and P6 R7 (bundle B2); design "Revision 3" / "Revision 2".
 // Rule 3b: DEV may only remove the .skip markers, never edit the assertions.
 
 const DESKTOP = { width: 1280, height: 800 };
@@ -32,38 +32,22 @@ async function expectLabelledNavLinks(page: Page, minHeight: number): Promise<vo
   }
 }
 
-test.describe('sign out (B1)', () => {
-  for (const [label, viewport] of [
-    ['phone', { width: 390, height: 844 }],
-    ['desktop', DESKTOP],
-  ] as const) {
-    test(`Sign out is in the top bar on ${label}`, async ({ page }) => {
-      await page.setViewportSize(viewport);
-      await signInAs(page, 'customer-card-ALFKI');
+// Pending again (DES, P7 R8–R10): identity moved into an account menu.
+test.describe.skip('account menu: switch customer and sign out (B1)', () => {
+  const PHONE = { width: 390, height: 844 };
 
-      const banner = page.getByRole('banner');
-      await expect(banner).toContainText('Signed in as ALFKI');
-      await expect(banner.getByRole('button', { name: 'Sign out', exact: true })).toBeVisible();
-    });
+  async function openAccountMenu(page: Page, companyName: string) {
+    const trigger = page
+      .getByRole('banner')
+      .getByRole('button', { name: `Account: ${companyName}`, exact: true });
+    await trigger.click();
+    await expect(trigger).toHaveAttribute('aria-expanded', 'true');
+    return page.getByRole('menu');
   }
 
-  test('signing out forgets the customer and the next one sees only their own orders', async ({
-    page,
-    request,
-  }) => {
-    const ernstIds = (await fetchOrdersAs(request, 'ERNSH')).map((o) => String(o.id)).sort();
-    await signInAs(page, 'customer-card-ALFKI');
-    await expect(page.getByTestId('order-row').first()).toBeVisible();
-
-    await page.getByRole('banner').getByRole('button', { name: 'Sign out', exact: true }).click();
-    await expect(page).toHaveURL(/\/sign-in$/);
-
-    await page.goto('/orders');
-    await expect(page).toHaveURL(/\/sign-in$/);
-
-    // Records every order id the page ever renders from here on, so a brief
-    // flash of the previous customer's cached orders is caught, not just the
-    // settled end state.
+  // Records every order id the page renders from now on, so a flash of the
+  // previous customer's cached orders is caught, not just the end state.
+  async function recordRenderedOrderIds(page: Page): Promise<void> {
     await page.evaluate(() => {
       const seen = new Set<string>();
       (window as unknown as { seenOrderIds: Set<string> }).seenOrderIds = seen;
@@ -73,24 +57,98 @@ test.describe('sign out (B1)', () => {
           .forEach((el) => seen.add(el.getAttribute('data-order-id') ?? ''));
       }).observe(document.body, { subtree: true, childList: true, attributes: true });
     });
+  }
 
+  async function renderedOrderIds(page: Page): Promise<string[]> {
+    return page.evaluate(() =>
+      [...(window as unknown as { seenOrderIds: Set<string> }).seenOrderIds].sort(),
+    );
+  }
+
+  for (const [label, viewport] of [
+    ['phone', PHONE],
+    ['desktop', DESKTOP],
+  ] as const) {
+    test(`the top bar names the customer, not their ID, on ${label}`, async ({ page }) => {
+      await page.setViewportSize(viewport);
+      await signInAs(page, 'customer-card-ALFKI');
+
+      const banner = page.getByRole('banner');
+      await expect(
+        banner.getByRole('button', { name: 'Account: Alfreds Futterkiste', exact: true }),
+      ).toBeVisible();
+      await expect(banner).not.toContainText('Signed in as');
+    });
+
+    test(`the account menu offers switching and signing out on ${label}`, async ({ page }) => {
+      await page.setViewportSize(viewport);
+      await signInAs(page, 'customer-card-late-orders');
+
+      const menu = await openAccountMenu(page, 'Ernst Handel');
+      await expect(menu).toContainText('Customer ERNSH');
+      await expect(menu).toContainText('Demo sign-in: switch customer without a password.');
+      await expect(menu.getByRole('menuitem')).toHaveText([
+        /Alfreds Futterkiste/,
+        /Save-a-lot Markets/,
+        'Choose another customer…',
+        'Sign out',
+      ]);
+    });
+  }
+
+  test("switching from the menu shows only the new customer's orders", async ({
+    page,
+    request,
+  }) => {
+    await page.setViewportSize(PHONE);
+    const alfredsIds = (await fetchOrdersAs(request, 'ALFKI')).map((o) => String(o.id)).sort();
+    await signInAs(page, 'customer-card-late-orders');
+    await expect(page.getByTestId('order-row').first()).toBeVisible();
+
+    const menu = await openAccountMenu(page, 'Ernst Handel');
+    await recordRenderedOrderIds(page);
+    await menu.getByRole('menuitem', { name: /Alfreds Futterkiste/ }).click();
+
+    await expect(page).toHaveURL(/\/orders$/);
+    await expect(page.getByText('Now viewing Alfreds Futterkiste', { exact: true })).toBeVisible();
+    await expect(page.getByTestId('order-row')).toHaveCount(alfredsIds.length);
+    for (const id of await renderedOrderIds(page)) {
+      expect(alfredsIds, `order ${id} rendered after switching to ALFKI`).toContain(id);
+    }
+  });
+
+  test('signing out forgets the customer and the next one sees only their own orders', async ({
+    page,
+    request,
+  }) => {
+    const ernstIds = (await fetchOrdersAs(request, 'ERNSH')).map((o) => String(o.id)).sort();
+    await signInAs(page, 'customer-card-ALFKI');
+    await expect(page.getByTestId('order-row').first()).toBeVisible();
+
+    const menu = await openAccountMenu(page, 'Alfreds Futterkiste');
+    await menu.getByRole('menuitem', { name: 'Sign out', exact: true }).click();
+    await expect(page).toHaveURL(/\/sign-in$/);
+    await expect(
+      page.getByText('Signed out of Alfreds Futterkiste', { exact: true }),
+    ).toBeVisible();
+
+    await page.goto('/orders');
+    await expect(page).toHaveURL(/\/sign-in$/);
+
+    await recordRenderedOrderIds(page);
     await page.getByTestId('customer-card-late-orders').click();
     await expect(page).toHaveURL(/\/orders$/);
     await expect(page.getByTestId('order-row')).toHaveCount(ernstIds.length);
-
-    const shown = (
-      await page
-        .getByTestId('order-row')
-        .evaluateAll((rows) => rows.map((row) => row.getAttribute('data-order-id') ?? ''))
-    ).sort();
-    expect(shown).toEqual(ernstIds);
-
-    const everSeen = await page.evaluate(() =>
-      [...(window as unknown as { seenOrderIds: Set<string> }).seenOrderIds].sort(),
-    );
-    for (const id of everSeen) {
+    for (const id of await renderedOrderIds(page)) {
       expect(ernstIds, `order ${id} rendered after switching to ERNSH`).toContain(id);
     }
+  });
+
+  test('"Choose another customer…" opens the sign-in page', async ({ page }) => {
+    await signInAs(page, 'customer-card-ALFKI');
+    const menu = await openAccountMenu(page, 'Alfreds Futterkiste');
+    await menu.getByRole('menuitem', { name: 'Choose another customer…', exact: true }).click();
+    await expect(page).toHaveURL(/\/sign-in$/);
   });
 });
 
