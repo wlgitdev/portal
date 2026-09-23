@@ -1,4 +1,5 @@
-@if (viewport.isPhone()) {
+@if (store.orders().length > 0) {
+  @if (viewport.isPhone()) {
   <app-page-header title="Orders">
     <div class="search-row">
       <div class="search-field">
@@ -157,6 +158,7 @@
       <app-order-filters (closed)="closeFilters()" />
     </div>
   </ng-template>
+  }
 }
 
 @if (store.ordersLoading()) {
@@ -164,14 +166,9 @@
     <app-skeleton [rows]="6" />
   </div>
 } @else if (store.orders().length === 0) {
-  <div data-testid="orders-empty-state">
-    <app-empty-state message="No orders yet. Orders placed with Northwind appear here." />
-  </div>
+  <app-orders-empty-state />
 } @else if (filterState.visibleOrderCount() === 0) {
-  <div data-testid="orders-no-matches" class="no-matches">
-    <app-empty-state message="No orders match your search or filters." />
-    <button type="button" (click)="filterState.clearSearchAndFilters()">Clear search and filters</button>
-  </div>
+  <app-orders-no-matches />
 } @else {
   <div class="grid-view">
     <ag-grid-angular

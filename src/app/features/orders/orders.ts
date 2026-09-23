@@ -11,7 +11,6 @@ import {
 import { CdkConnectedOverlay, CdkOverlayOrigin, type ConnectedPosition } from '@angular/cdk/overlay';
 import { MatBottomSheet } from '@angular/material/bottom-sheet';
 import { Component, ElementRef, computed, inject, signal, viewChild } from '@angular/core';
-import { EmptyState } from '../../shared/empty-state/empty-state';
 import { Icon } from '../../shared/icon/icon';
 import { PageHeader } from '../../shared/page-header/page-header';
 import { Skeleton } from '../../shared/skeleton/skeleton';
@@ -21,7 +20,9 @@ import { VoyageLine } from '../../shared/voyage-line/voyage-line';
 import { OrdersStore } from '../../core/orders/orders-store';
 import { ActiveFilterChips } from './active-filter-chips/active-filter-chips';
 import { OrderFilters } from './order-filters/order-filters';
+import { OrdersEmptyState } from './orders-empty-state/orders-empty-state';
 import { OrdersFilterState, type StatusTabValue } from './orders-filter-state';
+import { OrdersNoMatches } from './orders-no-matches/orders-no-matches';
 import { StatusCellRenderer } from './status-cell-renderer';
 import { VoyageCellRenderer } from './voyage-cell-renderer';
 import { OrderDrawer } from './order-drawer/order-drawer';
@@ -82,13 +83,14 @@ const HEADER_TOOLTIPS: Record<ColId, string> = {
     StatusChip,
     VoyageLine,
     Skeleton,
-    EmptyState,
     OrderDrawer,
     OrderGroupHeader,
     AgGridAngular,
     Icon,
     ActiveFilterChips,
     OrderFilters,
+    OrdersEmptyState,
+    OrdersNoMatches,
     CdkConnectedOverlay,
     CdkOverlayOrigin,
   ],

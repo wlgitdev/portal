@@ -1,0 +1,19 @@
+<div data-testid="orders-no-matches" class="empty-card">
+  @if (filterState.search(); as search) {
+    <h2>No orders match &ldquo;<span class="search-term mono">{{ search }}</span>&rdquo;</h2>
+  } @else {
+    <h2>No orders match these filters</h2>
+  }
+
+  <p>{{ body() }}</p>
+
+  <app-active-filter-chips
+    [chips]="chips()"
+    (remove)="filterState.removeChip($event)"
+    (clearAll)="filterState.clearSearchAndFilters()"
+  />
+
+  <button type="button" class="primary-button" (click)="filterState.clearSearchAndFilters()">
+    Clear search and filters
+  </button>
+</div>
