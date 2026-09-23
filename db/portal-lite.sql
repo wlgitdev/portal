@@ -28,6 +28,9 @@ ORDER BY CompanyName;
 -- Params: @customerId nchar(5), @shift int, @today date
 -- Status: ShippedDate set -> Shipped; else shifted RequiredDate >= @today -> Awaiting dispatch; else Late.
 -- total is the line-item sum only (no freight) so it matches OrderDetail.total (see below).
+-- Each line is rounded to 2dp before summing (not after) so this total always equals the sum of
+-- the same rounded amounts the drawer displays per line — Discount is `real`, imprecise enough
+-- that rounding the aggregate independently can land a penny off from summing rounded lines.
 -- ============================================================
 SELECT
     o.OrderID AS id,
@@ -44,7 +47,7 @@ SELECT
     o.ShipName AS shipTo
 FROM dbo.Orders o
 CROSS APPLY (
-    SELECT COUNT(*) AS itemCount, CAST(SUM(od.UnitPrice * od.Quantity * (1 - od.Discount)) AS money) AS total
+    SELECT COUNT(*) AS itemCount, SUM(CAST(od.UnitPrice * od.Quantity * (1 - od.Discount) AS decimal(19,2))) AS total
     FROM dbo.[Order Details] od
     WHERE od.OrderID = o.OrderID
 ) lines
@@ -79,7 +82,7 @@ SELECT
     lines.total AS total
 FROM dbo.Orders o
 CROSS APPLY (
-    SELECT CAST(SUM(od.UnitPrice * od.Quantity * (1 - od.Discount)) AS money) AS total
+    SELECT SUM(CAST(od.UnitPrice * od.Quantity * (1 - od.Discount) AS decimal(19,2))) AS total
     FROM dbo.[Order Details] od
     WHERE od.OrderID = o.OrderID
 ) lines
@@ -95,7 +98,7 @@ SELECT
     od.UnitPrice                AS unitPrice,
     od.Quantity                 AS quantity,
     od.Discount                 AS discount,
-    CAST(od.UnitPrice * od.Quantity * (1 - od.Discount) AS money) AS lineTotal
+    CAST(od.UnitPrice * od.Quantity * (1 - od.Discount) AS decimal(19,2)) AS lineTotal
 FROM dbo.[Order Details] od
 JOIN dbo.Products p ON p.ProductID = od.ProductID
 WHERE od.OrderID = @orderId
