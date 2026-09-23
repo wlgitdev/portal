@@ -332,8 +332,7 @@ test.describe('orders table at desktop width', () => {
     expect(groupIndex).toBe(expectedGroups.length - 1);
   });
 
-  // Pending again (DES, P7 R14): the heading now quotes the search.
-  test.skip('a search that matches nothing says so, and can be cleared', async ({
+  test('a search that matches nothing says so, and can be cleared', async ({
     page,
     request,
   }) => {

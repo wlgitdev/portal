@@ -1,0 +1,48 @@
+.empty-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  max-width: 420px;
+  margin: var(--space-5) auto;
+  padding: var(--space-5) var(--space-5) var(--space-6);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  border: 1px dashed var(--mat-sys-outline);
+  text-align: center;
+}
+
+h2 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.625rem;
+  margin: 0;
+}
+
+.search-term {
+  color: var(--color-fjord);
+  font-size: 1.25rem;
+}
+
+.mono {
+  font-family: var(--font-mono);
+}
+
+p {
+  margin: 0;
+  color: var(--mat-sys-on-surface-variant);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+}
+
+.primary-button {
+  height: 44px;
+  padding: 0 var(--space-5);
+  margin-top: var(--space-2);
+  border-radius: var(--radius-md);
+  border: none;
+  background: var(--color-fjord);
+  color: white;
+  font: 600 var(--text-sm) var(--font-body);
+  cursor: pointer;
+}

@@ -1,0 +1,26 @@
+<div data-testid="orders-empty-state" class="empty-card">
+  <div class="ghost-route" aria-hidden="true">
+    <span class="ghost-line"></span>
+    <svg class="ghost-hull" viewBox="0 0 32 14" width="48" height="21">
+      <path d="M2 6h28l-4 7H6z" fill="var(--color-fjord)" />
+      <rect x="9" y="1" width="6" height="5" rx="1" fill="var(--color-sea-glass)" />
+      <rect x="16" y="1" width="6" height="5" rx="1" fill="var(--color-signal-amber)" />
+    </svg>
+    <span class="ghost-stop ordered"></span>
+    <span class="ghost-stop shipped"></span>
+    <span class="ghost-stop due"></span>
+    <span class="ghost-label ordered">Ordered</span>
+    <span class="ghost-label shipped">Shipped</span>
+    <span class="ghost-label due">Due</span>
+  </div>
+
+  <h2>No orders yet</h2>
+  <p>
+    When {{ companyName() }} orders from Northwind, each order appears here so you can follow it
+    from ordered, to shipped, to due.
+  </p>
+  <button type="button" class="secondary-button" (click)="chooseAnother()">
+    <app-icon name="people" [size]="18" />
+    Choose another customer
+  </button>
+</div>

@@ -383,7 +383,7 @@ test.describe('finding orders on a phone', () => {
   });
 });
 
-test.describe.skip('customers with no orders', () => {
+test.describe('customers with no orders', () => {
   test.use({ viewport: PHONE });
 
   test('see what will appear here and a next step, with no dead controls', async ({ page }) => {

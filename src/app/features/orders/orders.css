@@ -262,25 +262,22 @@ select {
   background: var(--color-surface);
   border-radius: 14px;
   box-shadow: var(--shadow-float);
+  animation: popover-in 160ms var(--ease-out-sheet);
 }
 
-.no-matches {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-4);
-  padding-block: var(--space-6);
+/* Runs once per fresh insertion — the overlay recreates this element each
+   time it opens, so no open/close state needs tracking here (R16). */
+@keyframes popover-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
 }
 
-.no-matches button {
-  font: inherit;
-  font-weight: 600;
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-md);
-  border: none;
-  background: var(--color-fjord);
-  color: white;
-  cursor: pointer;
+@media (prefers-reduced-motion: reduce) {
+  .filters-popover {
+    animation: none;
+  }
 }
 
 .loading-panel {
