@@ -11,7 +11,7 @@ Show sales and testers a customer portal they can click through. Done means ever
 | 1 | Sign in as a customer and browse your orders | Waiting for Dev (failed) | Sign in as Alfreds, search orders, filter "Late", open one and check the lines add up to the total. On desktop, hover a header and a cut-off cell. Tap the status tabs, open Filters, drag the Total range and remove a chip. Switch customer from the top-right menu, then sign out. On a phone, check the Filters sheet and the account sheet. Then: drag the window from phone to desktop width and check a menu always shows; scroll to the bottom and check the top bar stays; read each order's status on its tracker; shrink the window's height and check Filters' buttons stay on screen; open Group by. |
 | 2 | Download a delivery note for any order | Ready for Release | Open an order, download its delivery note, check the PDF totals match the screen. On a phone, check each bottom menu item shows a picture and its name. |
 | 3 | See spending and delivery dates at a glance | Waiting for Dev | Open Spend and Schedule, switch Spend to table view, click a calendar entry to open the order. |
-| 4 | Edit your contact details | Waiting for Dev | Enter letters in Phone and try saving; fix it, save, reload and check it stuck. |
+| 4 | Edit your contact details | Waiting for Release (T) | Enter letters in Phone and try saving; fix it, save, reload and check it stuck. |
 | 5 | Switch brand and dark mode | Waiting for Dev | Pick each brand under Brand preview in light and dark; check everything stays readable, including on a phone. |
 
 ## Next — if the demo is won
@@ -68,7 +68,7 @@ Item 2:
    → Every menu item shows a picture and its name, on phone and desktop. (P6 R7)
 
 ## DEV next step
-Re-enter item 1 at **Waiting for Dev (failed)** via the DEV playbook and build `portal-lite-spec.md` phase **P8** (R17–R25). Item 2 stays Ready for Release; its nav-label test must stay green. Don't touch items 3–5.
+Still outstanding, next once picked back up: re-enter item 1 at **Waiting for Dev (failed)** via the DEV playbook and build `portal-lite-spec.md` phase **P8** (R17–R25). Item 2 stays Ready for Release; its nav-label test must stay green. Item 4 is now built (see build note below); don't touch item 3 or 5.
 
 Remove `.skip` from these pending tests, and don't change any assertion:
 - new: `e2e/shell-layout.spec.ts`, `e2e/status-tracker.spec.ts`, `e2e/orders-toolbar.spec.ts`;
@@ -78,3 +78,12 @@ Remove `.skip` from these pending tests, and don't change any assertion:
 If a test looks wrong, stop and hand back to DES.
 
 Previous build note (P7, 23/09/2026), kept for the record: two tests were reported flaky, independent of the build: `e2e/orders-table.spec.ts` "a cut-off cell shows its full text on hover" and `e2e/orders.spec.ts` "filter Late and open one whose lines sum to its total". Not fixed by P8; wants its own item.
+
+## DEV build note — item 4 (23/09/2026)
+WL pulled item 4 forward out of turn (time-crunch); item 1's P8 rework above is still unbuilt and untouched. `portal-lite-spec.md` P2/P4 and `portal-lite-design.md`'s Account screen already fully specced bundle B4, so no new spec/design doc was needed. Built `GET`/`PUT /api/me` and the Account screen (Contact/Address/Phone sections per the design) straight from those. Added the `db/portal-lite.sql` CustomerProfile query P1 called for but never got written.
+
+`.skip` removed from `e2e/account.spec.ts` only, assertions unchanged; all 7 pass. Full suite re-run clean otherwise: everything still pending for items 1/3/5 is still correctly pending, and the two P7 flaky tests above are still just flaky (pass on their own).
+
+### Pre-existing, not fixed here
+- `PortalApi.searchCustomers` (P4's "typed PortalApi service") has never actually been called — sign-in and OrdersStore both fetch via `httpResource` directly instead. `updateMe` was added to `PortalApi` here since a one-shot PUT needs an imperative call anyway; the dead `searchCustomers` method and the sign-in/orders drift are untouched. Wants its own item if it's worth resolving.
+- This session's cloud sandbox needed a local Node bump (22.22.2 → a `/usr/bin` 24.x install ahead of the pinned `/opt/node22` on `PATH`) before `ng serve`/Playwright's webServer would start at all — same root cause as the P6 note above, just hit again. Nothing in the repo changed for this; flagging in case the sandbox image itself is worth fixing so the next session doesn't repeat it.

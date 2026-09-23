@@ -1,0 +1,15 @@
+<div class="field">
+  <label [for]="id">{{ label() }}</label>
+  <input
+    [id]="id"
+    [type]="type()"
+    [value]="value()"
+    [readOnly]="readonlyField()"
+    (input)="valueChange.emit(inputValue($event))"
+    [attr.aria-invalid]="error() ? 'true' : null"
+    [attr.aria-describedby]="error() ? id + '-error' : null"
+  />
+  @if (error()) {
+    <p class="error" [id]="id + '-error'">{{ error() }}</p>
+  }
+</div>

@@ -7,6 +7,18 @@ export interface CustomerSummary {
   country: string | null;
 }
 
+export interface CustomerProfile {
+  companyName: string;
+  contactName: string | null;
+  address: string | null;
+  city: string | null;
+  region: string | null;
+  postalCode: string | null;
+  country: string | null;
+  phone: string | null;
+  fax: string | null;
+}
+
 export interface OrderSummary {
   id: number;
   orderedOn: string;
