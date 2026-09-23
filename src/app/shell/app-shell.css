@@ -1,0 +1,121 @@
+.shell {
+  display: flex;
+  min-height: 100vh;
+}
+
+.side-rail {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-5);
+  width: 88px;
+  flex: none;
+  padding-block-start: var(--space-4);
+  background: var(--color-fjord);
+}
+
+@media (min-width: 1024px) {
+  .side-rail {
+    display: flex;
+  }
+}
+
+.wordmark {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: white;
+  font-size: var(--text-lg);
+}
+
+.side-rail a {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  color: color-mix(in srgb, white 70%, transparent);
+  text-decoration: none;
+  font-size: var(--text-xs);
+}
+
+.side-rail a .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.side-rail a.active {
+  color: white;
+}
+
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-6);
+  background: var(--color-surface);
+  border-block-end: 1px solid var(--mat-sys-outline-variant);
+}
+
+.top-wordmark {
+  color: var(--color-fjord);
+}
+
+.signed-in-as {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.content {
+  flex: 1;
+  min-height: 0;
+  padding-block-end: 64px; /* clears the fixed bottom nav on small viewports */
+}
+
+@media (min-width: 720px) {
+  .content {
+    padding-block-end: 0;
+  }
+}
+
+.bottom-nav {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  position: fixed;
+  inset-inline: 0;
+  bottom: 0;
+  height: 56px;
+  background: var(--color-surface);
+  border-block-start: 1px solid var(--mat-sys-outline-variant);
+}
+
+@media (min-width: 720px) {
+  .bottom-nav {
+    display: none;
+  }
+}
+
+.bottom-nav a {
+  display: flex;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.bottom-nav a .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.bottom-nav a.active {
+  color: var(--color-fjord);
+}

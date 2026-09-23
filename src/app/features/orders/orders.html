@@ -1,0 +1,73 @@
+<app-page-header title="Orders">
+  <input
+    type="search"
+    data-testid="orders-search"
+    [ngModel]="search()"
+    (ngModelChange)="search.set($event)"
+    placeholder="Search order no or ship to"
+    autocomplete="off"
+  />
+  <select
+    data-testid="orders-status-filter"
+    [ngModel]="statusFilter()"
+    (ngModelChange)="statusFilter.set($event)"
+  >
+    @for (option of statusOptions; track option) {
+      <option [value]="option">{{ option }}</option>
+    }
+  </select>
+</app-page-header>
+
+@if (store.ordersLoading()) {
+  <div class="loading-panel">
+    <app-skeleton [rows]="6" />
+  </div>
+} @else if (filteredOrders().length === 0) {
+  <div data-testid="orders-empty-state">
+    <app-empty-state message="No orders yet. Orders placed with Northwind appear here." />
+  </div>
+} @else {
+  <div class="grid-view">
+    <ag-grid-angular
+      [rowData]="filteredOrders()"
+      [columnDefs]="columnDefs"
+      [getRowId]="getRowId"
+      [theme]="gridTheme"
+      (cellClicked)="onCellClicked($event)"
+    />
+  </div>
+
+  <ul class="card-view">
+    @for (order of filteredOrders(); track order.id) {
+      <li>
+        <button
+          type="button"
+          data-testid="order-row"
+          [attr.data-status]="order.status"
+          [attr.data-order-id]="order.id"
+          (click)="openOrder(order.id)"
+        >
+          <div class="card-top">
+            <span class="order-number mono" data-testid="order-row-number">{{
+              orderNumber(order)
+            }}</span>
+            <app-status-chip [status]="order.status" />
+          </div>
+          <app-voyage-line
+            size="mini"
+            [status]="order.status"
+            [orderedOn]="order.orderedOn"
+            [shippedOn]="order.shippedOn"
+            [dueOn]="order.dueOn"
+          />
+          <div class="card-bottom">
+            <span>{{ order.itemCount }} item{{ order.itemCount === 1 ? '' : 's' }}</span>
+            <span class="mono" data-testid="order-row-total">{{ formatMoney(order.total) }}</span>
+          </div>
+        </button>
+      </li>
+    }
+  </ul>
+}
+
+<app-order-drawer />

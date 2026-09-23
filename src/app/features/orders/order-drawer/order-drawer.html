@@ -1,0 +1,72 @@
+@if (store.selectedOrderId() !== null) {
+  <div class="backdrop" (click)="close()"></div>
+
+  <aside class="drawer" data-testid="order-drawer" role="dialog" aria-label="Order detail">
+    <header>
+      @if (store.selectedOrder(); as order) {
+        <span class="order-number mono">#{{ order.id }}</span>
+      }
+      <button type="button" class="close" (click)="close()" aria-label="Close order detail">
+        ✕
+      </button>
+    </header>
+
+    @if (store.selectedOrderLoading() || !store.selectedOrder()) {
+      <div class="loading">
+        <app-skeleton [rows]="4" />
+      </div>
+    } @else if (store.selectedOrder(); as order) {
+      <app-voyage-line
+        size="large"
+        [status]="order.status"
+        [orderedOn]="order.orderedOn"
+        [shippedOn]="order.shippedOn"
+        [dueOn]="order.dueOn"
+      />
+
+      <section class="ship-to">
+        <h2>Ship to</h2>
+        <p>
+          {{ order.shipTo.name }}<br />
+          {{ order.shipTo.address }}<br />
+          {{ order.shipTo.city }} {{ order.shipTo.postalCode }}<br />
+          {{ order.shipTo.country }}
+        </p>
+      </section>
+
+      <table class="lines">
+        <thead>
+          <tr>
+            <th scope="col">Product</th>
+            <th scope="col">Qty</th>
+            <th scope="col">Unit price</th>
+            <th scope="col">Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (line of order.lines; track line.productId) {
+            <tr>
+              <td>{{ line.productName }}</td>
+              <td class="mono">{{ line.quantity }}</td>
+              <td class="mono">{{ formatMoney(line.unitPrice) }}</td>
+              <td class="mono" data-testid="order-drawer-line-amount">
+                {{ formatMoney(line.lineTotal) }}
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+
+      <footer class="totals">
+        <div class="freight-row">
+          <span>Freight</span>
+          <span class="mono">{{ formatMoney(order.freight) }}</span>
+        </div>
+        <div class="total-row">
+          <span>Total</span>
+          <span class="mono" data-testid="order-drawer-total">{{ formatMoney(order.total) }}</span>
+        </div>
+      </footer>
+    }
+  </aside>
+}

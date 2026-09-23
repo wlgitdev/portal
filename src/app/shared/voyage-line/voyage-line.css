@@ -1,0 +1,44 @@
+:host {
+  display: inline-block;
+  width: 100%;
+}
+
+.voyage {
+  width: 100%;
+  height: 16px;
+  display: block;
+}
+
+.voyage.large {
+  height: 24px;
+}
+
+.route {
+  stroke: var(--color-outline, #c6ced3);
+  stroke-width: 1.5;
+}
+
+.route-sailed {
+  stroke: var(--color-fjord);
+  stroke-width: 1.5;
+}
+
+.mark {
+  fill: var(--color-surface);
+  stroke: var(--color-fjord);
+  stroke-width: 1.5;
+}
+
+.mark.shipped {
+  fill: var(--color-fjord);
+}
+
+.hull {
+  fill: var(--color-fjord);
+  stroke: var(--color-surface);
+  stroke-width: 1;
+}
+
+.hull.late {
+  fill: var(--color-harbour-red);
+}

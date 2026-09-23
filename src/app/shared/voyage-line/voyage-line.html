@@ -1,0 +1,37 @@
+<svg
+  class="voyage"
+  [class.large]="size() === 'large'"
+  viewBox="0 0 100 16"
+  preserveAspectRatio="none"
+  role="img"
+  [attr.aria-label]="ariaLabel()"
+>
+  <line x1="4" y1="8" x2="96" y2="8" class="route" />
+
+  @if (shippedPercent(); as shippedAt) {
+    <line x1="4" y1="8" [attr.x2]="shippedAt" y2="8" class="route-sailed" />
+  }
+
+  <circle cx="4" cy="8" r="2.5" class="mark ordered" />
+  <circle cx="96" cy="8" r="2.5" class="mark due" />
+
+  @if (shippedPercent(); as shippedAt) {
+    <rect
+      [attr.x]="shippedAt - 2"
+      y="6"
+      width="4"
+      height="4"
+      transform-origin="center"
+      [attr.transform]="'rotate(45 ' + shippedAt + ' 8)'"
+      class="mark shipped"
+    />
+  }
+
+  <circle
+    [attr.cx]="hullPercent()"
+    cy="8"
+    r="3.2"
+    class="hull"
+    [class.late]="status() === 'Late'"
+  />
+</svg>
