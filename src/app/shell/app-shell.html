@@ -2,8 +2,8 @@
   <nav class="side-rail" aria-label="Primary">
     <span class="wordmark">NW</span>
     @for (item of navItems; track item.path) {
-      <a [routerLink]="item.path" routerLinkActive="active" [attr.aria-label]="item.label">
-        <span class="dot" aria-hidden="true"></span>
+      <a [routerLink]="item.path" routerLinkActive="active">
+        <app-nav-icon [name]="item.icon" />
         <span class="label">{{ item.label }}</span>
       </a>
     }
@@ -13,7 +13,10 @@
     <header class="top-bar">
       <span class="wordmark top-wordmark">Northwind</span>
       @if (session.customerId(); as customerId) {
-        <span class="signed-in-as">{{ customerId }}</span>
+        <div class="session">
+          <span class="signed-in-as">Signed in as {{ customerId }}</span>
+          <button type="button" class="sign-out" (click)="signOut()">Sign out</button>
+        </div>
       }
     </header>
 
@@ -23,8 +26,9 @@
 
     <nav class="bottom-nav" aria-label="Primary">
       @for (item of navItems; track item.path) {
-        <a [routerLink]="item.path" routerLinkActive="active" [attr.aria-label]="item.label">
-          <span class="dot" aria-hidden="true"></span>
+        <a [routerLink]="item.path" routerLinkActive="active">
+          <app-nav-icon [name]="item.icon" />
+          <span class="label">{{ item.label }}</span>
         </a>
       }
     </nav>

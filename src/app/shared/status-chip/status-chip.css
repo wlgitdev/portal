@@ -11,6 +11,9 @@
   font-family: var(--font-body);
   font-size: var(--text-xs);
   font-weight: 600;
+  /* Own line-height so a grid cell's row-height line-height isn't inherited
+     (P6 T1): without this the chip stretches to fill the whole row. */
+  line-height: 1.25;
   white-space: nowrap;
 }
 

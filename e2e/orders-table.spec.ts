@@ -89,7 +89,7 @@ async function openFilters(page: Page): Promise<void> {
   await expect(button).toHaveAttribute('aria-expanded', 'true');
 }
 
-test.describe.skip('orders table at desktop width', () => {
+test.describe('orders table at desktop width', () => {
   test.use({ viewport: TALL_DESKTOP });
 
   test('every status chip fits inside its cell', async ({ page }) => {
@@ -333,7 +333,7 @@ test.describe.skip('orders table at desktop width', () => {
   });
 });
 
-test.describe.skip('orders table when space is tight', () => {
+test.describe('orders table when space is tight', () => {
   test.use({ viewport: NARROW_DESKTOP });
 
   test('a cut-off cell shows its full text on hover; others show nothing', async ({ page }) => {
@@ -376,7 +376,7 @@ test.describe.skip('orders table when space is tight', () => {
   });
 });
 
-test.describe.skip('orders card list grouping on a phone', () => {
+test.describe('orders card list grouping on a phone', () => {
   test('group by Status shows the same group headers as the table', async ({ page, request }) => {
     const orders = await fetchOrdersAs(request, 'ERNSH');
     const expected = STATUS_GROUP_ORDER.map((status) => ({

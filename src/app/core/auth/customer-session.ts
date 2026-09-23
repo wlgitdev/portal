@@ -13,4 +13,9 @@ export class CustomerSession {
     sessionStorage.setItem(STORAGE_KEY, customerId);
     this.customerIdSignal.set(customerId);
   }
+
+  signOut(): void {
+    sessionStorage.removeItem(STORAGE_KEY);
+    this.customerIdSignal.set(null);
+  }
 }
