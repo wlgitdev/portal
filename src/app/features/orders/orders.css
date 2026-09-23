@@ -249,7 +249,7 @@ select {
   padding: var(--space-3) var(--space-6) 0;
 }
 
-.status-tabs.phone + .chips-row {
+.chips-row.phone {
   padding-inline: var(--space-4);
 }
 

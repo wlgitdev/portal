@@ -9,19 +9,21 @@ import {
   type PostSortRowsParams,
 } from 'ag-grid-community';
 import { CdkConnectedOverlay, CdkOverlayOrigin, type ConnectedPosition } from '@angular/cdk/overlay';
+import { NgTemplateOutlet } from '@angular/common';
 import { MatBottomSheet } from '@angular/material/bottom-sheet';
 import { Component, ElementRef, computed, inject, signal, viewChild } from '@angular/core';
 import { Icon } from '../../shared/icon/icon';
 import { PageHeader } from '../../shared/page-header/page-header';
 import { Skeleton } from '../../shared/skeleton/skeleton';
 import { StatusChip } from '../../shared/status-chip/status-chip';
+import { openTrackedBottomSheet } from '../../shared/tracked-bottom-sheet';
 import { Viewport } from '../../shared/viewport/viewport';
 import { VoyageLine } from '../../shared/voyage-line/voyage-line';
 import { OrdersStore } from '../../core/orders/orders-store';
 import { ActiveFilterChips } from './active-filter-chips/active-filter-chips';
 import { OrderFilters } from './order-filters/order-filters';
 import { OrdersEmptyState } from './orders-empty-state/orders-empty-state';
-import { OrdersFilterState, type StatusTabValue } from './orders-filter-state';
+import { OrdersFilterState } from './orders-filter-state';
 import { OrdersNoMatches } from './orders-no-matches/orders-no-matches';
 import { StatusCellRenderer } from './status-cell-renderer';
 import { VoyageCellRenderer } from './voyage-cell-renderer';
@@ -32,7 +34,7 @@ import {
   type GroupRowData,
   type OrderGroupRowParams,
 } from './order-group-row/order-group-row';
-import { GROUP_BY_OPTIONS, displayedText, type GroupBy } from './order-view';
+import { GROUP_BY_OPTIONS, displayedText, plural, type GroupBy } from './order-view';
 import type { OrderStatus, OrderSummary } from '../../core/api/models';
 
 type ColId = 'orderNo' | 'orderedOn' | 'status' | 'progress' | 'itemCount' | 'total' | 'shipTo';
@@ -93,6 +95,7 @@ const HEADER_TOOLTIPS: Record<ColId, string> = {
     OrdersNoMatches,
     CdkConnectedOverlay,
     CdkOverlayOrigin,
+    NgTemplateOutlet,
   ],
   templateUrl: './orders.html',
   styleUrl: './orders.css',
@@ -106,9 +109,11 @@ export class Orders {
   protected readonly groupByOptions = GROUP_BY_OPTIONS;
   protected readonly filtersPositions = FILTERS_POSITIONS;
   protected readonly filtersOpen = signal(false);
+  protected readonly filtersSheetOpen = signal(false);
   protected readonly statusDotClass = STATUS_DOT_CLASS;
   protected readonly controlValue = controlValue;
   protected readonly displayedText = displayedText;
+  protected readonly plural = plural;
 
   private readonly filtersTriggerEl = viewChild<ElementRef<HTMLButtonElement>>('filtersTriggerEl');
 
@@ -279,10 +284,6 @@ export class Orders {
     }
   }
 
-  protected statusTabName(value: StatusTabValue, count: number): string {
-    return `${value} ${count}`;
-  }
-
   protected filtersButtonLabel(): string {
     const count = this.filterState.filterCount();
     return count > 0 ? `Filters (${count})` : 'Filters';
@@ -302,7 +303,7 @@ export class Orders {
   }
 
   protected openFiltersSheet(): void {
-    this.bottomSheet.open(OrderFilters);
+    openTrackedBottomSheet(this.bottomSheet, OrderFilters, this.filtersSheetOpen);
   }
 
   protected onGroupByChange(event: Event): void {

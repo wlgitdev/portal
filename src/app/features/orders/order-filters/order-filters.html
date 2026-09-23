@@ -263,6 +263,6 @@
   <button type="button" class="clear-filters" (click)="filterState.clearFilters()">Clear filters</button>
   <button type="button" class="show-orders" (click)="close()">
     Show <span class="mono">{{ filterState.visibleOrderCount() }}</span>
-    {{ filterState.visibleOrderCount() === 1 ? 'order' : 'orders' }}
+    {{ plural(filterState.visibleOrderCount(), 'order') }}
   </button>
 </div>

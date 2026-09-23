@@ -9,21 +9,18 @@ import {
   histogram,
   histogramTop,
   matchingOrders,
+  shipToOptions,
   type FilterChip,
   type GroupBy,
   type HistogramBin,
   type OrderFilters,
+  type ShipToOption,
 } from './order-view';
 
 export type StatusTabValue = OrderStatus | 'All';
 
 export interface StatusTabCount {
   value: StatusTabValue;
-  count: number;
-}
-
-export interface ShipToOption {
-  name: string;
   count: number;
 }
 
@@ -84,16 +81,7 @@ export class OrdersFilterState {
   // The Total slider/histogram's £0..top span.
   readonly totalRangeTop = computed(() => histogramTop(this.store.orders()));
 
-  readonly shipToOptions = computed<ShipToOption[]>(() => {
-    const counts = new Map<string, number>();
-    for (const order of this.store.orders()) {
-      const name = order.shipTo ?? '';
-      counts.set(name, (counts.get(name) ?? 0) + 1);
-    }
-    return [...counts.entries()]
-      .map(([name, count]) => ({ name, count }))
-      .sort((a, b) => a.name.localeCompare(b.name));
-  });
+  readonly shipToOptions = computed<ShipToOption[]>(() => shipToOptions(this.store.orders()));
 
   constructor() {
     // A customer switch is a fresh sign-in in all but name (R8) — the find
