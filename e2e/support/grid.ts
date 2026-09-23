@@ -4,8 +4,7 @@ import { expect, type Locator, type Page } from '@playwright/test';
 // `row-id` / `row-index` / `col-id` attributes are AG Grid's own, not ours.
 // If a grid upgrade renames them, fix it here and nowhere else.
 
-export type ColId =
-  'orderNo' | 'orderedOn' | 'status' | 'progress' | 'itemCount' | 'total' | 'shipTo';
+export type ColId = 'orderNo' | 'orderedOn' | 'status' | 'itemCount' | 'total' | 'shipTo';
 
 export interface GridEntry {
   kind: 'group' | 'order';

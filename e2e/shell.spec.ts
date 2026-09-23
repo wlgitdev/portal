@@ -41,7 +41,12 @@ test.describe.skip('account menu: switch customer and sign out (B1)', () => {
       .getByRole('banner')
       .getByRole('button', { name: `Account: ${companyName}`, exact: true });
     await trigger.click();
-    await expect(trigger).toHaveAttribute('aria-expanded', 'true');
+    // On a phone the menu opens in a modal sheet, which aria-hides the rest of
+    // the app, so role queries can no longer see the trigger (design Revision 4).
+    await expect(page.locator(`header [aria-label="Account: ${companyName}"]`)).toHaveAttribute(
+      'aria-expanded',
+      'true',
+    );
     return page.getByRole('menu');
   }
 

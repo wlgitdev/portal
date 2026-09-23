@@ -8,7 +8,7 @@ Show sales and testers a customer portal they can click through. Done means ever
 
 | # | Item | Status | To test |
 |---|---|---|---|
-| 1 | Sign in as a customer and browse your orders | Waiting for Release (T) | Sign in as Alfreds, search orders, filter "Late", open one and check the lines add up to the total. On desktop, hover a header and a cut-off cell. Tap the status tabs, open Filters, drag the Total range and remove a chip. Switch customer from the top-right menu, then sign out. On a phone, check the Filters sheet and the account sheet. |
+| 1 | Sign in as a customer and browse your orders | Waiting for Dev (failed) | Sign in as Alfreds, search orders, filter "Late", open one and check the lines add up to the total. On desktop, hover a header and a cut-off cell. Tap the status tabs, open Filters, drag the Total range and remove a chip. Switch customer from the top-right menu, then sign out. On a phone, check the Filters sheet and the account sheet. Then: drag the window from phone to desktop width and check a menu always shows; scroll to the bottom and check the top bar stays; read each order's status on its tracker; shrink the window's height and check Filters' buttons stay on screen; open Group by. |
 | 2 | Download a delivery note for any order | Ready for Release | Open an order, download its delivery note, check the PDF totals match the screen. On a phone, check each bottom menu item shows a picture and its name. |
 | 3 | See spending and delivery dates at a glance | Waiting for Dev | Open Spend and Schedule, switch Spend to table view, click a calendar entry to open the order. |
 | 4 | Edit your contact details | Waiting for Dev | Enter letters in Phone and try saving; fix it, save, reload and check it stuck. |
@@ -47,13 +47,34 @@ item 1:
    → Status becomes tabs with live counts (as in Shopify). Filters open as a sheet on a phone and a panel on desktop (as in Airbnb), and results update as you go, with a "Show 23 orders" button. Total is chosen on a bar chart of your own order values. Dates have quick picks such as "Last 3 months". Filters that are on stay visible as chips you can remove one at a time. (P7 R11–R13)
    → Also fixed: Items and Total now line up on the right. (P7 R15)
    → See the picture: `docs/plans/mockups/orders-rev3.html`.
+Third pass, after commit 9df37be (answered by DES on 23/09/2026; build from `portal-lite-spec.md` → phase **P8**, design → "Revision 4"):
+ - navigation: there is a certain width of screen at which the nav bar is no longer shown in any way.
+   → Between tablet and small-laptop widths neither menu was showing. The bottom menu now shows on every screen narrower than 1024px, and the side menu from there up, so exactly one is always there. (P8 R17)
+ - navigation: when scrolling to the bottom of the page the top nav bar is no longer visible. it should be either sticky or everything sized to fit the screen height without scroll available.
+   → Both: the top bar now stays pinned on every page, and on desktop the Orders page fits the screen exactly, so only the table scrolls. (P8 R18)
+ - navigation: in desktop view the left hand side nav bar orders option wording is too close to the highlight line on it's left
+   → Each side-menu item now spans the full menu width, so the highlight line sits at the edge with clear space before the words. (P8 R19)
+ - the orders list: the progress dots mean nothing. if they're trying to convey current status relative to the range of statuses then better off merging them with the status column as it becomes redundant i.e fixed position status icons on a line instead and progressing between the statuses on the bar by highlighting different ones as per their current status and displaying the status wording underneath. this would make the status column redundant, which means that it can then be removed.
+   → Done as described. Status and Progress become one "Status" column showing three fixed stops on a line: Ordered, Awaiting dispatch (or Late), Shipped. Each stop has its own picture, the current one is lit in its status colour, and its name sits underneath, like a parcel tracker. Phone cards and the order panel use the same tracker, and the order panel now spells out the Ordered, Shipped and Due dates. Sorting Status puts Late first. (P8 R20–R21)
+ - filter/group: the filters button text seems to have a different look (font/thickness/size?) to the group by button text.
+   → Confirmed: the Filters button was using the computer's default font. Every button and field now uses the portal's font. (P8 R22)
+ - filter/group: the clear/show buttons on the dropdown of the filter is cut off if the desktop screen height is too small
+   → The Filters panel now shrinks to fit the screen; its middle scrolls while "Clear filters" and "Show n orders" stay on screen. (P8 R23)
+ - filter/group: the group by drop down is no longer cohesive with the other dropdowns (filter, account setup).
+   → Group by now opens the same style of panel as Filters and the account menu, with the current choice ticked. (P8 R23–R24)
+
 Item 2:
  - in mobile mode, the orders option just shows as a dot. it's unclear to the user what it's supposed to be.
    → Every menu item shows a picture and its name, on phone and desktop. (P6 R7)
 
-## DEV build note
-**Item 1 — P7 built, 23/09/2026.** All of `portal-lite-spec.md` phase P7 (R8–R16) is in: the account menu (switch customer, sign out), status tabs with live counts, the new Filters surface (Ordered presets, the Total histogram, Items steppers, Ship to checklist), removable filter chips, right-aligned Items/Total, and both empty states (no orders yet; nothing matches). Waiting for Release (T) — item 2 untouched, as instructed.
+## DEV next step
+Re-enter item 1 at **Waiting for Dev (failed)** via the DEV playbook and build `portal-lite-spec.md` phase **P8** (R17–R25). Item 2 stays Ready for Release; its nav-label test must stay green. Don't touch items 3–5.
 
-Every test named in the previous build note is unskipped and green, assertions untouched, plus the full pre-existing suite. One exception, left exactly as WL asked (raised and decided 23/09/2026): `e2e/shell.spec.ts`'s "account menu: switch customer and sign out (B1)" stays `.skip` for its phone half only — MatBottomSheet (P7's own spec'd host, and correctly so: the design's Stage 3 review calls the sheet "a modal dialog with a focus trap") sets aria-hidden on the rest of the app while open, per Angular's own Dialog service, with no config to opt out. That's standard, correct modal accessibility, but it means the account trigger leaves the accessibility tree the moment the sheet opens, so the test's shared helper — which checks aria-expanded="true" on that same trigger right after opening it — can't pass for this host. The desktop half of the same block is unskipped and passes. Needs DES's (or WL's) call on adjusting that one assertion for the phone path; not something DEV can resolve without either reworking the sheet by hand to dodge standard platform behaviour or editing the assertion itself.
+Remove `.skip` from these pending tests, and don't change any assertion:
+- new: `e2e/shell-layout.spec.ts`, `e2e/status-tracker.spec.ts`, `e2e/orders-toolbar.spec.ts`;
+- updated by DES: the six skipped tests in `e2e/orders-table.spec.ts`;
+- `e2e/shell.spec.ts` "account menu: switch customer and sign out (B1)", now both phone and desktop. DES settled P7's open question: the test now finds the phone trigger by its label, and the assertion is unchanged.
 
-Also noted, not fixed here: `e2e/orders-table.spec.ts`'s "a cut-off cell shows its full text on hover" and `e2e/orders.spec.ts`'s "filter Late and open one whose lines sum to its total" are both flaky independent of this build (confirmed by re-running each in isolation against unchanged code) — root causes look like font-loading and reactive-render timing races in how those two tests check the DOM, not incorrect app behaviour. Detail in the P7 commit messages.
+If a test looks wrong, stop and hand back to DES.
+
+Previous build note (P7, 23/09/2026), kept for the record: two tests were reported flaky, independent of the build: `e2e/orders-table.spec.ts` "a cut-off cell shows its full text on hover" and `e2e/orders.spec.ts` "filter Late and open one whose lines sum to its total". Not fixed by P8; wants its own item.
