@@ -37,8 +37,11 @@ fetch_script() {
 restore() {
   local script
   script="$(fetch_script)"
-  sqlcmd_run -Q "IF DB_ID(N'$NORTHWIND_DB') IS NOT NULL BEGIN ALTER DATABASE [$NORTHWIND_DB] SET SINGLE_USER WITH ROLLBACK IMMEDIATE; DROP DATABASE [$NORTHWIND_DB]; END" >/dev/null
-  sqlcmd_run -i "$script" >/dev/null
+  # instnwnd.sql deliberately doesn't create a database (see its header comment) — it expects
+  # to be run against an already-selected one, so -d is required or its objects land in whatever
+  # database the connection defaults to.
+  sqlcmd_run -Q "IF DB_ID(N'$NORTHWIND_DB') IS NOT NULL BEGIN ALTER DATABASE [$NORTHWIND_DB] SET SINGLE_USER WITH ROLLBACK IMMEDIATE; DROP DATABASE [$NORTHWIND_DB]; END; CREATE DATABASE [$NORTHWIND_DB]" >/dev/null
+  sqlcmd_run -d "$NORTHWIND_DB" -i "$script" >/dev/null
   ok "Northwind restored from $NORTHWIND_SQL_URL"
 }
 
