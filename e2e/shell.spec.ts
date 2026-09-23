@@ -32,7 +32,7 @@ async function expectLabelledNavLinks(page: Page, minHeight: number): Promise<vo
   }
 }
 
-test.describe.skip('sign out (B1)', () => {
+test.describe('sign out (B1)', () => {
   for (const [label, viewport] of [
     ['phone', { width: 390, height: 844 }],
     ['desktop', DESKTOP],
@@ -94,7 +94,7 @@ test.describe.skip('sign out (B1)', () => {
   });
 });
 
-test.describe.skip('navigation is labelled (B2)', () => {
+test.describe('navigation is labelled (B2)', () => {
   test('on a phone, every bottom-nav item shows an icon and its name', async ({ page }) => {
     await signInAs(page, 'customer-card-ALFKI');
     await expectLabelledNavLinks(page, 48);

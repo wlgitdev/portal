@@ -4,70 +4,186 @@
     data-testid="orders-search"
     [ngModel]="search()"
     (ngModelChange)="search.set($event)"
-    placeholder="Search order no or ship to"
+    placeholder="Search all columns"
     autocomplete="off"
   />
-  <select
-    data-testid="orders-status-filter"
-    [ngModel]="statusFilter()"
-    (ngModelChange)="statusFilter.set($event)"
+  <div class="field-label">
+    <label for="orders-status-filter">Status</label>
+    <select
+      id="orders-status-filter"
+      data-testid="orders-status-filter"
+      [ngModel]="filters().status"
+      (ngModelChange)="updateFilter('status', $event)"
+    >
+      @for (option of statusOptions; track option) {
+        <option [value]="option">{{ option }}</option>
+      }
+    </select>
+  </div>
+  <button
+    type="button"
+    [attr.aria-expanded]="filtersOpen()"
+    aria-controls="orders-filters-panel"
+    (click)="toggleFiltersPanel()"
   >
-    @for (option of statusOptions; track option) {
-      <option [value]="option">{{ option }}</option>
-    }
-  </select>
+    {{ filterCount() > 0 ? 'Filters (' + filterCount() + ')' : 'Filters' }}
+  </button>
+  <div class="field-label">
+    <label for="orders-group-by">Group by</label>
+    <select id="orders-group-by" [ngModel]="groupBy()" (ngModelChange)="setGroupBy($event)">
+      @for (option of groupByOptions; track option.value) {
+        <option [value]="option.value">{{ option.label }}</option>
+      }
+    </select>
+  </div>
 </app-page-header>
+
+@if (filtersOpen()) {
+  <section class="filters-panel" id="orders-filters-panel">
+    <label>
+      Order no contains
+      <input
+        type="text"
+        [ngModel]="filters().orderNoContains"
+        (ngModelChange)="updateFilter('orderNoContains', $event)"
+      />
+    </label>
+    <label>
+      Ordered from
+      <input
+        type="date"
+        [ngModel]="filters().orderedFrom"
+        (ngModelChange)="updateFilter('orderedFrom', $event)"
+      />
+    </label>
+    <label>
+      Ordered to
+      <input
+        type="date"
+        [ngModel]="filters().orderedTo"
+        (ngModelChange)="updateFilter('orderedTo', $event)"
+      />
+    </label>
+    <label>
+      Items from
+      <input
+        type="number"
+        [ngModel]="filters().itemsFrom"
+        (ngModelChange)="updateFilter('itemsFrom', $event)"
+      />
+    </label>
+    <label>
+      Items to
+      <input
+        type="number"
+        [ngModel]="filters().itemsTo"
+        (ngModelChange)="updateFilter('itemsTo', $event)"
+      />
+    </label>
+    <label>
+      Total from
+      <input
+        type="number"
+        [ngModel]="filters().totalFrom"
+        (ngModelChange)="updateFilter('totalFrom', $event)"
+      />
+    </label>
+    <label>
+      Total to
+      <input
+        type="number"
+        [ngModel]="filters().totalTo"
+        (ngModelChange)="updateFilter('totalTo', $event)"
+      />
+    </label>
+    <label>
+      Ship to contains
+      <input
+        type="text"
+        [ngModel]="filters().shipToContains"
+        (ngModelChange)="updateFilter('shipToContains', $event)"
+      />
+    </label>
+    <button type="button" (click)="clearFilters()">Clear filters</button>
+  </section>
+}
 
 @if (store.ordersLoading()) {
   <div class="loading-panel">
     <app-skeleton [rows]="6" />
   </div>
-} @else if (filteredOrders().length === 0) {
+} @else if (store.orders().length === 0) {
   <div data-testid="orders-empty-state">
     <app-empty-state message="No orders yet. Orders placed with Northwind appear here." />
+  </div>
+} @else if (visibleOrderCount() === 0) {
+  <div data-testid="orders-no-matches" class="no-matches">
+    <app-empty-state message="No orders match your search or filters." />
+    <button type="button" (click)="clearSearchAndFilters()">Clear search and filters</button>
   </div>
 } @else {
   <div class="grid-view">
     <ag-grid-angular
-      [rowData]="filteredOrders()"
+      [rowData]="gridRows()"
       [columnDefs]="columnDefs"
       [getRowId]="getRowId"
       [theme]="gridTheme"
+      [tooltipShowMode]="tooltipShowMode"
+      [tooltipShowDelay]="tooltipShowDelay"
+      [isFullWidthRow]="isFullWidthRow"
+      [fullWidthCellRenderer]="fullWidthCellRenderer"
+      [fullWidthCellRendererParams]="fullWidthCellRendererParams"
+      [postSortRows]="postSortRows"
       (cellClicked)="onCellClicked($event)"
     />
   </div>
 
-  <ul class="card-view">
-    @for (order of filteredOrders(); track order.id) {
-      <li>
-        <button
-          type="button"
-          data-testid="order-row"
-          [attr.data-status]="order.status"
-          [attr.data-order-id]="order.id"
-          (click)="openOrder(order.id)"
-        >
-          <div class="card-top">
-            <span class="order-number mono" data-testid="order-row-number">{{
-              orderNumber(order)
-            }}</span>
-            <app-status-chip [status]="order.status" />
-          </div>
-          <app-voyage-line
-            size="mini"
-            [status]="order.status"
-            [orderedOn]="order.orderedOn"
-            [shippedOn]="order.shippedOn"
-            [dueOn]="order.dueOn"
-          />
-          <div class="card-bottom">
-            <span>{{ order.itemCount }} item{{ order.itemCount === 1 ? '' : 's' }}</span>
-            <span class="mono" data-testid="order-row-total">{{ formatMoney(order.total) }}</span>
-          </div>
-        </button>
-      </li>
+  <div class="card-view">
+    @for (group of orderView().groups; track group.key) {
+      @if (groupBy() !== 'none') {
+        <app-order-group-header
+          [group]="group"
+          [collapsed]="collapsedGroups().has(group.key)"
+          (toggled)="toggleGroup(group.key)"
+        />
+      }
+      @if (groupBy() === 'none' || !collapsedGroups().has(group.key)) {
+        <ul class="card-list">
+          @for (order of group.orders; track order.id) {
+            <li>
+              <button
+                type="button"
+                data-testid="order-row"
+                [attr.data-status]="order.status"
+                [attr.data-order-id]="order.id"
+                (click)="openOrder(order.id)"
+              >
+                <div class="card-top">
+                  <span class="order-number mono" data-testid="order-row-number">{{
+                    '#' + order.id
+                  }}</span>
+                  <app-status-chip [status]="order.status" />
+                </div>
+                <app-voyage-line
+                  size="mini"
+                  [status]="order.status"
+                  [orderedOn]="order.orderedOn"
+                  [shippedOn]="order.shippedOn"
+                  [dueOn]="order.dueOn"
+                />
+                <div class="card-bottom">
+                  <span>{{ order.itemCount }} item{{ order.itemCount === 1 ? '' : 's' }}</span>
+                  <span class="mono" data-testid="order-row-total">{{
+                    formatMoney(order.total)
+                  }}</span>
+                </div>
+              </button>
+            </li>
+          }
+        </ul>
+      }
     }
-  </ul>
+  </div>
 }
 
 <app-order-drawer />

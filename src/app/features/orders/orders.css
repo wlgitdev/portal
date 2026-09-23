@@ -1,4 +1,7 @@
 input[type='search'],
+input[type='text'],
+input[type='date'],
+input[type='number'],
 select {
   font: inherit;
   font-size: var(--text-sm);
@@ -6,6 +9,84 @@ select {
   border-radius: var(--radius-md);
   border: 1px solid var(--mat-sys-outline);
   background: var(--color-surface);
+}
+
+.page-header .actions button {
+  font: inherit;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--mat-sys-outline);
+  background: var(--color-surface);
+  color: var(--color-deep-water);
+  cursor: pointer;
+}
+
+.page-header .actions button[aria-expanded='true'] {
+  border-color: var(--color-fjord);
+  color: var(--color-fjord);
+}
+
+.field-label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.filters-panel {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: var(--space-3);
+  align-items: end;
+  padding: 0 var(--space-6) var(--space-5);
+}
+
+@media (max-width: 719px) {
+  .filters-panel {
+    grid-template-columns: 1fr;
+    padding-inline: var(--space-4);
+  }
+}
+
+.filters-panel label {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  font-size: var(--text-sm);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.filters-panel button {
+  font: inherit;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--mat-sys-outline);
+  background: var(--color-surface);
+  cursor: pointer;
+  align-self: end;
+}
+
+.no-matches {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.no-matches button {
+  font: inherit;
+  font-weight: 600;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-md);
+  border: none;
+  background: var(--color-fjord);
+  color: white;
+  cursor: pointer;
 }
 
 .loading-panel {
@@ -34,8 +115,6 @@ select {
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
-  list-style: none;
-  margin: 0;
   padding: 0 var(--space-4) var(--space-6);
 }
 
@@ -43,6 +122,19 @@ select {
   .card-view {
     display: none;
   }
+}
+
+.card-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.align-right {
+  text-align: right;
 }
 
 .card-view button {

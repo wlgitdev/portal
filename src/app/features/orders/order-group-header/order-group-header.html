@@ -1,0 +1,19 @@
+<div class="order-group" data-testid="order-group">
+  <button type="button" [attr.aria-expanded]="!collapsed()" (click)="toggled.emit()">
+    <svg class="chevron" [class.collapsed]="collapsed()" viewBox="0 0 16 16" aria-hidden="true">
+      <path
+        d="M4 6l4 4 4-4"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.6"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
+    </svg>
+    <span
+      >{{ group().label }} · {{ group().orders.length }}
+      {{ group().orders.length === 1 ? 'order' : 'orders' }} ·
+      {{ formatMoney(group().total) }}</span
+    >
+  </button>
+</div>

@@ -32,20 +32,16 @@
   flex-direction: column;
   align-items: center;
   gap: var(--space-1);
+  padding-block: var(--space-2);
+  border-inline-start: 3px solid transparent;
   color: color-mix(in srgb, white 70%, transparent);
   text-decoration: none;
   font-size: var(--text-xs);
 }
 
-.side-rail a .dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: currentColor;
-}
-
 .side-rail a.active {
   color: white;
+  border-inline-start-color: white;
 }
 
 .main {
@@ -68,10 +64,33 @@
   color: var(--color-fjord);
 }
 
+.session {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
 .signed-in-as {
   font-family: var(--font-mono);
   font-size: var(--text-sm);
   color: var(--mat-sys-on-surface-variant);
+}
+
+.sign-out {
+  font: inherit;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-fjord);
+  background: none;
+  border: none;
+  padding: var(--space-1) 0;
+  cursor: pointer;
+}
+
+.sign-out:hover,
+.sign-out:focus-visible {
+  text-decoration: underline;
+  outline: none;
 }
 
 .content {
@@ -105,17 +124,20 @@
 }
 
 .bottom-nav a {
+  flex: 1;
+  min-height: 48px;
   display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  border-block-start: 3px solid transparent;
   color: var(--mat-sys-on-surface-variant);
-}
-
-.bottom-nav a .dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: currentColor;
+  text-decoration: none;
+  font-size: var(--text-xs);
 }
 
 .bottom-nav a.active {
   color: var(--color-fjord);
+  border-block-start-color: var(--color-fjord);
 }
