@@ -16,13 +16,24 @@
         <app-skeleton [rows]="4" />
       </div>
     } @else if (store.selectedOrder(); as order) {
-      <app-voyage-line
-        size="large"
-        [status]="order.status"
-        [orderedOn]="order.orderedOn"
-        [shippedOn]="order.shippedOn"
-        [dueOn]="order.dueOn"
-      />
+      <app-status-tracker size="large" [status]="order.status" />
+
+      <dl class="order-dates">
+        <div>
+          <dt>Ordered</dt>
+          <dd data-testid="order-drawer-ordered">{{ ukDate(order.orderedOn) }}</dd>
+        </div>
+        <div>
+          <dt>Shipped</dt>
+          <dd data-testid="order-drawer-shipped">{{
+            order.shippedOn ? ukDate(order.shippedOn) : 'Not yet'
+          }}</dd>
+        </div>
+        <div>
+          <dt>Due</dt>
+          <dd data-testid="order-drawer-due">{{ ukDate(order.dueOn) }}</dd>
+        </div>
+      </dl>
 
       <section class="ship-to">
         <h2>Ship to</h2>

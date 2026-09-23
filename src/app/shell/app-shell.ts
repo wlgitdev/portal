@@ -1,10 +1,10 @@
 import { CdkMenuTrigger } from '@angular/cdk/menu';
-import type { ConnectedPosition } from '@angular/cdk/overlay';
 import { MatBottomSheet } from '@angular/material/bottom-sheet';
 import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { CustomerSession } from '../core/auth/customer-session';
 import { Icon } from '../shared/icon/icon';
+import { END_ALIGNED_MENU_POSITION } from '../shared/menu-position';
 import { Monogram } from '../shared/monogram/monogram';
 import { openTrackedBottomSheet } from '../shared/tracked-bottom-sheet';
 import { Viewport } from '../shared/viewport/viewport';
@@ -24,12 +24,6 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { label: 'Orders', path: '/orders', icon: 'orders' },
   { label: 'Account', path: '/account', icon: 'account' },
-];
-
-// Right edge of the trigger to the right edge of the menu, opening downward
-// (design Revision 3: the account menu is right-aligned under the trigger).
-const ACCOUNT_MENU_POSITIONS: ConnectedPosition[] = [
-  { originX: 'end', originY: 'bottom', overlayX: 'end', overlayY: 'top', offsetY: 8 },
 ];
 
 @Component({
@@ -53,7 +47,7 @@ export class AppShell {
   private readonly bottomSheet = inject(MatBottomSheet);
 
   protected readonly navItems = NAV_ITEMS;
-  protected readonly accountMenuPositions = ACCOUNT_MENU_POSITIONS;
+  protected readonly accountMenuPositions = END_ALIGNED_MENU_POSITION;
   protected readonly accountSheetOpen = signal(false);
 
   protected readonly currentCustomer = computed(() => ({

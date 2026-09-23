@@ -1,0 +1,89 @@
+:host {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.track {
+  display: flex;
+  align-items: center;
+}
+
+.stop {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--color-fjord);
+  color: white;
+}
+
+:host(.large) .stop {
+  width: 32px;
+  height: 32px;
+}
+
+.stop[data-state='todo'] {
+  background: var(--color-surface);
+  border: 1.5px solid var(--mat-sys-outline-variant);
+  color: var(--mat-sys-outline);
+}
+
+.segment {
+  flex: 1;
+  height: 2px;
+  background: var(--mat-sys-outline-variant);
+}
+
+.segment.filled {
+  background: var(--color-fjord);
+}
+
+.label {
+  font: 600 12px/1.25 var(--font-body);
+  text-align: center;
+  color: var(--color-deep-water);
+}
+
+:host(.large) .label {
+  font-size: 14px;
+}
+
+.label.end {
+  text-align: right;
+}
+
+/* The current stop's colour (and the label under it) comes from the
+   order's own status, carried on the host as data-status — not from stop
+   index, since exactly one stop is ever "current" at a time. */
+:host([data-status='Awaiting dispatch']) .stop[data-state='current'] {
+  background: var(--color-signal-amber);
+  color: var(--color-amber-text);
+}
+
+:host([data-status='Awaiting dispatch']) .label {
+  color: var(--color-amber-text);
+}
+
+:host([data-status='Late']) .stop[data-state='current'] {
+  background: var(--color-harbour-red);
+  color: white;
+}
+
+:host([data-status='Late']) .label {
+  color: var(--color-harbour-red);
+}
+
+:host([data-status='Shipped']) .stop[data-state='current'] {
+  background: var(--color-sea-glass);
+  color: white;
+}
+
+:host([data-status='Shipped']) .label {
+  /* Matches the shipped chip's tint this replaces — sea-glass alone is too
+     light for text on white. */
+  color: color-mix(in srgb, var(--color-sea-glass) 65%, var(--color-deep-water));
+}

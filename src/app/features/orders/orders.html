@@ -93,19 +93,47 @@
           }
         </button>
 
-        <div class="group-by-pill">
+        <button
+          type="button"
+          class="filters-pill"
+          [class.open]="groupByTrigger.isOpen()"
+          #groupByTrigger="cdkMenuTriggerFor"
+          [cdkMenuTriggerFor]="groupByMenuTpl"
+          [cdkMenuPosition]="menuPosition"
+          aria-haspopup="menu"
+          [attr.aria-expanded]="groupByTrigger.isOpen()"
+        >
           <app-icon name="group" [size]="16" />
-          <label for="orders-group-by">Group by</label>
-          <select
-            id="orders-group-by"
-            [value]="filterState.groupBy()"
-            (change)="onGroupByChange($event)"
+          <span class="pill-label">Group by</span>
+          <span class="pill-value">{{ currentGroupByLabel() }}</span>
+          <app-icon
+            name="chevron-down"
+            [size]="14"
+            class="chevron"
+            [class.open]="groupByTrigger.isOpen()"
+          />
+        </button>
+        <ng-template #groupByMenuTpl>
+          <div
+            cdkMenu
+            aria-label="Group by"
+            class="popover-surface group-by-menu"
+            data-testid="popover-surface"
           >
             @for (option of groupByOptions; track option.value) {
-              <option [value]="option.value">{{ option.label }}</option>
+              <button
+                type="button"
+                cdkMenuItemRadio
+                class="menu-radio-item"
+                [cdkMenuItemChecked]="option.value === filterState.groupBy()"
+                (click)="filterState.setGroupBy(option.value)"
+              >
+                <app-icon name="check" [size]="16" class="check-icon" />
+                {{ option.label }}
+              </button>
             }
-          </select>
-        </div>
+          </div>
+        </ng-template>
       </div>
     </div>
 
@@ -114,12 +142,19 @@
       [cdkConnectedOverlayOrigin]="filtersOrigin"
       [cdkConnectedOverlayOpen]="filtersOpen()"
       [cdkConnectedOverlayPositions]="filtersPositions"
+      [cdkConnectedOverlayFlexibleDimensions]="true"
+      [cdkConnectedOverlayViewportMargin]="16"
       [cdkConnectedOverlayHasBackdrop]="true"
       cdkConnectedOverlayBackdropClass="cdk-overlay-transparent-backdrop"
       (backdropClick)="closeFilters()"
       (detach)="filtersOpen.set(false)"
     >
-      <div class="filters-popover" id="order-filters-panel" (keydown.escape)="closeFilters()">
+      <div
+        class="filters-popover popover-surface"
+        data-testid="popover-surface"
+        id="order-filters-panel"
+        (keydown.escape)="closeFilters()"
+      >
         <app-order-filters (closed)="closeFilters()" />
       </div>
     </ng-template>
@@ -142,23 +177,7 @@
   <app-orders-empty-state />
 } @else if (filterState.visibleOrderCount() === 0) {
   <app-orders-no-matches />
-} @else {
-  <div class="grid-view">
-    <ag-grid-angular
-      [rowData]="gridRows()"
-      [columnDefs]="columnDefs"
-      [getRowId]="getRowId"
-      [theme]="gridTheme"
-      [tooltipShowMode]="tooltipShowMode"
-      [tooltipShowDelay]="tooltipShowDelay"
-      [isFullWidthRow]="isFullWidthRow"
-      [fullWidthCellRenderer]="fullWidthCellRenderer"
-      [fullWidthCellRendererParams]="fullWidthCellRendererParams"
-      [postSortRows]="postSortRows"
-      (cellClicked)="onCellClicked($event)"
-    />
-  </div>
-
+} @else if (viewport.isPhone()) {
   <div class="card-view">
     @for (group of filterState.orderView().groups; track group.key) {
       @if (filterState.groupBy() !== 'none') {
@@ -179,19 +198,10 @@
                 [attr.data-order-id]="order.id"
                 (click)="openOrder(order.id)"
               >
-                <div class="card-top">
-                  <span class="order-number mono" data-testid="order-row-number">{{
-                    '#' + order.id
-                  }}</span>
-                  <app-status-chip [status]="order.status" />
-                </div>
-                <app-voyage-line
-                  size="mini"
-                  [status]="order.status"
-                  [orderedOn]="order.orderedOn"
-                  [shippedOn]="order.shippedOn"
-                  [dueOn]="order.dueOn"
-                />
+                <span class="order-number mono" data-testid="order-row-number">{{
+                  '#' + order.id
+                }}</span>
+                <app-status-tracker [status]="order.status" />
                 <div class="card-bottom">
                   <span>{{ order.itemCount }} {{ plural(order.itemCount, 'item') }}</span>
                   <span class="mono" data-testid="order-row-total">{{
@@ -204,6 +214,23 @@
         </ul>
       }
     }
+  </div>
+} @else {
+  <div class="grid-view">
+    <ag-grid-angular
+      [rowData]="gridRows()"
+      [columnDefs]="columnDefs"
+      [getRowId]="getRowId"
+      [theme]="gridTheme"
+      [rowHeight]="rowHeight"
+      [tooltipShowMode]="tooltipShowMode"
+      [tooltipShowDelay]="tooltipShowDelay"
+      [isFullWidthRow]="isFullWidthRow"
+      [fullWidthCellRenderer]="fullWidthCellRenderer"
+      [fullWidthCellRendererParams]="fullWidthCellRendererParams"
+      [postSortRows]="postSortRows"
+      (cellClicked)="onCellClicked($event)"
+    />
   </div>
 }
 

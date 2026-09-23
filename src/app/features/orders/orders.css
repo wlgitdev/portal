@@ -1,6 +1,27 @@
-select {
-  font: inherit;
-  font-size: var(--text-sm);
+/* Orders is the one page that never scrolls at >=720px (R18): its own
+   height is exactly what's left under the sticky top bar (and the bottom
+   nav, while that still shows below 1024px), so only the grid — flex:1
+   below — scrolls internally. Phone keeps ordinary page scroll. */
+@media (min-width: 720px) {
+  :host {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    height: calc(100dvh - var(--top-bar-height) - var(--bottom-nav-height));
+    overflow: hidden;
+  }
+
+  app-page-header,
+  .toolbar-row2,
+  .chips-row {
+    flex: none;
+  }
+}
+
+@media (min-width: 1024px) {
+  :host {
+    height: calc(100dvh - var(--top-bar-height));
+  }
 }
 
 .search-row {
@@ -36,7 +57,6 @@ select {
   min-width: 0;
   border: none;
   background: none;
-  font: inherit;
   font-size: var(--text-sm);
   color: var(--color-deep-water);
 }
@@ -205,8 +225,9 @@ select {
   padding-bottom: var(--space-2);
 }
 
-.filters-pill,
-.group-by-pill {
+/* Group by (R24) is a button styled with this exact class, not its own —
+   it and Filters read as one family of controls. */
+.filters-pill {
   display: flex;
   align-items: center;
   gap: var(--space-2);
@@ -228,20 +249,66 @@ select {
   color: var(--color-fjord);
 }
 
-.group-by-pill {
-  position: relative;
-  cursor: default;
-}
-
-.group-by-pill label {
+.pill-label {
   color: var(--mat-sys-on-surface-variant);
 }
 
-.group-by-pill select {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
+.pill-value {
+  font-weight: 600;
+}
+
+.filters-pill .chevron {
+  color: var(--mat-sys-on-surface-variant);
+  transition: transform 160ms var(--ease-out-sheet);
+}
+
+.filters-pill .chevron.open {
+  transform: rotate(180deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .filters-pill .chevron {
+    transition: none;
+  }
+}
+
+.group-by-menu {
+  min-width: 200px;
+  padding-block: var(--space-2);
+}
+
+.menu-radio-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  height: 44px;
+  padding-inline: var(--space-4);
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-deep-water);
+  text-align: left;
   cursor: pointer;
+}
+
+.menu-radio-item:hover,
+.menu-radio-item:focus-visible,
+.menu-radio-item.cdk-menu-item-highlighted {
+  background: var(--color-fjord-wash);
+  outline: none;
+}
+
+.check-icon {
+  flex: none;
+  color: var(--color-fjord);
+  visibility: hidden;
+}
+
+.menu-radio-item[aria-checked='true'] .check-icon {
+  visibility: visible;
 }
 
 .chips-row {
@@ -253,40 +320,30 @@ select {
   padding-inline: var(--space-4);
 }
 
+/* Chrome shared with every other desktop pop-up (background, radius,
+   shadow, entry animation) lives once in styles.css as .popover-surface
+   (R23); this only sizes and lays out this one popover's own content. It
+   never runs off the screen: cdkConnectedOverlayFlexibleDimensions (in the
+   template) shrinks the overlay pane to the real available space, and this
+   height rides along with it. */
 .filters-popover {
   width: 420px;
   max-width: 90vw;
-  max-height: 70vh;
+  max-height: min(70vh, 100%);
   display: flex;
   flex-direction: column;
-  background: var(--color-surface);
-  border-radius: 14px;
-  box-shadow: var(--shadow-float);
-  animation: popover-in 160ms var(--ease-out-sheet);
-}
-
-/* Runs once per fresh insertion — the overlay recreates this element each
-   time it opens, so no open/close state needs tracking here (R16). */
-@keyframes popover-in {
-  from {
-    opacity: 0;
-    transform: translateY(-4px);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .filters-popover {
-    animation: none;
-  }
 }
 
 .loading-panel {
   padding: 0 var(--space-6);
 }
 
+/* Which of these two renders is now an @if/@else on viewport.isPhone() in
+   the template (one DOM, not a hidden AG Grid sitting behind the cards) —
+   these rules only need to lay each one out, not decide when it shows. */
 .grid-view {
-  display: none;
-  height: calc(100vh - 200px);
+  flex: 1;
+  min-height: 240px;
   padding: 0 var(--space-6) var(--space-6);
 }
 
@@ -296,23 +353,11 @@ select {
   width: 100%;
 }
 
-@media (min-width: 720px) {
-  .grid-view {
-    display: block;
-  }
-}
-
 .card-view {
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
   padding: var(--space-3) var(--space-4) var(--space-6);
-}
-
-@media (min-width: 720px) {
-  .card-view {
-    display: none;
-  }
 }
 
 .card-list {
@@ -358,7 +403,6 @@ select {
   outline: none;
 }
 
-.card-top,
 .card-bottom {
   display: flex;
   align-items: center;

@@ -36,7 +36,7 @@ async function surfaceStyle(page: Page): Promise<Record<string, string>> {
   return computed(surface, SURFACE_PROPERTIES);
 }
 
-test.describe.skip('orders toolbar on desktop', () => {
+test.describe('orders toolbar on desktop', () => {
   test.use({ viewport: DESKTOP });
 
   test('Filters and Group by labels are set in the same type', async ({ page }) => {

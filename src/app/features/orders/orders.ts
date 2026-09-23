@@ -8,25 +8,25 @@ import {
   type IsFullWidthRowParams,
   type PostSortRowsParams,
 } from 'ag-grid-community';
+import { CdkMenu, CdkMenuItemRadio, CdkMenuTrigger } from '@angular/cdk/menu';
 import { CdkConnectedOverlay, CdkOverlayOrigin, type ConnectedPosition } from '@angular/cdk/overlay';
 import { NgTemplateOutlet } from '@angular/common';
 import { MatBottomSheet } from '@angular/material/bottom-sheet';
 import { Component, ElementRef, computed, inject, signal, viewChild } from '@angular/core';
 import { Icon } from '../../shared/icon/icon';
+import { END_ALIGNED_MENU_POSITION } from '../../shared/menu-position';
 import { PageHeader } from '../../shared/page-header/page-header';
 import { Skeleton } from '../../shared/skeleton/skeleton';
-import { StatusChip } from '../../shared/status-chip/status-chip';
+import { StatusTracker } from '../../shared/status-tracker/status-tracker';
 import { openTrackedBottomSheet } from '../../shared/tracked-bottom-sheet';
 import { Viewport } from '../../shared/viewport/viewport';
-import { VoyageLine } from '../../shared/voyage-line/voyage-line';
 import { OrdersStore } from '../../core/orders/orders-store';
 import { ActiveFilterChips } from './active-filter-chips/active-filter-chips';
 import { OrderFilters } from './order-filters/order-filters';
 import { OrdersEmptyState } from './orders-empty-state/orders-empty-state';
 import { OrdersFilterState } from './orders-filter-state';
 import { OrdersNoMatches } from './orders-no-matches/orders-no-matches';
-import { StatusCellRenderer } from './status-cell-renderer';
-import { VoyageCellRenderer } from './voyage-cell-renderer';
+import { StatusTrackerCellRenderer } from './status-tracker-cell-renderer';
 import { OrderDrawer } from './order-drawer/order-drawer';
 import { OrderGroupHeader } from './order-group-header/order-group-header';
 import {
@@ -34,10 +34,10 @@ import {
   type GroupRowData,
   type OrderGroupRowParams,
 } from './order-group-row/order-group-row';
-import { GROUP_BY_OPTIONS, displayedText, plural, type GroupBy } from './order-view';
+import { GROUP_BY_OPTIONS, STATUS_GROUP_ORDER, displayedText, plural } from './order-view';
 import type { OrderStatus, OrderSummary } from '../../core/api/models';
 
-type ColId = 'orderNo' | 'orderedOn' | 'status' | 'progress' | 'itemCount' | 'total' | 'shipTo';
+type ColId = 'orderNo' | 'orderedOn' | 'status' | 'itemCount' | 'total' | 'shipTo';
 
 // Every order row also carries the key of the group it's currently in, so
 // postSortRows (below) can re-partition rows AG Grid has just sorted flat.
@@ -49,7 +49,7 @@ function isGroupRow(row: GridRow): row is GroupRowData {
 }
 
 function controlValue(event: Event): string {
-  return (event.target as HTMLInputElement | HTMLSelectElement).value;
+  return (event.target as HTMLInputElement).value;
 }
 
 const STATUS_DOT_CLASS: Record<OrderStatus, string> = {
@@ -58,21 +58,23 @@ const STATUS_DOT_CLASS: Record<OrderStatus, string> = {
   Shipped: 'ship',
 };
 
-// Right edge of the trigger to the right edge of the popover if it fits,
-// left-aligned as a fallback near the viewport's right edge.
+// Below the trigger, end-aligned then start-aligned; above as a fallback in
+// the same two alignments for a short window (R23 "opens upward only if
+// there's more room above" — cdkConnectedOverlayFlexibleDimensions, bound
+// in the template, then shrinks whichever of these actually gets used).
 const FILTERS_POSITIONS: ConnectedPosition[] = [
   { originX: 'end', originY: 'bottom', overlayX: 'end', overlayY: 'top', offsetY: 8 },
   { originX: 'start', originY: 'bottom', overlayX: 'start', overlayY: 'top', offsetY: 8 },
+  { originX: 'end', originY: 'top', overlayX: 'end', overlayY: 'bottom', offsetY: -8 },
+  { originX: 'start', originY: 'top', overlayX: 'start', overlayY: 'bottom', offsetY: -8 },
 ];
 
-// Verbatim design Revision 2 copy — pinned by e2e/orders-table.spec.ts.
+// Verbatim design Revision 4 copy — pinned by e2e/orders-table.spec.ts.
 const HEADER_TOOLTIPS: Record<ColId, string> = {
   orderNo: "Northwind's reference number for this order.",
   orderedOn: 'The date you placed the order.',
   status:
-    'Shipped: on its way to you. Awaiting dispatch: not shipped yet, still on time. Late: not shipped and past its due date.',
-  progress:
-    "The order's journey from ordered, through shipped, to due. The marker shows where it is today.",
+    "Each order moves from Ordered, to Awaiting dispatch, to Shipped. Late means it hasn't shipped and is past its due date.",
   itemCount: 'How many different products are on the order.',
   total: 'Value of the goods after discounts. Freight is charged separately.',
   shipTo: 'Who the order is delivered to.',
@@ -82,8 +84,7 @@ const HEADER_TOOLTIPS: Record<ColId, string> = {
   selector: 'app-orders',
   imports: [
     PageHeader,
-    StatusChip,
-    VoyageLine,
+    StatusTracker,
     Skeleton,
     OrderDrawer,
     OrderGroupHeader,
@@ -95,6 +96,9 @@ const HEADER_TOOLTIPS: Record<ColId, string> = {
     OrdersNoMatches,
     CdkConnectedOverlay,
     CdkOverlayOrigin,
+    CdkMenu,
+    CdkMenuItemRadio,
+    CdkMenuTrigger,
     NgTemplateOutlet,
   ],
   templateUrl: './orders.html',
@@ -108,12 +112,17 @@ export class Orders {
 
   protected readonly groupByOptions = GROUP_BY_OPTIONS;
   protected readonly filtersPositions = FILTERS_POSITIONS;
+  protected readonly menuPosition = END_ALIGNED_MENU_POSITION;
   protected readonly filtersOpen = signal(false);
   protected readonly filtersSheetOpen = signal(false);
   protected readonly statusDotClass = STATUS_DOT_CLASS;
   protected readonly controlValue = controlValue;
   protected readonly displayedText = displayedText;
   protected readonly plural = plural;
+
+  protected readonly currentGroupByLabel = computed(
+    () => this.groupByOptions.find((option) => option.value === this.filterState.groupBy())!.label,
+  );
 
   private readonly filtersTriggerEl = viewChild<ElementRef<HTMLButtonElement>>('filtersTriggerEl');
 
@@ -172,20 +181,13 @@ export class Orders {
       headerName: 'Status',
       headerTooltip: HEADER_TOOLTIPS.status,
       headerComponent: 'agColumnHeader',
-      cellRenderer: StatusCellRenderer,
+      cellRenderer: StatusTrackerCellRenderer,
+      valueGetter: (p) => (p.data as OrderRow).status,
+      comparator: (a: OrderStatus, b: OrderStatus) =>
+        STATUS_GROUP_ORDER.indexOf(a) - STATUS_GROUP_ORDER.indexOf(b),
       // No tooltipValueGetter: whenTruncated can't measure a renderer cell,
       // so any value here would show on every hover (spec R2).
-      minWidth: 150,
-      flex: 1,
-    },
-    {
-      colId: 'progress',
-      headerName: 'Progress',
-      headerTooltip: HEADER_TOOLTIPS.progress,
-      headerComponent: 'agColumnHeader',
-      cellRenderer: VoyageCellRenderer,
-      sortable: false,
-      minWidth: 140,
+      minWidth: 168,
       flex: 2,
     },
     {
@@ -233,6 +235,8 @@ export class Orders {
   protected readonly getRowId = (params: GetRowIdParams<GridRow>) =>
     isGroupRow(params.data) ? `group:${params.data.group.key}` : String(params.data.id);
   protected readonly gridTheme = themeQuartz;
+  // Tall enough for the status tracker's line + name under it (R20).
+  protected readonly rowHeight = 52;
   protected readonly tooltipShowMode = 'whenTruncated' as const;
   protected readonly tooltipShowDelay = 400;
 
@@ -304,10 +308,6 @@ export class Orders {
 
   protected openFiltersSheet(): void {
     openTrackedBottomSheet(this.bottomSheet, OrderFilters, this.filtersSheetOpen);
-  }
-
-  protected onGroupByChange(event: Event): void {
-    this.filterState.setGroupBy(controlValue(event) as GroupBy);
   }
 }
 

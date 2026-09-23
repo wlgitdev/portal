@@ -8,7 +8,7 @@ Show sales and testers a customer portal they can click through. Done means ever
 
 | # | Item | Status | To test |
 |---|---|---|---|
-| 1 | Sign in as a customer and browse your orders | Waiting for Dev (failed) | Sign in as Alfreds, search orders, filter "Late", open one and check the lines add up to the total. On desktop, hover a header and a cut-off cell. Tap the status tabs, open Filters, drag the Total range and remove a chip. Switch customer from the top-right menu, then sign out. On a phone, check the Filters sheet and the account sheet. Then: drag the window from phone to desktop width and check a menu always shows; scroll to the bottom and check the top bar stays; read each order's status on its tracker; shrink the window's height and check Filters' buttons stay on screen; open Group by. |
+| 1 | Sign in as a customer and browse your orders | Waiting for Release (T) | Sign in as Alfreds, search orders, filter "Late", open one and check the lines add up to the total. On desktop, hover a header and a cut-off cell. Tap the status tabs, open Filters, drag the Total range and remove a chip. Switch customer from the top-right menu, then sign out. On a phone, check the Filters sheet and the account sheet. Then: drag the window from phone to desktop width and check a menu always shows; scroll to the bottom and check the top bar stays; read each order's status on its tracker; shrink the window's height and check Filters' buttons stay on screen; open Group by. |
 | 2 | Download a delivery note for any order | Ready for Release | Open an order, download its delivery note, check the PDF totals match the screen. On a phone, check each bottom menu item shows a picture and its name. |
 | 3 | See spending and delivery dates at a glance | Waiting for Dev | Open Spend and Schedule, switch Spend to table view, click a calendar entry to open the order. |
 | 4 | Edit your contact details | Waiting for Release (T) | Enter letters in Phone and try saving; fix it, save, reload and check it stuck. |
@@ -68,16 +68,9 @@ Item 2:
    → Every menu item shows a picture and its name, on phone and desktop. (P6 R7)
 
 ## DEV next step
-Still outstanding, next once picked back up: re-enter item 1 at **Waiting for Dev (failed)** via the DEV playbook and build `portal-lite-spec.md` phase **P8** (R17–R25). Item 2 stays Ready for Release; its nav-label test must stay green. Item 4 is now built (see build note below); don't touch item 3 or 5.
+Items 1, 2 and 4 are now built (see build notes below). Still outstanding, next once picked back up: item 3 (Spend/Schedule, bundle B3) and item 5 (brand/dark mode, bundle B5) — both still **Waiting for Dev**, both untouched this round.
 
-Remove `.skip` from these pending tests, and don't change any assertion:
-- new: `e2e/shell-layout.spec.ts`, `e2e/status-tracker.spec.ts`, `e2e/orders-toolbar.spec.ts`;
-- updated by DES: the six skipped tests in `e2e/orders-table.spec.ts`;
-- `e2e/shell.spec.ts` "account menu: switch customer and sign out (B1)", now both phone and desktop. DES settled P7's open question: the test now finds the phone trigger by its label, and the assertion is unchanged.
-
-If a test looks wrong, stop and hand back to DES.
-
-Previous build note (P7, 23/09/2026), kept for the record: two tests were reported flaky, independent of the build: `e2e/orders-table.spec.ts` "a cut-off cell shows its full text on hover" and `e2e/orders.spec.ts` "filter Late and open one whose lines sum to its total". Not fixed by P8; wants its own item.
+Previous build note (P7, 23/09/2026), kept for the record: two tests were reported flaky, independent of the build: `e2e/orders-table.spec.ts` "a cut-off cell shows its full text on hover" and `e2e/orders.spec.ts` "filter Late and open one whose lines sum to its total". Still just flaky as of the P8 build below (each passes alone; whichever of the two trips varies by run) — not fixed, wants its own item.
 
 ## DEV build note — item 4 (23/09/2026)
 WL pulled item 4 forward out of turn (time-crunch); item 1's P8 rework above is still unbuilt and untouched. `portal-lite-spec.md` P2/P4 and `portal-lite-design.md`'s Account screen already fully specced bundle B4, so no new spec/design doc was needed. Built `GET`/`PUT /api/me` and the Account screen (Contact/Address/Phone sections per the design) straight from those. Added the `db/portal-lite.sql` CustomerProfile query P1 called for but never got written.
@@ -87,3 +80,13 @@ WL pulled item 4 forward out of turn (time-crunch); item 1's P8 rework above is 
 ### Pre-existing, not fixed here
 - `PortalApi.searchCustomers` (P4's "typed PortalApi service") has never actually been called — sign-in and OrdersStore both fetch via `httpResource` directly instead. `updateMe` was added to `PortalApi` here since a one-shot PUT needs an imperative call anyway; the dead `searchCustomers` method and the sign-in/orders drift are untouched. Wants its own item if it's worth resolving.
 - This session's cloud sandbox needed a local Node bump (22.22.2 → a `/usr/bin` 24.x install ahead of the pinned `/opt/node22` on `PATH`) before `ng serve`/Playwright's webServer would start at all — same root cause as the P6 note above, just hit again. Nothing in the repo changed for this; flagging in case the sandbox image itself is worth fixing so the next session doesn't repeat it.
+
+## DEV build note — item 1, P8 rework (23/09/2026)
+Built `portal-lite-spec.md` phase **P8** (R17–R25, design → "Revision 4") straight from the spec and design doc; no gaps found. Nav now splits bottom-nav/side-rail at 1024px (was two different breakpoints with a gap between them); top bar and side rail are sticky with a new small z-index scale in `tokens.css`; Orders' own height is capped to exactly what's left under the chrome at ≥720px so only the grid scrolls (the old `calc(100vh - 200px)` guess is gone). New `src/app/shared/status-tracker/` replaces the status chip, the voyage line in the grid/cards/drawer, and the Progress column with one component (compact in the grid and phone cards, large in the drawer); `StatusChip`, `StatusCellRenderer` and `VoyageCellRenderer` are deleted, now nothing imports them (`VoyageLine` itself stays — sign-in still uses it). Group by is now a button + menu on the same shared `.popover-surface` as Filters and the account menu (new `src/app/shared/menu-position.ts` so the account menu and Group by share one `ConnectedPosition`), and the Filters popover no longer runs off a short screen (`cdkConnectedOverlayFlexibleDimensions`).
+
+One fix beyond the R-items: the account-menu "switch customer" test (`e2e/shell.spec.ts`) failed on a genuine bug, not a test problem — Sign out was fine, but "Switch to" left a beat where the outgoing customer's orders were still the ones on screen. Root cause: `httpResource` (`OrdersStore.ordersResource`) doesn't notice a changed `X-Demo-Customer` synchronously with the signal write, so `reset()`'s old `.set(undefined)` was landing before the switch's other effects (the toast, the menu closing) had already painted — those are imperative Material calls, not signal-driven, so they don't wait for Angular's next tick the way the order list does. Fixed in `OrdersStore`: a `reset()`-owned `awaitingFreshOrders` flag now gates `orders()` directly (never trusting `ordersResource`'s own timing), and `reset()` forces a synchronous `ApplicationRef.tick()` so the order list is already empty before `switchTo()`'s other calls run. Confirmed with the test at `--repeat-each=8`.
+
+`.skip` removed from: `e2e/shell-layout.spec.ts`, `e2e/status-tracker.spec.ts`, `e2e/orders-toolbar.spec.ts`, the six P8 tests in `e2e/orders-table.spec.ts`, and the `e2e/shell.spec.ts` account-menu describe block — assertions unchanged throughout. Full suite green: items 2 and 4 unaffected (delivery-note, nav-labels, account all still pass), items 3 and 5 still correctly pending, the two P7 flaky tests are still just flaky (independent of this build, each passes alone).
+
+### Pre-existing, not fixed here
+- Nothing new found this round beyond the two items already listed above.

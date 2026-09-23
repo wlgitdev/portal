@@ -8,7 +8,12 @@ export type IconName =
   | 'chevron-down'
   | 'people'
   | 'sign-out'
-  | 'info';
+  | 'info'
+  | 'check'
+  | 'receipt'
+  | 'clock'
+  | 'warning'
+  | 'ship';
 
 @Component({
   selector: 'app-icon',

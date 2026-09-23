@@ -34,13 +34,14 @@
             [cdkMenuPosition]="accountMenuPositions"
             [attr.aria-label]="'Account: ' + currentCustomer().companyName"
             aria-haspopup="menu"
+            [attr.aria-expanded]="accountTrigger.isOpen()"
           >
             <app-monogram [customer]="currentCustomer()" [size]="32" />
             <span class="account-name">{{ currentCustomer().companyName }}</span>
             <app-icon name="chevron-down" [size]="14" class="chevron" />
           </button>
           <ng-template #accountMenuTpl>
-            <div class="account-menu-popover">
+            <div class="account-menu-popover popover-surface" data-testid="popover-surface">
               <app-account-menu />
             </div>
           </ng-template>

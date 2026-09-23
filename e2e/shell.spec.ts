@@ -32,8 +32,7 @@ async function expectLabelledNavLinks(page: Page, minHeight: number): Promise<vo
   }
 }
 
-// Pending again (DES, P7 R8–R10): identity moved into an account menu.
-test.describe.skip('account menu: switch customer and sign out (B1)', () => {
+test.describe('account menu: switch customer and sign out (B1)', () => {
   const PHONE = { width: 390, height: 844 };
 
   async function openAccountMenu(page: Page, companyName: string) {

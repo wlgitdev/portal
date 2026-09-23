@@ -3,12 +3,13 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { OrdersStore } from '../../../core/orders/orders-store';
 import { formatMoney } from '../../../shared/format-money';
 import { Skeleton } from '../../../shared/skeleton/skeleton';
-import { VoyageLine } from '../../../shared/voyage-line/voyage-line';
+import { StatusTracker } from '../../../shared/status-tracker/status-tracker';
+import { ukDate } from '../order-view';
 import { buildDeliveryNoteDocument } from './delivery-note';
 
 @Component({
   selector: 'app-order-drawer',
-  imports: [VoyageLine, Skeleton],
+  imports: [StatusTracker, Skeleton],
   templateUrl: './order-drawer.html',
   styleUrl: './order-drawer.css',
 })
@@ -17,6 +18,7 @@ export class OrderDrawer {
   private readonly snackBar = inject(MatSnackBar);
 
   protected readonly formatMoney = formatMoney;
+  protected readonly ukDate = ukDate;
   protected readonly downloadingDeliveryNote = signal(false);
 
   protected close(): void {
