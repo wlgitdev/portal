@@ -1,0 +1,103 @@
+/* Content only — the popover/sheet chrome (width, shadow, corners) is the
+   host's concern (app-shell.css for the desktop popover; Material supplies
+   the phone bottom sheet's own chrome), so this component works unstyled
+   inside either. */
+.account-menu {
+  display: block;
+  padding-block-end: var(--space-2);
+  outline: none;
+}
+
+.menu-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+}
+
+.menu-head .name {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 1.0625rem;
+  color: var(--color-deep-water);
+}
+
+.sub {
+  font-size: var(--text-xs);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.menu-head .sub {
+  margin-block-start: 2px;
+}
+
+.demo-note {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0 var(--space-5) var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--color-mist);
+  color: var(--mat-sys-on-surface-variant);
+  font-size: var(--text-xs);
+}
+
+.demo-note app-icon {
+  flex: none;
+}
+
+.group-label {
+  padding: var(--space-3) var(--space-5) var(--space-1);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--mat-sys-outline);
+}
+
+.menu-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  height: 52px;
+  padding-inline: var(--space-5);
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: var(--text-base);
+  font-weight: 500;
+  color: var(--color-deep-water);
+  text-align: left;
+  cursor: pointer;
+}
+
+.menu-item app-icon {
+  color: var(--mat-sys-on-surface-variant);
+  flex: none;
+}
+
+.menu-item-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.menu-item .sub {
+  margin-inline-start: auto;
+  flex: none;
+}
+
+.menu-item:hover,
+.menu-item:focus-visible,
+.menu-item.cdk-menu-item-highlighted {
+  background: var(--color-fjord-wash);
+  outline: none;
+}
+
+.separator {
+  height: 1px;
+  margin: var(--space-2) 0;
+  background: var(--color-line-soft);
+}

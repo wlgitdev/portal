@@ -1,0 +1,35 @@
+<div cdkMenu class="account-menu">
+  <div class="menu-head">
+    <app-monogram [customer]="current()" [size]="48" />
+    <div>
+      <div class="name">{{ current().companyName }}</div>
+      <div class="sub mono">Customer {{ current().id }}</div>
+    </div>
+  </div>
+
+  <div class="demo-note">
+    <app-icon name="info" [size]="16" />
+    Demo sign-in: switch customer without a password.
+  </div>
+
+  <div class="group-label">Switch to</div>
+  @for (customer of others(); track customer.id) {
+    <button type="button" cdkMenuItem class="menu-item" (click)="switchTo(customer)">
+      <app-monogram [customer]="customer" [size]="28" />
+      <span class="menu-item-label">{{ customer.companyName }}</span>
+      <span class="sub mono">{{ customer.id }}</span>
+    </button>
+  }
+
+  <button type="button" cdkMenuItem class="menu-item" (click)="chooseAnother()">
+    <app-icon name="people" />
+    <span class="menu-item-label">Choose another customer…</span>
+  </button>
+
+  <div class="separator"></div>
+
+  <button type="button" cdkMenuItem class="menu-item" (click)="signOut()">
+    <app-icon name="sign-out" />
+    <span class="menu-item-label">Sign out</span>
+  </button>
+</div>
