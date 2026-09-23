@@ -1,6 +1,6 @@
 # Roadmap
 
-Status meanings: Waiting for Planning · Waiting for Dev · In Progress · Waiting for Release (T) · In Testing (T) · Waiting for Dev (failed) · Ready for Release. Testers set only the last two.
+Status meanings: Waiting for Planning · Waiting for Dev · In Progress · Waiting for Release (T) · In Testing (T) · Waiting for Dev (failed) · Ready for Release. Testers set only the last two, the failed status will be accompanied with comments (see "Tester Comments for Waiting for Dev (failed)" section).
 
 ## Now — Customer portal demo (23/09/2026)
 Show sales and testers a customer portal they can click through. Done means every item below is Ready for Release before the demo.
@@ -8,7 +8,7 @@ Show sales and testers a customer portal they can click through. Done means ever
 
 | # | Item | Status | To test |
 |---|---|---|---|
-| 1 | Sign in as a customer and browse your orders | Waiting for Release (T) | Sign in as Alfreds, search orders, filter "Late", open one and check the lines add up to the total. |
+| 1 | Sign in as a customer and browse your orders | Waiting for Dev (failed) | Sign in as Alfreds, search orders, filter "Late", open one and check the lines add up to the total. |
 | 2 | Download a delivery note for any order | Waiting for Release (T) | Open an order, download its delivery note, check the PDF totals match the screen. |
 | 3 | See spending and delivery dates at a glance | Waiting for Dev | Open Spend and Schedule, switch Spend to table view, click a calendar entry to open the order. |
 | 4 | Edit your contact details | Waiting for Dev | Enter letters in Phone and try saving; fix it, save, reload and check it stuck. |
@@ -23,3 +23,13 @@ Show sales and testers a customer portal they can click through. Done means ever
 - Portal keeps working when the database is switched off (layout-swap demo)
 - ~~Setup guide so a colleague can run it in under 10 minutes~~ — done early, see README.md
 - Confirm company turnover for the PDF library decision (carried from full spec)
+
+## Tester Comments for Waiting for Dev (failed)
+item 1: 
+ - in desktop mode the status column label height is too large for the cells.
+ - when the cells are hovered over, if the text content is larger than the column width then a tooltip is expected by the user that displays the full cell content
+ - there is no way to log out/switch users
+ - the meaning of the 'Voyage' column is unclear, hovering over the column headers should show tooltip tooltips to explain the column 
+ - the table should allow searching, grouping, filtering by every displayed column
+Item 2:
+ - in mobile mode, the orders option just shows as a dot. it's unclear to the user what it's supposed to be.
