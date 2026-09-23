@@ -1,0 +1,42 @@
+<svg
+  [attr.width]="size()"
+  [attr.height]="size()"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  aria-hidden="true"
+>
+  @switch (name()) {
+    @case ('search') {
+      <circle cx="11" cy="11" r="7" />
+      <path d="M20 20l-4-4" />
+    }
+    @case ('close') {
+      <path d="M6 6l12 12M18 6L6 18" stroke-width="2.4" />
+    }
+    @case ('filter') {
+      <path d="M4 7h16M7 12h10M10 17h4" />
+    }
+    @case ('group') {
+      <rect x="4" y="4" width="16" height="6" rx="1.5" />
+      <rect x="4" y="14" width="16" height="6" rx="1.5" />
+    }
+    @case ('chevron-down') {
+      <path d="M6 9l6 6 6-6" />
+    }
+    @case ('people') {
+      <circle cx="9" cy="8" r="3.5" />
+      <path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M16 4.5a3.5 3.5 0 010 7M21 20c0-2.6-1.6-4.8-4-5.6" />
+    }
+    @case ('sign-out') {
+      <path d="M14 4h4a2 2 0 012 2v12a2 2 0 01-2 2h-4M9 16l-4-4 4-4M5 12h11" />
+    }
+    @case ('info') {
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 11v6M12 7.5v.5" />
+    }
+  }
+</svg>

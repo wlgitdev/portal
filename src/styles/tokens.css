@@ -15,6 +15,14 @@
   --color-harbour-red: #c2413b;
   --color-surface: #ffffff;
 
+  /* Added in design Revision 3 (P7) — derived from the palette above, not new hues. */
+  --color-fjord-wash: #eef3f8;
+  --color-fjord-tint: #d9e2ec; /* alias of --mat-sys-primary-container */
+  --color-line-soft: #e1e6ea;
+  --radius-pill: 999px;
+  --shadow-float: 0 24px 48px -16px rgb(20 32 46 / 0.45);
+  --ease-out-sheet: cubic-bezier(0.2, 0.8, 0.2, 1);
+
   /* Type */
   --font-display: 'Big Shoulders Display', sans-serif;
   --font-body: 'IBM Plex Sans', sans-serif;

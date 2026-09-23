@@ -30,4 +30,11 @@ export class OrdersStore {
   closeOrder(): void {
     this.selectedOrderId.set(null);
   }
+
+  // Called before a customer switch changes CustomerSession's id, so the
+  // next customer's first render never shows the previous one's orders.
+  reset(): void {
+    this.closeOrder();
+    this.ordersResource.set(undefined);
+  }
 }
