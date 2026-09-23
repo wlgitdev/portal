@@ -1,7 +1,68 @@
 @if (store.orders().length > 0) {
   @if (viewport.isPhone()) {
-  <app-page-header title="Orders">
-    <div class="search-row">
+    <app-page-header title="Orders">
+      <div class="search-row">
+        <div class="search-field">
+          <app-icon name="search" [size]="18" />
+          <input
+            type="search"
+            data-testid="orders-search"
+            [value]="filterState.search()"
+            (input)="filterState.setSearch(controlValue($event))"
+            placeholder="Search all columns"
+            autocomplete="off"
+          />
+          @if (filterState.search()) {
+            <button
+              type="button"
+              class="clear-search"
+              aria-label="Clear search"
+              (click)="filterState.setSearch('')"
+            >
+              <app-icon name="close" [size]="14" />
+            </button>
+          }
+        </div>
+        <button
+          type="button"
+          class="filters-icon-button"
+          [class.active]="filterState.filterCount() > 0"
+          [attr.aria-label]="filtersButtonLabel()"
+          (click)="openFiltersSheet()"
+        >
+          <app-icon name="filter" [size]="20" />
+          @if (filterState.filterCount() > 0) {
+            <span class="badge mono" aria-hidden="true">{{ filterState.filterCount() }}</span>
+          }
+        </button>
+      </div>
+    </app-page-header>
+
+    <div class="status-tabs phone" role="radiogroup" aria-label="Status">
+      @for (tab of filterState.statusTabs(); track tab.value) {
+        <label class="tab" [class.on]="filterState.filters().status === tab.value">
+          <input
+            type="radio"
+            name="orders-status"
+            [checked]="filterState.filters().status === tab.value"
+            (change)="filterState.setStatus(tab.value)"
+          />
+          @if (tab.value !== 'All') {
+            <span class="dot" [class]="statusDotClass[tab.value]"></span>
+          }
+          {{ tab.value }} <span class="count mono">{{ tab.count }}</span>
+        </label>
+      }
+    </div>
+
+    <app-active-filter-chips
+      class="chips-row"
+      [chips]="filterState.chips()"
+      (remove)="filterState.removeChip($event)"
+      (clearAll)="filterState.clearFilters()"
+    />
+  } @else {
+    <app-page-header title="Orders">
       <div class="search-field">
         <app-icon name="search" [size]="18" />
         <input
@@ -23,141 +84,84 @@
           </button>
         }
       </div>
-      <button
-        type="button"
-        class="filters-icon-button"
-        [class.active]="filterState.filterCount() > 0"
-        [attr.aria-label]="filtersButtonLabel()"
-        (click)="openFiltersSheet()"
-      >
-        <app-icon name="filter" [size]="20" />
-        @if (filterState.filterCount() > 0) {
-          <span class="badge mono" aria-hidden="true">{{ filterState.filterCount() }}</span>
-        }
-      </button>
-    </div>
-  </app-page-header>
+    </app-page-header>
 
-  <div class="status-tabs phone" role="radiogroup" aria-label="Status">
-    @for (tab of filterState.statusTabs(); track tab.value) {
-      <label class="tab" [class.on]="filterState.filters().status === tab.value">
-        <input
-          type="radio"
-          name="orders-status"
-          [checked]="filterState.filters().status === tab.value"
-          (change)="filterState.setStatus(tab.value)"
-        />
-        @if (tab.value !== 'All') {
-          <span class="dot" [class]="statusDotClass[tab.value]"></span>
+    <div class="toolbar-row2">
+      <div class="status-tabs" role="radiogroup" aria-label="Status">
+        @for (tab of filterState.statusTabs(); track tab.value) {
+          <label class="tab" [class.on]="filterState.filters().status === tab.value">
+            <input
+              type="radio"
+              name="orders-status"
+              [checked]="filterState.filters().status === tab.value"
+              (change)="filterState.setStatus(tab.value)"
+            />
+            @if (tab.value !== 'All') {
+              <span class="dot" [class]="statusDotClass[tab.value]"></span>
+            }
+            {{ tab.value }} <span class="count mono">{{ tab.count }}</span>
+          </label>
         }
-        {{ tab.value }} <span class="count mono">{{ tab.count }}</span>
-      </label>
-    }
-  </div>
+      </div>
 
-  <app-active-filter-chips
-    class="chips-row"
-    [chips]="filterState.chips()"
-    (remove)="filterState.removeChip($event)"
-    (clearAll)="filterState.clearFilters()"
-  />
-} @else {
-  <app-page-header title="Orders">
-    <div class="search-field">
-      <app-icon name="search" [size]="18" />
-      <input
-        type="search"
-        data-testid="orders-search"
-        [value]="filterState.search()"
-        (input)="filterState.setSearch(controlValue($event))"
-        placeholder="Search all columns"
-        autocomplete="off"
-      />
-      @if (filterState.search()) {
+      <div class="toolbar-tools">
         <button
+          #filtersTriggerEl
           type="button"
-          class="clear-search"
-          aria-label="Clear search"
-          (click)="filterState.setSearch('')"
+          class="filters-pill"
+          cdkOverlayOrigin
+          #filtersOrigin="cdkOverlayOrigin"
+          [class.active]="filterState.filterCount() > 0"
+          [class.open]="filtersOpen()"
+          [attr.aria-label]="filtersButtonLabel()"
+          [attr.aria-expanded]="filtersOpen()"
+          aria-controls="order-filters-panel"
+          (click)="toggleFilters()"
         >
-          <app-icon name="close" [size]="14" />
+          <app-icon name="filter" [size]="16" />
+          Filters
+          @if (filterState.filterCount() > 0) {
+            <span class="badge mono" aria-hidden="true">{{ filterState.filterCount() }}</span>
+          }
         </button>
-      }
-    </div>
-  </app-page-header>
 
-  <div class="toolbar-row2">
-    <div class="status-tabs" role="radiogroup" aria-label="Status">
-      @for (tab of filterState.statusTabs(); track tab.value) {
-        <label class="tab" [class.on]="filterState.filters().status === tab.value">
-          <input
-            type="radio"
-            name="orders-status"
-            [checked]="filterState.filters().status === tab.value"
-            (change)="filterState.setStatus(tab.value)"
-          />
-          @if (tab.value !== 'All') {
-            <span class="dot" [class]="statusDotClass[tab.value]"></span>
-          }
-          {{ tab.value }} <span class="count mono">{{ tab.count }}</span>
-        </label>
-      }
-    </div>
-
-    <div class="toolbar-tools">
-      <button
-        #filtersTriggerEl
-        type="button"
-        class="filters-pill"
-        cdkOverlayOrigin
-        #filtersOrigin="cdkOverlayOrigin"
-        [class.active]="filterState.filterCount() > 0"
-        [class.open]="filtersOpen()"
-        [attr.aria-label]="filtersButtonLabel()"
-        [attr.aria-expanded]="filtersOpen()"
-        aria-controls="order-filters-panel"
-        (click)="toggleFilters()"
-      >
-        <app-icon name="filter" [size]="16" />
-        Filters
-        @if (filterState.filterCount() > 0) {
-          <span class="badge mono" aria-hidden="true">{{ filterState.filterCount() }}</span>
-        }
-      </button>
-
-      <div class="group-by-pill">
-        <app-icon name="group" [size]="16" />
-        <label for="orders-group-by">Group by</label>
-        <select id="orders-group-by" [value]="filterState.groupBy()" (change)="onGroupByChange($event)">
-          @for (option of groupByOptions; track option.value) {
-            <option [value]="option.value">{{ option.label }}</option>
-          }
-        </select>
+        <div class="group-by-pill">
+          <app-icon name="group" [size]="16" />
+          <label for="orders-group-by">Group by</label>
+          <select
+            id="orders-group-by"
+            [value]="filterState.groupBy()"
+            (change)="onGroupByChange($event)"
+          >
+            @for (option of groupByOptions; track option.value) {
+              <option [value]="option.value">{{ option.label }}</option>
+            }
+          </select>
+        </div>
       </div>
     </div>
-  </div>
 
-  <app-active-filter-chips
-    class="chips-row"
-    [chips]="filterState.chips()"
-    (remove)="filterState.removeChip($event)"
-    (clearAll)="filterState.clearFilters()"
-  />
+    <app-active-filter-chips
+      class="chips-row"
+      [chips]="filterState.chips()"
+      (remove)="filterState.removeChip($event)"
+      (clearAll)="filterState.clearFilters()"
+    />
 
-  <ng-template
-    cdkConnectedOverlay
-    [cdkConnectedOverlayOrigin]="filtersOrigin"
-    [cdkConnectedOverlayOpen]="filtersOpen()"
-    [cdkConnectedOverlayPositions]="filtersPositions"
-    [cdkConnectedOverlayHasBackdrop]="true"
-    cdkConnectedOverlayBackdropClass="cdk-overlay-transparent-backdrop"
-    (backdropClick)="closeFilters()"
-    (detach)="filtersOpen.set(false)"
-  >
-    <div class="filters-popover" id="order-filters-panel" (keydown.escape)="closeFilters()">
-      <app-order-filters (closed)="closeFilters()" />
-    </div>
-  </ng-template>
+    <ng-template
+      cdkConnectedOverlay
+      [cdkConnectedOverlayOrigin]="filtersOrigin"
+      [cdkConnectedOverlayOpen]="filtersOpen()"
+      [cdkConnectedOverlayPositions]="filtersPositions"
+      [cdkConnectedOverlayHasBackdrop]="true"
+      cdkConnectedOverlayBackdropClass="cdk-overlay-transparent-backdrop"
+      (backdropClick)="closeFilters()"
+      (detach)="filtersOpen.set(false)"
+    >
+      <div class="filters-popover" id="order-filters-panel" (keydown.escape)="closeFilters()">
+        <app-order-filters (closed)="closeFilters()" />
+      </div>
+    </ng-template>
   }
 }
 
