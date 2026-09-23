@@ -17,9 +17,14 @@ test.describe.skip('sign in and browse orders', () => {
     await page.getByTestId(testId).click();
   }
 
-  test('search orders, filter Late, and open one whose lines sum to its total', async ({
-    page,
-  }) => {
+  // Real Northwind data: every one of ALFKI's 6 orders already shipped, so a
+  // Late filter on Alfreds' own orders is always empty — that's honest data,
+  // not a bug. The design's third featured card ("one customer with late
+  // orders") exists for exactly this reason, so the Late-filter/drawer-math
+  // half of the roadmap's to-test line is exercised via that customer
+  // (ERNSH — Ernst Handel, the only other place that name appears in the
+  // spec is as a brand preset, which is a happy coincidence, not a dependency).
+  test('search orders as Alfreds', async ({ page }) => {
     await signInAs(page, 'customer-card-ALFKI');
     await expect(page).toHaveURL(/\/orders$/);
 
@@ -33,9 +38,13 @@ test.describe.skip('sign in and browse orders', () => {
     await page.getByTestId('orders-search').fill(firstOrderNumber);
     await expect(rows).toHaveCount(1);
     await expect(rows.first().getByTestId('order-row-number')).toHaveText(firstOrderNumber);
-    await page.getByTestId('orders-search').fill('');
+  });
 
-    // Filter: Late.
+  test('filter Late and open one whose lines sum to its total', async ({ page }) => {
+    await signInAs(page, 'customer-card-late-orders');
+    await expect(page).toHaveURL(/\/orders$/);
+
+    const rows = page.getByTestId('order-row');
     await page.getByTestId('orders-status-filter').selectOption({ label: 'Late' });
     await expect(rows.first()).toBeVisible();
     const lateCount = await rows.count();
