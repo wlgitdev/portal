@@ -215,11 +215,100 @@ feed B1 and R7 feeds B2. B3–B5 aren't touched, but inherit R7's nav and R6's t
 removes only the `.skip`. The existing `orders.spec.ts` and `delivery-note.spec.ts`
 must keep passing unchanged.
 
+## P7 — Second rework after testing (DES, 23/09/2026)
+
+Source: roadmap "Tester Comments", item 1, second pass (sign out, empty list, filters).
+Design: `portal-lite-design.md` → "Revision 3", plus the mockup `docs/plans/mockups/orders-rev3.html`.
+P7 **replaces** P6 R5 (page header, filters panel, no-matches) and R6's top-bar
+presentation. P6's search rules, grouping, grid and sign-out data safety all stand.
+
+```yaml
+phase: P7
+component: Orders find surface, account menu, empty states (bundle B1 only)
+requirements:
+  R8_session:
+    - CustomerSession stores { id, companyName } (sessionStorage, same key family); signIn(customer), signOut(), switchTo(customer)
+    - switchTo = signOut + signIn in one step: OrdersStore drops cached list and selection before the new id is set (P6 rule stands)
+    - sign-in page passes the CustomerSummary / featured card it already has — no new API call
+    - FEATURED customers list moves to src/app/core/auth/featured-customers.ts (shared by sign-in and the account menu)
+  R9_monogram:
+    - shared component src/app/shared/monogram/: input customer {id, companyName}, size 28|32|48
+    - initials: first letter of the first two words of companyName (letters only); one word -> first two letters; uppercase
+    - fill: stable hash of id (sum of char codes mod 4) over [#1F3A5F, #2F5D3A, #6E2233, #2B5D54]; white text; aria-hidden
+  R10_account_menu:
+    - trigger in the top bar: button, accessible name "Account: {companyName}", aria-haspopup="menu", aria-expanded;
+      ≥720px shows monogram + company name + chevron; <720px monogram only in a 44x44 hit area
+    - content component src/app/shell/account-menu/: header (48px monogram, name, "Customer {ID}"), demo note
+      "Demo sign-in: switch customer without a password.", group label "Switch to", one menuitem per featured customer
+      except the current one (name = company name), menuitem "Choose another customer…", separator, menuitem "Sign out"
+    - host: @angular/cdk/menu (cdkMenuTriggerFor) ≥720px; MatBottomSheet containing the same cdkMenu <720px
+    - switching lands on /orders and shows snackbar "Now viewing {companyName}"; sign out lands on /sign-in (replaceUrl) with snackbar "Signed out of {companyName}"
+    - "Choose another customer…" = sign out without the snackbar, then /sign-in
+    - the old "Signed in as" text and the bare Sign out button are removed
+  R11_toolbar:
+    - search: type=search pill, testid orders-search kept, magnifier icon, clear button "Clear search" when non-empty
+    - status: radiogroup named "Status", radios in order All, Late, Awaiting dispatch, Shipped; accessible name "{label} {count}";
+      counts = orders matching search + filters (not status); the old select and testid orders-status-filter are removed
+    - Filters trigger: accessible name "Filters" or "Filters ({n})", n = active chip count; aria-expanded + aria-controls;
+      ≥720px pill with icon, label and badge; <720px 44px round icon button with badge
+    - Group by: ≥720px native select labelled "Group by" dressed as a pill; <720px only inside the Filters sheet
+  R12_filters_surface:
+    - one component src/app/features/orders/order-filters/ (sections + footer); hosts: CDK connected overlay ≥720px (role dialog, non-modal),
+      MatBottomSheet <720px (role dialog, aria-modal, name "Filters", focus returns to the trigger on close)
+    - live apply; footer: "Clear filters" (resets sections only) and primary "Show {n} order(s)" (closes; n = live result count)
+    - sections, labels exact:
+        Group by (<720px only): radiogroup "Group by" — None, Status, Ordered month, Items, Ship to
+        Ordered: radiogroup "Ordered" — Any time, Last 30 days, Last 3 months, Last 12 months, Custom dates;
+                 Custom dates reveals date inputs "Ordered from", "Ordered to" (inclusive)
+                 presets: orderedOn >= today minus 30 days | minus 3 calendar months | minus 12 calendar months (browser local date)
+        Total: hint "{k} of your {N} orders fall in this range."; histogram data-testid total-histogram with 16 bars (data-testid total-histogram-bar,
+               data-count, data-in-range="true|false"; a bar is in range when its midpoint lies within [from, to], open ends unbounded) over £0..ceil500(max total) — bar index = min(15, floor(total ÷ (top ÷ 16))) — counting orders matching everything except Total;
+               range inputs "Minimum total" / "Maximum total" (step 50); money inputs "Total from" / "Total to" kept in sync; extremes = no limit
+        Items: numeric inputs "Items from" / "Items to" (empty = Any) with buttons "Decrease Items from", "Increase Items from", "Decrease Items to", "Increase Items to"
+        Order no: text input "Order no contains"
+        Ship to: ≥2 distinct shipTo -> checkbox per name (accessible name = the ship-to name) with its count; else text "All your orders go to {name}."
+    - order-view.ts OrderFilters changes: orderedPreset ('any'|'30d'|'3m'|'12m'|'custom'), shipTo: string[] replaces shipToContains; status stays in the model
+    - new pure functions in order-view.ts: activeFilterChips(filters, today) -> { key, text }[] (text per design copy, exactly), histogram(orders, filters) -> bins
+  R13_chips:
+    - row under the toolbar when ≥1 chip, data-testid active-filters; chips in section order (Ordered, Total, Items, Order no, Ship to); each chip's remove button named "Remove filter: {text}"; "Clear all" button when ≥2 chips
+  R14_empty_states:
+    - no orders: toolbar hidden (no search, tabs, filters, group); card data-testid orders-empty-state with heading "No orders yet",
+      body per design (company name inserted), button "Choose another customer" -> /sign-in; ghost voyage drawing aria-hidden; hull bob off under reduced motion
+    - nothing matches: data-testid orders-no-matches; heading "No orders match “{search}”" when search set, else "No orders match these filters";
+      body per design; the chips (plus "Search {term}" chip when searching); primary button "Clear search and filters" resets search, filters and status (not Group by)
+  R15_grid_alignment:
+    - Items and Total cells and headers right-aligned (text-align: right), mono — P6 R2 requirement not yet met
+  R16_tokens_motion:
+    - tokens per design Revision 3 table; motion per design (transform/opacity only; none under prefers-reduced-motion)
+acceptance:  # one test each, files under "Bundles"
+  - given the phone and desktop top bar, the account trigger is named "Account: {companyName}"; there is no "Signed in as" text
+  - given the account menu, it lists the other featured customers, "Choose another customer…" and "Sign out" as menu items
+  - given a switch to Alfreds from the menu, the URL is /orders, the toast reads "Now viewing Alfreds Futterkiste", and only ALFKI's orders ever render
+  - given Sign out from the menu, the URL is /sign-in, /orders redirects to sign-in, and the toast reads "Signed out of {companyName}"
+  - given status tabs, their counts equal the oracle under the current search, and choosing Late shows only Late orders
+  - given each Filters section, the rows equal the oracle; chips read exactly per design; Filters ({n}) counts chips; removing a chip restores rows
+  - given the Total histogram, bar counts sum to the orders matching the other filters, and in-range bars match the Total from/to values
+  - given the phone, Filters opens a modal dialog named "Filters" whose "Show {n} orders" button shows the live count and closes it
+  - given ALFKI, the Ship to section offers a checkbox per ship-to name; given SAVEA, it states the single destination
+  - given FISSA, the toolbar is absent and "Choose another customer" leads to sign-in
+  - given a search that matches nothing, the heading quotes the search and Clear search and filters restores every order and status All
+  - given desktop, Items and Total cells are right-aligned
+```
+
+**Bundle impact.** P7 feeds **B1** only. B2's nav fix passed, so leave it alone.
+
+**Rule 3b.** DES has updated the B1 tests to this contract:
+- `e2e/orders.spec.ts`: the status select becomes the tabs;
+- `e2e/orders-table.spec.ts`: filters, chips and no-matches follow the new UI;
+- `e2e/shell.spec.ts` "sign out (B1)": now the account menu.
+
+The new pending file is `e2e/orders-find.spec.ts`. DEV removes only the `.skip` markers.
+
 ## Bundles (tester-testable units → roadmap items)
 
 | Bundle | Phases | Test file (Playwright, pending) |
 |---|---|---|
-| B1 Sign in and browse my orders | P1–P4 (sign in, orders, drawer) + P6 R1–R6 | e2e/orders.spec.ts, e2e/orders-table.spec.ts, e2e/shell.spec.ts (sign out) |
+| B1 Sign in and browse my orders | P1–P4 (sign in, orders, drawer) + P6 R1–R4 + P7 R8–R16 | e2e/orders.spec.ts, e2e/orders-table.spec.ts, e2e/orders-find.spec.ts, e2e/shell.spec.ts (account) |
 | B2 Download a delivery note | P4 (pdf) + P6 R7 | e2e/delivery-note.spec.ts, e2e/shell.spec.ts (nav labels) |
 | B3 See spend and schedule | P4 (overview, spend, schedule) | e2e/spend-schedule.spec.ts |
 | B4 Edit my account details | P2 PUT, P4 account | e2e/account.spec.ts |

@@ -81,6 +81,13 @@ async function searchFor(page: Page, term: string): Promise<void> {
   await page.getByTestId('orders-search').fill(term);
 }
 
+async function chooseCustomDates(page: Page): Promise<void> {
+  await page
+    .getByRole('radiogroup', { name: 'Ordered' })
+    .getByRole('radio', { name: 'Custom dates', exact: true })
+    .click();
+}
+
 async function openFilters(page: Page): Promise<void> {
   const button = page.getByRole('button', { name: /^Filters/ });
   if ((await button.getAttribute('aria-expanded')) !== 'true') {
@@ -171,31 +178,43 @@ test.describe('orders table at desktop width', () => {
     }
   });
 
-  test('each Filters field narrows the rows by its column', async ({ page, request }) => {
+  // Pending again (DES, P7 R12): Ship to is now a checklist (orders-find.spec.ts) and dates sit behind Custom dates.
+  test.skip('each Filters field narrows the rows by its column', async ({ page, request }) => {
     const orders = await fetchOrdersAs(request, 'SAVEA');
     const byDate = [...orders].sort((a, b) => a.orderedOn.localeCompare(b.orderedOn));
     const from = byDate[5].orderedOn.slice(0, 10);
     const to = byDate[20].orderedOn.slice(0, 10);
-    const cases: { label: string; value: string; keep: (o: OrderSummary) => boolean }[] = [
+    const cases: {
+      label: string;
+      value: string;
+      keep: (o: OrderSummary) => boolean;
+      before?: (page: Page) => Promise<void>;
+    }[] = [
       { label: 'Order no contains', value: '110', keep: (o) => `#${o.id}`.includes('110') },
-      { label: 'Ordered from', value: from, keep: (o) => o.orderedOn.slice(0, 10) >= from },
-      { label: 'Ordered to', value: to, keep: (o) => o.orderedOn.slice(0, 10) <= to },
+      {
+        label: 'Ordered from',
+        value: from,
+        keep: (o) => o.orderedOn.slice(0, 10) >= from,
+        before: chooseCustomDates,
+      },
+      {
+        label: 'Ordered to',
+        value: to,
+        keep: (o) => o.orderedOn.slice(0, 10) <= to,
+        before: chooseCustomDates,
+      },
       { label: 'Items from', value: '4', keep: (o) => o.itemCount >= 4 },
       { label: 'Items to', value: '4', keep: (o) => o.itemCount <= 4 },
       { label: 'Total from', value: '1000', keep: (o) => o.total >= 1000 },
       { label: 'Total to', value: '3000', keep: (o) => o.total <= 3000 },
-      {
-        label: 'Ship to contains',
-        value: 'save',
-        keep: (o) => (o.shipTo ?? '').toLowerCase().includes('save'),
-      },
     ];
     await signInAs(page, 'customer-card-SAVEA');
     await waitForGrid(page);
     const allIds = orders.map((o) => o.id).sort((a, b) => a - b);
 
-    for (const { label, value, keep } of cases) {
+    for (const { label, value, keep, before } of cases) {
       await openFilters(page);
+      await before?.(page);
       await page.getByLabel(label, { exact: true }).fill(value);
       const expected = orders
         .filter(keep)
@@ -210,7 +229,8 @@ test.describe('orders table at desktop width', () => {
     }
   });
 
-  test('filters combine, and the Filters button counts them', async ({ page, request }) => {
+  // Pending again (DES, P7 R11): the count is now active chips — Items 4–5 and Total £1,000 or more make 2.
+  test.skip('filters combine, and the Filters button counts them', async ({ page, request }) => {
     const orders = await fetchOrdersAs(request, 'SAVEA');
     await signInAs(page, 'customer-card-SAVEA');
     await waitForGrid(page);
@@ -224,7 +244,7 @@ test.describe('orders table at desktop width', () => {
       .map((o) => o.id)
       .sort((a, b) => a - b);
     await expect.poll(() => visibleOrderIds(page)).toEqual(expected);
-    await expect(page.getByRole('button', { name: 'Filters (3)', exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Filters (2)', exact: true })).toBeVisible();
   });
 
   test('group by Status shows urgent groups first, with counts and totals', async ({
@@ -314,7 +334,11 @@ test.describe('orders table at desktop width', () => {
     expect(groupIndex).toBe(expectedGroups.length - 1);
   });
 
-  test('a search that matches nothing says so, and can be cleared', async ({ page, request }) => {
+  // Pending again (DES, P7 R14): the heading now quotes the search.
+  test.skip('a search that matches nothing says so, and can be cleared', async ({
+    page,
+    request,
+  }) => {
     const orders = await fetchOrdersAs(request, 'SAVEA');
     await signInAs(page, 'customer-card-SAVEA');
     await waitForGrid(page);
@@ -322,7 +346,7 @@ test.describe('orders table at desktop width', () => {
     await searchFor(page, 'zzzz');
     const noMatches = page.getByTestId('orders-no-matches');
     await expect(noMatches).toBeVisible();
-    await expect(noMatches).toContainText('No orders match your search or filters.');
+    await expect(noMatches.getByRole('heading')).toHaveText('No orders match “zzzz”');
     await expect(page.getByTestId('orders-empty-state')).toHaveCount(0);
 
     await noMatches.getByRole('button', { name: 'Clear search and filters', exact: true }).click();
@@ -377,7 +401,11 @@ test.describe('orders table when space is tight', () => {
 });
 
 test.describe('orders card list grouping on a phone', () => {
-  test('group by Status shows the same group headers as the table', async ({ page, request }) => {
+  // Pending again (DES, P7 R12): on a phone, Group by lives in the Filters sheet.
+  test.skip('group by Status shows the same group headers as the table', async ({
+    page,
+    request,
+  }) => {
     const orders = await fetchOrdersAs(request, 'ERNSH');
     const expected = STATUS_GROUP_ORDER.map((status) => ({
       status,
@@ -387,7 +415,14 @@ test.describe('orders card list grouping on a phone', () => {
       .map((group) => groupHeaderText(group.status, group.orders));
     await signInAs(page, 'customer-card-late-orders');
 
-    await page.getByLabel('Group by', { exact: true }).selectOption({ label: 'Status' });
+    await page.getByRole('button', { name: /^Filters/ }).click();
+    const sheet = page.getByRole('dialog', { name: 'Filters' });
+    await sheet
+      .getByRole('radiogroup', { name: 'Group by' })
+      .getByRole('radio', { name: 'Status', exact: true })
+      .click();
+    await sheet.getByRole('button', { name: /^Show \d+ orders?$/ }).click();
+    await expect(sheet).toBeHidden();
 
     await expect(page.getByTestId('order-group').filter({ visible: true })).toHaveText(expected);
   });

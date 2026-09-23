@@ -87,3 +87,20 @@ export async function isTruncated(target: Locator): Promise<boolean> {
     return value.scrollWidth > value.clientWidth;
   });
 }
+
+// Distance in px from the end of the rendered text to the cell's right edge;
+// small for right-aligned content, large for left-aligned short values.
+export async function textRightGap(target: Locator): Promise<number> {
+  return target.evaluate((element) => {
+    const textNode = document
+      .createTreeWalker(element, NodeFilter.SHOW_TEXT, {
+        acceptNode: (node) =>
+          node.textContent?.trim() ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT,
+      })
+      .nextNode();
+    if (!textNode) return Number.POSITIVE_INFINITY;
+    const range = document.createRange();
+    range.selectNodeContents(textNode);
+    return element.getBoundingClientRect().right - range.getBoundingClientRect().right;
+  });
+}

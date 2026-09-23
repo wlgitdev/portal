@@ -108,7 +108,7 @@ All faces self-hosted via @fontsource (OFL); no runtime Google CDN.
 - Company name is read-only.
 - Inline errors, "Save changes" button, "Changes saved" toast, and an unsaved-changes guard.
 
-**Global:** header has a light/dark/system switch, a **Brand preview** menu and **Sign out** (Revision 2).
+**Global:** header has a light/dark/system switch, a **Brand preview** menu and the **account menu** (Revision 3).
 
 ### Wireframes
 
@@ -143,7 +143,7 @@ One name per action, used identically everywhere.
 - **Account form:** Save changes → toast "Changes saved"
 - **Orders columns:** Order no · Ordered · Status · Progress · Items · Total · Ship to (Revision 2)
 - **Orders find:** Search all columns · Filters · Clear filters · Group by · Clear search and filters
-- **Session:** Signed in as {ID} · Sign out
+- **Session:** Account: {company name} · Switch to · Choose another customer… · Sign out (Revision 3)
 - **Errors:** say what is wrong and how to fix it, e.g. "Phone can only contain digits, spaces, +, ( ) and -".
 
 ### Angular talking points
@@ -333,3 +333,228 @@ Notes on the Filters panel:
 
 ### Pre-existing, not fixed here
 - `e2e/orders.spec.ts` still duplicates the `parseMoney`/`signInAs` helpers (already noted in the spec).
+
+## Revision 3 — second tester pass on item 1 (23/09/2026)
+
+Interface: **Web**. Source: roadmap "Tester Comments", three new comments on item 1.
+The spec phase that builds it is **P7** in `portal-lite-spec.md`.
+Hi-fi reference: `docs/plans/mockups/orders-rev3.html` (open it from a checkout).
+Frames A–G are named below.
+**Revision 3 supersedes** the Revision 2 sections "Sign out (T3)", "Find orders (T5)", "Filters panel", "No matches", and the "No orders yet" copy.
+Everything else in Revision 2 stands.
+
+### Stage 1 — What went wrong (/design-expert)
+
+| # | Tester said | Real problem | Root cause |
+|---|---|---|---|
+| U1 | Sign out looks bad, esp. on mobile | Raw ID in code type ("Signed in as ERNSH") next to a bare text link, squeezed into the phone top bar. It doesn't say *who* you are, and switching customer (the thing a demo actually does) takes a sign-out plus a hunt. | Revision 2 designed the action, not the identity. |
+| U2 | The empty list looks bad | One grey sentence and a generic envelope icon. It doesn't say what will appear or what to do now. The no-matches version doesn't say *what* hid the orders. | Empty states were treated as an edge case, not a moment. |
+| U3 | Filters are bad UX, esp. on mobile; won't impress | Eight bare inputs in an inline form. On a phone the form pushes every order off-screen. The Filters button is unstyled, dates read mm/dd/yyyy, and nothing shows which filters are on once the panel closes. | Revision 2 chose the right *model* (one panel, one filter logic) but gave it no *interaction design*. |
+| — | *(found while reviewing)* Items and Total are left-aligned | Revision 2 required right-alignment; the tests didn't pin it, so it was missed | Test gap, now closed. |
+
+**Prior art studied (the testers asked for well-loved patterns):**
+
+| Pattern | Where it's loved | What we take |
+|---|---|---|
+| Filter sheet with live count | Airbnb search filters | A bottom sheet on phone. Results update live. The footer's primary button states the outcome: "Show 23 orders". |
+| Price histogram + two-handle slider | Airbnb price filter | Total is chosen by **seeing where your orders' values fall**, not by typing guesses. |
+| Status views with counts | Shopify admin order list, GitHub issues ("Open 12 · Closed 40") | Status becomes tabs with live counts: the most-used filter is visible and self-explaining. |
+| Removable filter chips | Linear, Notion, Amazon | Active filters stay visible as plain-English chips, each with its own ×. |
+| Account avatar menu | Gmail / Google account switcher | Identity lives in a monogram in the top bar; one tap opens who you are and what you can do. |
+| "Who's watching?" quick switch | Netflix profiles | The demo's featured customers are one tap away: switch without going back to the sign-in page. |
+| Teaching empty state | Mailchimp, Shopify first-run screens | Show what *will* be here (a ghosted voyage line), say it plainly, offer the next step. |
+
+Options weighed:
+
+| Decision | Options | Chosen |
+|---|---|---|
+| Filter surface | Inline form (today) · a sidebar that pushes the grid · **a sheet on phone and an anchored popover on desktop** | The sheet/popover, because it costs no permanent screen space and matches the prior art on both form factors |
+| Apply model | "Apply" button · **live, with the count on the primary button** | Live. There's no hidden state, the grid visibly responds, and the button doubles as "done" |
+| Status control | Select (today) · **tabs with counts** | Tabs. They're visible, one tap, and informative before you tap |
+| Ship-to filter | "contains" text · **a checklist with counts, only when there's a real choice** | A checklist. Real data: 7 of 8 sampled customers ship to one name, so a field there would be a control that changes nothing (Rams: honest). |
+
+### Stage 2 — Settled solution (/frontend-design)
+
+**Direction.** It stays inside Harbour: the same palette, the same three faces, and no new colours. The one bold move is the **cargo histogram**, a Total filter drawn from this customer's own order values. Everything around it stays quiet: pills, chips and hairlines in the palette's existing tints.
+
+**Tokens added to `tokens.css`** (derived, not new hues):
+
+| Token | Value | Use |
+|---|---|---|
+| `--color-fjord-wash` | #EEF3F8 | Pressed/active pill fill, open account trigger |
+| `--color-fjord-tint` | #D9E2EC (the existing primary-container) | Filter chips |
+| `--color-line-soft` | #E1E6EA | Section dividers inside sheets and cards |
+| `--radius-pill` | 999px | Pills, chips, search |
+| `--shadow-float` | 0 24px 48px -16px rgb(20 32 46 / .45) | Popover, account menu |
+| `--ease-out-sheet` | cubic-bezier(.2,.8,.2,1) | Sheet and popover entry |
+
+**Monogram (identity).**
+- Initials are the first letters of the company name's first two words, e.g. "Ernst Handel" → EH. A one-word name uses its first two letters.
+- Big Shoulders 700, white, on a rounded square (radius 8px at 32px; 12px at 48px).
+- The fill comes from a stable hash of the customer ID over four Harbour darks: fjord #1F3A5F, forest #2F5D3A, burgundy #6E2233 and deep sea #2B5D54. Each gives ≥ 7:1 with white.
+- No presence dot: a customer isn't "online". It was tried in the mockup and removed as decoration.
+
+**U1 — Account trigger and menu (frames C, G).**
+- **Top bar, right side:**
+  - ≥720px: a pill button with the 32px monogram, the company name (Plex Sans 500) and a chevron.
+  - <720px: the monogram alone, in a 44×44 hit area.
+  - Accessible name "Account: {company name}", with `aria-haspopup="menu"` and `aria-expanded`.
+  - The raw ID and the bare "Sign out" link are gone from the bar.
+- **Menu content (one component, two hosts):**
+  - ≥720px: a menu anchored to the trigger, right-aligned, 340px wide, with `--shadow-float`.
+  - <720px: a bottom sheet with a grab handle.
+  - Contents, top to bottom:
+    1. A header: 48px monogram, the company name (Plex Sans 600, 17px), and "Customer {ID}" (Plex Mono, 13px, secondary ink).
+    2. An honesty note in a mist box with an info icon: "Demo sign-in: switch customer without a password."
+    3. The group label "Switch to", then one menu item per **featured customer other than the current one**. Each shows its monogram, name, and ID right-aligned in mono.
+    4. "Choose another customer…" (people icon), which opens the sign-in page.
+    5. A divider, then "Sign out" (exit icon).
+  - Every item is a `menuitem`. Arrow keys move between items, and Esc closes and returns focus to the trigger.
+- **Switching:**
+  - It signs out and back in under the hood, and drops cached orders and any open drawer. The previous customer's orders never flash (Revision 2's rule stands).
+  - It lands on /orders, and a toast reads "Now viewing {company name}".
+- **Sign out** goes to sign-in (replacing the history entry), with the toast "Signed out of {company name}".
+- The session remembers the company name as well as the ID, taken from the card or search result the user picked, so there's no extra API call.
+
+**U3 — Finding orders (frames A, B, F).**
+
+*Toolbar.*
+- **≥720px:**
+  - Row 1 holds the "Orders" title and search. Search is a 380px pill with a magnifier icon and a clear (×) button when filled.
+  - Row 2 holds the status tabs on the left, then on the right the **Filters** pill and the **Group by** pill.
+- **<720px:**
+  - Row 1: search (flex), plus a 44px round **Filters** button (icon only) with a count badge.
+  - Row 2: status tabs, horizontally scrollable, with a fade on the right edge.
+  - Group by moves into the Filters sheet.
+  - Result: the first order card sits about 90px higher than in Revision 2.
+- **Search:**
+  - Placeholder "Search all columns", unchanged.
+  - Matching is as in Revision 2 (every displayed column, money with or without £ and commas).
+
+*Status tabs* (replaces the Status select).
+- A `radiogroup` named "Status" containing All · Late · Awaiting dispatch · Shipped, in that order (urgent first, matching the group order).
+- Each shows a 7px status dot (except All) and a live count in mono. Counts reflect search and filters, so the tabs preview their result.
+- The selected tab is fjord 600, with a 3px underline bar.
+- Accessible name is label then count, e.g. "Late 1".
+
+*Filters button.*
+- A pill (≥720px) or round icon button (<720px) with a filter-lines icon.
+- When filters are active: a fjord badge with the count, the button outline turns fjord, and it takes the wash fill.
+- Accessible name "Filters" or "Filters ({n})", where **n = the number of active filter chips**. Status and search aren't counted: they're already visible.
+- `aria-expanded` and `aria-controls` point at the surface.
+
+*Filters surface (one component, two hosts).*
+- **<720px:** a modal bottom sheet (`role="dialog"`, `aria-modal`, name "Filters"):
+  - 20px top radius, grab handle, scrim at 42% ink;
+  - a sticky head ("Filters" in Big Shoulders 600 24px, plus a round close button);
+  - a scrolling body and a sticky footer;
+  - closes on scrim tap, swipe down, Esc or close, returning focus to the Filters button.
+- **≥720px:** a non-modal popover anchored under the Filters pill:
+  - 420px wide, max 70vh, with a pointer nub;
+  - closes on outside click or Esc.
+- **Footer:**
+  - left, the text button "Clear filters", which resets every section (not search, status or group);
+  - right, the primary button **"Show {n} orders"**, which just closes the surface. The number is the live result count ("Show 1 order" when singular, "Show 0 orders" when none).
+- Filters apply live as they change. The page behind updates, and the chips appear.
+- **Sections**, in this order. Each has a Plex Sans 600 heading, and a "Reset" link when the section is set:
+  1. **Group by** (phone only): single-choice chips None · Status · Ordered month · Items · Ship to, as a radiogroup named "Group by".
+  2. **Ordered:**
+     - single-choice chips Any time · Last 30 days · Last 3 months · Last 12 months · Custom dates;
+     - "Custom dates" reveals two date fields, "Ordered from" and "Ordered to", both inclusive;
+     - the presets count back from today in the browser's local date: 30 days, and the same day 3 or 12 months back.
+  3. **Total — the signature:**
+     - Hint: "{k} of your {N} orders fall in this range."
+     - The histogram:
+       - 16 equal bins from £0 to the customer's largest order total, rounded up to the next £500;
+       - it counts orders that match everything *except* Total, so it shows what you'd get;
+       - bars inside the range are fjord, outside are the line colour, and they change colour over 120ms.
+     - Under it, a two-thumb slider on a £50 step, as two range inputs named "Minimum total" and "Maximum total", with 24px thumbs.
+     - Under that, two money fields, "Total from" and "Total to", each with a £ prefix and mono digits, kept in step with the thumbs.
+     - A thumb at its extreme means "no limit" on that side.
+  4. **Items:**
+     - hint "Different products on the order.";
+     - two stepper rows, "Items from" and "Items to";
+     - each is a numeric input showing "Any" when empty, between round − / + buttons named "Decrease Items from", "Increase Items from", and so on.
+  5. **Order no:** one field, "Order no contains", with a # prefix and mono.
+  6. **Ship to:**
+     - when the customer's orders go to ≥2 ship-to names, a checkbox list, one per name, with its order count right-aligned in mono;
+     - otherwise one sentence: "All your orders go to {name}."
+- Below 720px everything stacks at full width. The popover never shows Group by: the desktop pill owns it.
+
+*Active filter chips.*
+- A wrapping row under the toolbar, shown only when at least one filter is active. The chips are fjord-tint pills in Plex Sans 500 13px, with the value in 600.
+- Chip text, exactly:
+  - "Ordered last 30 days", "Ordered last 3 months" or "Ordered last 12 months";
+  - "Ordered 01/06/2026–31/08/2026", "Ordered from 01/06/2026" or "Ordered until 31/08/2026";
+  - "Total £1,000–£6,000", "Total £1,000 or more" or "Total up to £3,000";
+  - "Items 4–5", "Items 4" (from = to), "Items 4 or more" or "Items up to 4";
+  - "Order no contains 110";
+  - "Ship to Alfreds Futterkiste" (one ticked), or "Ship to 2 places" (several).
+- Each chip has a remove button (≥28px hit area) named "Remove filter: {chip text}".
+- With 2 or more chips, a trailing "Clear all" text button does the same as Clear filters.
+- Chips enter with a 120ms fade and scale from .96.
+
+*Group by pill* (≥720px).
+- A native select dressed as a pill, with a visible label "Group by" in secondary ink, then the value, then a chevron.
+- It's labelled "Group by", and its options are unchanged.
+
+*Grid.* Items and Total are right-aligned, headers included, in mono, as Revision 2 required.
+
+**U2 — Empty states (frames D, E).**
+- **No orders at all.** The toolbar (search, tabs, filters, group) is **hidden**, because controls that can't change anything are noise. Below the title sits a white card, 16px radius, centred, containing:
+  - A ghosted voyage line:
+    - a dashed fjord-tint route with the three real stops (circle, diamond, circle) labelled Ordered · Shipped · Due in mono 12px;
+    - the hull glyph sits above the Ordered stop and bobs 2px on a 3.2s loop;
+    - it's static under reduced motion, and the whole drawing is `aria-hidden`.
+  - The heading "No orders yet" (Big Shoulders 600, 30px).
+  - The body: "When {company name} orders from Northwind, each order appears here so you can follow it from ordered, to shipped, to due."
+  - A secondary button, "Choose another customer" (people icon), which goes to sign-in. It's a demo-honest next step.
+  - It keeps `data-testid="orders-empty-state"`.
+- **Nothing matches.** A dashed-border white card in place of the list (`data-testid="orders-no-matches"`), containing:
+  - The heading:
+    - "No orders match “{search}”" when search is set, with the query in mono fjord;
+    - "No orders match these filters" when only filters or status are set.
+  - The body: "All {N} of your orders are hidden by {this search / these filters / this search and {n} filter(s)}. Search looks at order no, date, status, items, total and ship to."
+  - The same removable chips (plus a "Search {term}" chip when searching).
+  - The primary button "Clear search and filters", which resets search, filters and status to All. Group by stays.
+
+**Motion (all with transform and opacity only; none under reduced motion).**
+- Sheet: rises 240ms on `--ease-out-sheet`, leaves 180ms.
+- Popover and menu: fade plus a 4px rise over 160ms.
+- Chips: 120ms enter.
+- Hull bob: the only ambient motion, and only in the no-orders state.
+
+**Copy glossary additions.**
+- Account: {company name} · Customer {ID} · Switch to · Choose another customer… · Sign out
+- Toasts: Now viewing {company name} · Signed out of {company name}
+- Filters: Show {n} orders · Clear filters · Clear all · Reset · Custom dates · Any time
+- Empty: No orders yet · No orders match · Clear search and filters · Choose another customer
+
+### Stage 3 — Review (/design-reviewer), run against the mockup screenshots
+
+- [x] **Visibility of system status:** live counts on the tabs and on "Show n orders". Chips keep active filters visible after the surface closes.
+- [x] **Recognition over recall:** there are presets for dates, and the histogram shows where the values actually are instead of asking for a guess.
+- [x] **User control:** every filter has its own ×. There's also a Reset per section, Clear filters, Clear all, and Esc or swipe to dismiss.
+- [x] **Mobile ergonomics:**
+  - the primary actions sit in the sheet footer, in thumb reach;
+  - the first order is visible without scrolling;
+  - every hit target is ≥ 44px, except chip removes at ≥ 28px, which WCAG 2.5.8 accepts.
+- [x] **Honesty (Rams):**
+  - there's no ship-to control when there's nothing to choose;
+  - no toolbar when there are no orders;
+  - the demo sign-in is labelled as such in the account menu;
+  - no presence dot.
+- [x] **Accessibility:**
+  - the sheet is a modal dialog with a focus trap and the popover a non-modal dialog;
+  - the tabs are a radiogroup;
+  - the slider thumbs are native range inputs with names;
+  - every chip remove button has a unique name;
+  - monogram fills are ≥ 7:1.
+- [x] **Consistency:** one surface component for sheet and popover, and one menu component for sheet and menu. Chip text uses the same vocabulary as the section headings.
+- [x] **Chanel pass:** removed the presence dot and moved Group by into the sheet on phone. The mockup's first pass also had a result sentence *and* a count in the footer; that was cut to the button alone.
+- [ ] Date field format follows the browser's locale (UK browsers show DD/MM/YYYY). The design can't force it on a native date input; acceptable for the demo.
+- [ ] Dark-mode values for the new tokens are B5's job.
+
+### Told to WL
+- The Ship-to "contains" field from Revision 2 is gone. It's replaced by a checklist that only appears when a customer really ships to more than one name.
+- Status moves from a select to tabs. The already-passing B1 test is updated to match; DES owns that change.
