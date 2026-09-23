@@ -33,6 +33,7 @@
     "@angular/cli": "^22.1.8",
     "@angular/compiler-cli": "^22.1.0",
     "@playwright/test": "^1.63.0",
+    "pdfjs-dist": "^6.3.289",
     "prettier": "^3.8.1",
     "typescript": "~6.0.2"
   }
