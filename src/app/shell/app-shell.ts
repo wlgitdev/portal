@@ -1,7 +1,13 @@
-import { Component, inject } from '@angular/core';
-import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { CdkMenuTrigger } from '@angular/cdk/menu';
+import type { ConnectedPosition } from '@angular/cdk/overlay';
+import { MatBottomSheet } from '@angular/material/bottom-sheet';
+import { Component, computed, inject, signal } from '@angular/core';
+import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { CustomerSession } from '../core/auth/customer-session';
-import { OrdersStore } from '../core/orders/orders-store';
+import { Icon } from '../shared/icon/icon';
+import { Monogram } from '../shared/monogram/monogram';
+import { Viewport } from '../shared/viewport/viewport';
+import { AccountMenu } from './account-menu/account-menu';
 import { NavIcon, type NavIconName } from './nav-icon/nav-icon';
 
 interface NavItem {
@@ -17,22 +23,37 @@ interface NavItem {
 // add an entry here.
 const NAV_ITEMS: NavItem[] = [{ label: 'Orders', path: '/orders', icon: 'orders' }];
 
+// Right edge of the trigger to the right edge of the menu, opening downward
+// (design Revision 3: the account menu is right-aligned under the trigger).
+const ACCOUNT_MENU_POSITIONS: ConnectedPosition[] = [
+  { originX: 'end', originY: 'bottom', overlayX: 'end', overlayY: 'top', offsetY: 8 },
+];
+
 @Component({
   selector: 'app-shell',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, NavIcon],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, NavIcon, Icon, Monogram, CdkMenuTrigger, AccountMenu],
   templateUrl: './app-shell.html',
   styleUrl: './app-shell.css',
 })
 export class AppShell {
   protected readonly session = inject(CustomerSession);
-  private readonly ordersStore = inject(OrdersStore);
-  private readonly router = inject(Router);
+  protected readonly viewport = inject(Viewport);
+  private readonly bottomSheet = inject(MatBottomSheet);
 
   protected readonly navItems = NAV_ITEMS;
+  protected readonly accountMenuPositions = ACCOUNT_MENU_POSITIONS;
+  protected readonly accountSheetOpen = signal(false);
 
-  protected signOut(): void {
-    this.ordersStore.closeOrder();
-    this.session.signOut();
-    this.router.navigateByUrl('/sign-in', { replaceUrl: true });
+  protected readonly currentCustomer = computed(() => ({
+    id: this.session.customerId() ?? '',
+    companyName: this.session.companyName() ?? '',
+  }));
+
+  protected openAccountSheet(): void {
+    this.accountSheetOpen.set(true);
+    this.bottomSheet
+      .open(AccountMenu)
+      .afterDismissed()
+      .subscribe(() => this.accountSheetOpen.set(false));
   }
 }

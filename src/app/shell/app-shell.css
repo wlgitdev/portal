@@ -64,33 +64,69 @@
   color: var(--color-fjord);
 }
 
-.session {
+.account-trigger {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
-}
-
-.signed-in-as {
-  font-family: var(--font-mono);
-  font-size: var(--text-sm);
-  color: var(--mat-sys-on-surface-variant);
-}
-
-.sign-out {
+  gap: var(--space-2);
+  padding: 4px 8px 4px 4px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-pill);
+  background: none;
   font: inherit;
   font-size: var(--text-sm);
-  font-weight: 600;
-  color: var(--color-fjord);
-  background: none;
-  border: none;
-  padding: var(--space-1) 0;
+  font-weight: 500;
+  color: var(--color-deep-water);
   cursor: pointer;
 }
 
-.sign-out:hover,
-.sign-out:focus-visible {
-  text-decoration: underline;
-  outline: none;
+.account-trigger.phone {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  justify-content: center;
+}
+
+.account-trigger:hover,
+.account-trigger.open {
+  background: var(--color-fjord-wash);
+  border-color: var(--color-fjord-tint);
+}
+
+.account-trigger:focus-visible {
+  outline: 2px solid var(--color-fjord);
+  outline-offset: 1px;
+}
+
+.account-name {
+  max-width: 22ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chevron {
+  color: var(--mat-sys-on-surface-variant);
+  transition: transform 160ms var(--ease-out-sheet);
+}
+
+.account-trigger.open .chevron {
+  transform: rotate(180deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chevron {
+    transition: none;
+  }
+}
+
+.account-menu-popover {
+  width: 340px;
+  max-width: 90vw;
+  max-height: 70vh;
+  overflow-y: auto;
+  background: var(--color-surface);
+  border-radius: 14px;
+  box-shadow: var(--shadow-float);
 }
 
 .content {

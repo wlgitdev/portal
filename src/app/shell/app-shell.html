@@ -10,13 +10,41 @@
   </nav>
 
   <div class="main">
-    <header class="top-bar">
+    <header class="top-bar" role="banner">
       <span class="wordmark top-wordmark">Northwind</span>
-      @if (session.customerId(); as customerId) {
-        <div class="session">
-          <span class="signed-in-as">Signed in as {{ customerId }}</span>
-          <button type="button" class="sign-out" (click)="signOut()">Sign out</button>
-        </div>
+      @if (session.customerId()) {
+        @if (viewport.isPhone()) {
+          <button
+            type="button"
+            class="account-trigger phone"
+            [attr.aria-label]="'Account: ' + currentCustomer().companyName"
+            aria-haspopup="menu"
+            [attr.aria-expanded]="accountSheetOpen()"
+            (click)="openAccountSheet()"
+          >
+            <app-monogram [customer]="currentCustomer()" [size]="32" />
+          </button>
+        } @else {
+          <button
+            type="button"
+            class="account-trigger"
+            [class.open]="accountTrigger.isOpen()"
+            #accountTrigger="cdkMenuTriggerFor"
+            [cdkMenuTriggerFor]="accountMenuTpl"
+            [cdkMenuPosition]="accountMenuPositions"
+            [attr.aria-label]="'Account: ' + currentCustomer().companyName"
+            aria-haspopup="menu"
+          >
+            <app-monogram [customer]="currentCustomer()" [size]="32" />
+            <span class="account-name">{{ currentCustomer().companyName }}</span>
+            <app-icon name="chevron-down" [size]="14" class="chevron" />
+          </button>
+          <ng-template #accountMenuTpl>
+            <div class="account-menu-popover">
+              <app-account-menu />
+            </div>
+          </ng-template>
+        }
       }
     </header>
 
