@@ -21,5 +21,5 @@ Show sales and testers a customer portal they can click through. Done means ever
 - Portal installed on the test server with a secure address
 - Add a new kind of record in under 5 minutes (the "Suppliers" demo)
 - Portal keeps working when the database is switched off (layout-swap demo)
-- Setup guide so a colleague can run it in under 10 minutes
+- ~~Setup guide so a colleague can run it in under 10 minutes~~ — done early, see README.md
 - Confirm company turnover for the PDF library decision (carried from full spec)
