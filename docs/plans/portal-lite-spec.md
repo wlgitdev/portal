@@ -215,3 +215,26 @@ sequenceDiagram
 ## Tests (Rule 3b)
 - DES writes the 5 Playwright files above as pending, before P4.
 - The repo doesn't exist yet, so they land as the first commit after `ng new`.
+
+## Test contract for B2–B5 (DES, 23/09/2026)
+
+The four pending files above now exist. They pin these hooks and copy; DEV builds to them and never edits the tests (Rule 3b). Anything here that turns out wrong is a spec gap — stop and hand back to DES.
+
+Shared: `e2e/support/portal.ts` (sign-in, nav, API oracle), `e2e/support/pdf.ts` (reads PDF text/page size via `pdfjs-dist`, devDependency, Apache-2.0), `e2e/support/a11y.ts` (contrast, pure-colour, motion, keyboard checks — each self-checked against planted faults before commit).
+
+| Bundle | Routes | Test ids | Roles / copy |
+|---|---|---|---|
+| B2 | — | `order-drawer-freight` (drawer freight amount) | button "Download delivery note"; file `delivery-note-{id}.pdf`; A4 portrait; PDF text contains `#{id}`, "Delivery note", "Received by", every line amount, freight and total formatted exactly as the drawer shows them |
+| B3 | `/overview`, `/spend`, `/schedule` | `overview-sentence`, `on-the-water-order` + `data-order-id`, `spend-chart`, `spend-table`, `spend-table-row` + `data-month="YYYY-MM"`, `spend-table-amount`, `schedule-event` + `data-order-id`, `overview-empty-state`, `spend-empty-state`, `skeleton` (on the shared skeleton) | nav links "Overview", "Spend", "Schedule"; Overview `h1` contains company name; sentence contains "{n} late"; switch "Show as table" hides the chart and shows 12 rows, current month last; schedule opens on the current month and clicking an entry opens the shared order drawer; no `progressbar` while loading |
+| B4 | `/account` | — | nav link "Account"; labels "Company name" (read-only), "Phone"; button "Save changes"; toast "Changes saved"; phone error "Phone can only contain digits, spaces, +, ( ) and -" wired as the field's accessible description with `aria-invalid="true"`; no PUT sent when client validation fails; leave-guard dialog "Discard unsaved changes?" with buttons "Keep editing" / "Discard changes", shown only when dirty; API: `GET /api/me` 401 without header, `PUT /api/me` 400 with `errors.phone` |
+| B5 | `/styleguide` (inside the shell) | `wordmark` (exactly one element, in the top bar), `voyage-line` (on the shared voyage line) | button "Brand preview" opens `menuitemradio` items "Northwind" / "Alfreds Futterkiste" / "Ernst Handel" with `aria-checked`; `<html data-brand="northwind|alfreds|ernst">`; radiogroup "Theme" with radios Light / Dark / System visible in the header at phone width; `<html data-theme="light|dark">` (System follows the device live); light `--mat-sys-primary` = #1F3A5F / #2F5D3A / #6E2233; `--mat-sys-corner-medium` differs per brand; text ≥4.5:1 on every signed-in page in all 6 combinations; no pure #000/#FFF painted in dark; no sideways scroll at 360px; Overview voyage lines animate on load except under reduced motion; every Tab stop on `/orders` and `/account` reachable with a visible focus change |
+
+Decisions settled here so DEV doesn't have to:
+- Test data: B4 edits **BLAUS**, never a demo customer, and restores its row afterwards. B3's overview/schedule checks use **ERNSH** (has late orders and current-month entries).
+- Spend's 12-month window is the current calendar month plus the 11 before it; empty months show £0.00 rather than being dropped.
+- Sign-in still lands on `/orders` (B1's test pins that); Overview is reached from the nav.
+- Brand and theme don't need to persist across reloads; the tests re-pick them per page.
+
+### Pre-existing, not fixed here
+- `e2e/orders.spec.ts` (B1) keeps its own copies of `parseMoney`/`signInAs`, now duplicated in `e2e/support/portal.ts`. Left alone because B1 is awaiting release.
+- The shell's side-rail wordmark ("NW") and top-bar wordmark are two elements; B5 needs only the top-bar one to carry `data-testid="wordmark"`.
