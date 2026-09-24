@@ -687,6 +687,7 @@ Options weighed:
 
 ### Told to WL
 - The Overview page (B3, not built yet) is still specified with the voyage line as its hero. Recommend it adopts the status tracker too, so the portal speaks one status language. That's a decision for when B3 is planned.
+  → Settled 24/09/2026, when B3 was built: WL chose the status tracker. See roadmap.md's item 3 build note.
 - The bottom nav now shows up to 1023px, not just on phones. That's a deliberate change from Revision 2's "phone only".
 
 ### Pre-existing, not fixed here
