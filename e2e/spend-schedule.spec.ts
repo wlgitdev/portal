@@ -6,7 +6,7 @@ import { fetchOrdersAs, navigateTo, parseMoney, signInAs, signInBySearch } from 
 // To test: open Spend and Schedule, switch Spend to table view, click a
 // calendar entry to open the order.
 // Rule 3b: DEV may only remove this .skip, never edit the assertions below.
-test.describe.skip('see spend and schedule', () => {
+test.describe('see spend and schedule', () => {
   // ERNSH has late orders, and its latest order is Northwind's latest, which
   // the API's date shift lands in the current month — so its overview has
   // something late to say and its calendar has entries in the opening month.

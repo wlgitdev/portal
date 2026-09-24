@@ -1,0 +1,18 @@
+<app-page-header title="Schedule" />
+
+@if (store.ordersLoading()) {
+  <app-skeleton [rows]="6" />
+} @else if (store.orders().length === 0) {
+  <app-empty-state
+    data-testid="schedule-empty-state"
+    message="No orders yet. Orders placed with Northwind appear here."
+  />
+} @else {
+  @defer (when !store.ordersLoading()) {
+    <full-calendar class="calendar" [options]="calendarOptions()" />
+  } @loading (minimum 100ms) {
+    <app-skeleton [rows]="6" />
+  } @placeholder {
+    <app-skeleton [rows]="6" />
+  }
+}

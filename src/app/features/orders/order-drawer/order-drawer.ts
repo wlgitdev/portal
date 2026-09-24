@@ -1,10 +1,10 @@
 import { Component, inject, signal } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { OrdersStore } from '../../../core/orders/orders-store';
+import { ukDate } from '../../../shared/dates';
 import { formatMoney } from '../../../shared/format-money';
 import { Skeleton } from '../../../shared/skeleton/skeleton';
 import { StatusTracker } from '../../../shared/status-tracker/status-tracker';
-import { ukDate } from '../order-view';
 import { buildDeliveryNoteDocument } from './delivery-note';
 
 @Component({

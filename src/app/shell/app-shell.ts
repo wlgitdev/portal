@@ -3,6 +3,7 @@ import { MatBottomSheet } from '@angular/material/bottom-sheet';
 import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { CustomerSession } from '../core/auth/customer-session';
+import { OrderDrawer } from '../features/orders/order-drawer/order-drawer';
 import { Icon } from '../shared/icon/icon';
 import { END_ALIGNED_MENU_POSITION } from '../shared/menu-position';
 import { Monogram } from '../shared/monogram/monogram';
@@ -17,12 +18,11 @@ interface NavItem {
   icon: NavIconName;
 }
 
-// Nav carries only the destinations that actually exist. Overview, Spend and
-// Schedule land with bundle B3 — a link to a page that isn't built yet would
-// be a dead affordance, not a shortcut. Icons for all five are drawn in
-// NavIcon already (P6 R7) so B3 only needs to add its entries here.
 const NAV_ITEMS: NavItem[] = [
+  { label: 'Overview', path: '/overview', icon: 'overview' },
   { label: 'Orders', path: '/orders', icon: 'orders' },
+  { label: 'Spend', path: '/spend', icon: 'spend' },
+  { label: 'Schedule', path: '/schedule', icon: 'schedule' },
   { label: 'Account', path: '/account', icon: 'account' },
 ];
 
@@ -37,6 +37,7 @@ const NAV_ITEMS: NavItem[] = [
     Monogram,
     CdkMenuTrigger,
     AccountMenu,
+    OrderDrawer,
   ],
   templateUrl: './app-shell.html',
   styleUrl: './app-shell.css',

@@ -9,7 +9,11 @@ import {
   type PostSortRowsParams,
 } from 'ag-grid-community';
 import { CdkMenu, CdkMenuItemRadio, CdkMenuTrigger } from '@angular/cdk/menu';
-import { CdkConnectedOverlay, CdkOverlayOrigin, type ConnectedPosition } from '@angular/cdk/overlay';
+import {
+  CdkConnectedOverlay,
+  CdkOverlayOrigin,
+  type ConnectedPosition,
+} from '@angular/cdk/overlay';
 import { NgTemplateOutlet } from '@angular/common';
 import { MatBottomSheet } from '@angular/material/bottom-sheet';
 import { Component, ElementRef, computed, inject, signal, viewChild } from '@angular/core';
@@ -21,20 +25,20 @@ import { StatusTracker } from '../../shared/status-tracker/status-tracker';
 import { openTrackedBottomSheet } from '../../shared/tracked-bottom-sheet';
 import { Viewport } from '../../shared/viewport/viewport';
 import { OrdersStore } from '../../core/orders/orders-store';
+import { STATUS_GROUP_ORDER } from '../../core/orders/order-stats';
 import { ActiveFilterChips } from './active-filter-chips/active-filter-chips';
 import { OrderFilters } from './order-filters/order-filters';
 import { OrdersEmptyState } from './orders-empty-state/orders-empty-state';
 import { OrdersFilterState } from './orders-filter-state';
 import { OrdersNoMatches } from './orders-no-matches/orders-no-matches';
 import { StatusTrackerCellRenderer } from './status-tracker-cell-renderer';
-import { OrderDrawer } from './order-drawer/order-drawer';
 import { OrderGroupHeader } from './order-group-header/order-group-header';
 import {
   OrderGroupRow,
   type GroupRowData,
   type OrderGroupRowParams,
 } from './order-group-row/order-group-row';
-import { GROUP_BY_OPTIONS, STATUS_GROUP_ORDER, displayedText, plural } from './order-view';
+import { GROUP_BY_OPTIONS, displayedText, plural } from './order-view';
 import type { OrderStatus, OrderSummary } from '../../core/api/models';
 
 type ColId = 'orderNo' | 'orderedOn' | 'status' | 'itemCount' | 'total' | 'shipTo';
@@ -86,7 +90,6 @@ const HEADER_TOOLTIPS: Record<ColId, string> = {
     PageHeader,
     StatusTracker,
     Skeleton,
-    OrderDrawer,
     OrderGroupHeader,
     AgGridAngular,
     Icon,

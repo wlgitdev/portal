@@ -1,0 +1,36 @@
+<h1>{{ greeting }}, {{ companyName() }}</h1>
+
+@if (store.ordersLoading()) {
+  <app-skeleton [rows]="4" />
+} @else if (store.orders().length === 0) {
+  <app-empty-state
+    data-testid="overview-empty-state"
+    message="No orders yet. Orders placed with Northwind appear here."
+  />
+} @else {
+  <p data-testid="overview-sentence">
+    <strong>{{ onTheWater().length }}</strong> orders on the water,
+    <strong>{{ lateCount() }}</strong> late. <strong>{{ formatMoney(quarterSpend()) }}</strong>
+    spent this quarter.
+  </p>
+
+  <section class="on-the-water">
+    <h2>On the water</h2>
+    <ul class="water-list">
+      @for (order of onTheWater(); track order.id) {
+        <li>
+          <button
+            type="button"
+            data-testid="on-the-water-order"
+            [attr.data-order-id]="order.id"
+            [attr.data-status]="order.status"
+            (click)="openOrder(order.id)"
+          >
+            <span class="order-number mono">{{ '#' + order.id }}</span>
+            <app-status-tracker [status]="order.status" />
+          </button>
+        </li>
+      }
+    </ul>
+  </section>
+}

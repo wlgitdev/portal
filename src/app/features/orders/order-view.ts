@@ -2,6 +2,8 @@
 // truth for search, filtering, grouping, chips and the Total histogram, so
 // there is exactly one place that decides what an order "displays as",
 // "matches" or "falls in range".
+import { STATUS_GROUP_ORDER } from '../../core/orders/order-stats';
+import { localIsoDate, ukDate } from '../../shared/dates';
 import type { OrderStatus, OrderSummary } from '../../core/api/models';
 
 export type GroupBy = 'none' | 'status' | 'orderedMonth' | 'itemCount' | 'shipTo';
@@ -93,18 +95,10 @@ const wholeMoney = new Intl.NumberFormat('en-GB', {
   currency: 'GBP',
   maximumFractionDigits: 0,
 });
-// Urgency order, most pressing first — shared by grouping and by the grid's
-// Status column comparator (R20) so there's exactly one definition of it.
-export const STATUS_GROUP_ORDER: OrderStatus[] = ['Late', 'Awaiting dispatch', 'Shipped'];
 export const HISTOGRAM_BIN_COUNT = 16;
 
 export function plural(count: number, word: string): string {
   return `${word}${count === 1 ? '' : 's'}`;
-}
-
-export function ukDate(iso: string): string {
-  const [year, month, day] = iso.slice(0, 10).split('-');
-  return `${day}/${month}/${year}`;
 }
 
 export function displayedText(order: OrderSummary): DisplayedText {
@@ -158,8 +152,7 @@ function presetCutoff(preset: OrderedPreset, today: Date): string | null {
     default:
       return null;
   }
-  const pad = (n: number) => String(n).padStart(2, '0');
-  return `${cutoff.getFullYear()}-${pad(cutoff.getMonth() + 1)}-${pad(cutoff.getDate())}`;
+  return localIsoDate(cutoff);
 }
 
 function matchesOrdered(order: OrderSummary, filters: OrderFilters, today: Date): boolean {
@@ -174,9 +167,7 @@ function matchesOrdered(order: OrderSummary, filters: OrderFilters, today: Date)
 }
 
 function matchesOrderNo(order: OrderSummary, filters: OrderFilters): boolean {
-  return (
-    !filters.orderNoContains || `#${order.id}`.includes(filters.orderNoContains.trim())
-  );
+  return !filters.orderNoContains || `#${order.id}`.includes(filters.orderNoContains.trim());
 }
 
 function matchesStatus(order: OrderSummary, filters: OrderFilters): boolean {
@@ -281,7 +272,12 @@ function compareGroups(groupBy: GroupBy, a: GroupKey, b: GroupKey): number {
 
 export function buildOrderView(
   orders: OrderSummary[],
-  { search, filters, groupBy, today }: { search: string; filters: OrderFilters; groupBy: GroupBy; today: Date },
+  {
+    search,
+    filters,
+    groupBy,
+    today,
+  }: { search: string; filters: OrderFilters; groupBy: GroupBy; today: Date },
 ): OrderView {
   const matching = matchingOrders(orders, { search, filters, today });
 

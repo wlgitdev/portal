@@ -14,8 +14,20 @@ export const routes: Routes = [
     canActivate: [authGuard],
     children: [
       {
+        path: 'overview',
+        loadComponent: () => import('./features/overview/overview').then((m) => m.Overview),
+      },
+      {
         path: 'orders',
         loadComponent: () => import('./features/orders/orders').then((m) => m.Orders),
+      },
+      {
+        path: 'spend',
+        loadComponent: () => import('./features/spend/spend').then((m) => m.Spend),
+      },
+      {
+        path: 'schedule',
+        loadComponent: () => import('./features/schedule/schedule').then((m) => m.Schedule),
       },
       {
         path: 'account',
