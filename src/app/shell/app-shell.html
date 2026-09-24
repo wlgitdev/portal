@@ -53,6 +53,8 @@
       <router-outlet />
     </main>
 
+    <app-order-drawer />
+
     <nav class="bottom-nav" aria-label="Primary">
       @for (item of navItems; track item.path) {
         <a [routerLink]="item.path" routerLinkActive="active">

@@ -9,7 +9,12 @@
     autocomplete="off"
   />
   @if (filterState.search()) {
-    <button type="button" class="clear-search" aria-label="Clear search" (click)="filterState.setSearch('')">
+    <button
+      type="button"
+      class="clear-search"
+      aria-label="Clear search"
+      (click)="filterState.setSearch('')"
+    >
       <app-icon name="close" [size]="14" />
     </button>
   }
@@ -233,5 +238,3 @@
     />
   </div>
 }
-
-<app-order-drawer />

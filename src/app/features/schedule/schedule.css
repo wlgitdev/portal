@@ -1,0 +1,54 @@
+:host {
+  display: block;
+  padding: var(--space-5);
+}
+
+.calendar {
+  font-family: var(--font-body);
+}
+
+/* FullCalendar renders its own DOM outside Angular's template (like AG
+   Grid, see orders.css) — plain scoped rules never reach it. */
+:host ::ng-deep .fc-event.ordered {
+  background: var(--color-fjord);
+  border-color: var(--color-fjord);
+  color: white;
+}
+
+:host ::ng-deep .fc-event.due {
+  background: transparent;
+  border: 1.5px solid var(--color-signal-amber);
+  color: var(--color-amber-text);
+}
+
+:host ::ng-deep .fc-event.late {
+  background: var(--color-harbour-red);
+  border-color: var(--color-harbour-red);
+  color: white;
+}
+
+:host ::ng-deep .fc-toolbar-title {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  color: var(--color-deep-water);
+}
+
+:host ::ng-deep .fc-button-primary {
+  background: var(--color-surface);
+  border-color: var(--mat-sys-outline-variant);
+  color: var(--color-deep-water);
+  text-transform: capitalize;
+  box-shadow: none;
+}
+
+:host ::ng-deep .fc-button-primary:hover {
+  background: var(--color-fjord-wash);
+  border-color: var(--color-fjord);
+  color: var(--color-fjord);
+}
+
+:host ::ng-deep .fc-button-primary.fc-button-active {
+  background: var(--color-fjord);
+  border-color: var(--color-fjord);
+  color: white;
+}

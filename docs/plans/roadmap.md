@@ -10,7 +10,7 @@ Show sales and testers a customer portal they can click through. Done means ever
 |---|---|---|---|
 | 1 | Sign in as a customer and browse your orders | Waiting for Release (T) | Sign in as Alfreds, search orders, filter "Late", open one and check the lines add up to the total. On desktop, hover a header and a cut-off cell. Tap the status tabs, open Filters, drag the Total range and remove a chip. Switch customer from the top-right menu, then sign out. On a phone, check the Filters sheet and the account sheet. Then: drag the window from phone to desktop width and check a menu always shows; scroll to the bottom and check the top bar stays; read each order's status on its tracker; shrink the window's height and check Filters' buttons stay on screen; open Group by. |
 | 2 | Download a delivery note for any order | Ready for Release | Open an order, download its delivery note, check the PDF totals match the screen. On a phone, check each bottom menu item shows a picture and its name. |
-| 3 | See spending and delivery dates at a glance | Waiting for Dev | Open Spend and Schedule, switch Spend to table view, click a calendar entry to open the order. |
+| 3 | See spending and delivery dates at a glance | Waiting for Release (T) | Open Spend and Schedule, switch Spend to table view, click a calendar entry to open the order. |
 | 4 | Edit your contact details | Waiting for Release (T) | Enter letters in Phone and try saving; fix it, save, reload and check it stuck. |
 | 5 | Switch brand and dark mode | Waiting for Dev | Pick each brand under Brand preview in light and dark; check everything stays readable, including on a phone. |
 
@@ -68,7 +68,7 @@ Item 2:
    → Every menu item shows a picture and its name, on phone and desktop. (P6 R7)
 
 ## DEV next step
-Items 1, 2 and 4 are now built (see build notes below). Still outstanding, next once picked back up: item 3 (Spend/Schedule, bundle B3) and item 5 (brand/dark mode, bundle B5) — both still **Waiting for Dev**, both untouched this round.
+Items 1, 2, 3 and 4 are now built (see build notes below). Still outstanding, next once picked back up: item 5 (brand/dark mode, bundle B5) — still **Waiting for Dev**, untouched this round.
 
 Previous build note (P7, 23/09/2026), kept for the record: two tests were reported flaky, independent of the build: `e2e/orders-table.spec.ts` "a cut-off cell shows its full text on hover" and `e2e/orders.spec.ts` "filter Late and open one whose lines sum to its total". Still just flaky as of the P8 build below (each passes alone; whichever of the two trips varies by run) — not fixed, wants its own item.
 
@@ -90,3 +90,19 @@ One fix beyond the R-items: the account-menu "switch customer" test (`e2e/shell.
 
 ### Pre-existing, not fixed here
 - Nothing new found this round beyond the two items already listed above.
+
+## DEV build note — item 3 (24/09/2026)
+Built `portal-lite-spec.md` phase **P4**'s Overview/Spend/Schedule (bundle B3) straight from the spec and design doc. One open call the spec didn't settle: design Revision 4 flagged Overview's "on the water" list as still specified with the voyage line, recommended the new status tracker instead for one status language across the portal, and left the choice for "when B3 is planned" — that's now, so WL was asked and chose the status tracker; built that way.
+
+New `src/app/core/orders/order-stats.ts` (`onTheWaterOrders`, `quarterSpend`, `monthlySpend`) and `src/app/shared/dates.ts`/`css-token.ts` hold logic now shared by more than one page: `STATUS_GROUP_ORDER` and `ukDate` moved there from `features/orders/order-view.ts` (Overview needed both too), and `css-token.ts` reads a CSS custom property's resolved value for ECharts, which renders to canvas and can't read `var(--token)` the way real DOM/CSS can — so Spend's bar/average-line colours still come from `tokens.css`, not a hardcoded duplicate, ready for B5 to theme. `<app-order-drawer>` moved from Orders' own template up to the shell: Overview and Schedule both open orders now too, so one shared instance replaced what would have been three copies. Added `echarts` + `ngx-echarts` (Spend) and `@fullcalendar/angular` + `core`/`daygrid`/`list`/`interaction` (Schedule), both MIT/Apache-2.0 per the spec's licence rule, both lazy-loaded with their routes same as `pdfmake`.
+
+One fix beyond P4 itself: the shared `Skeleton` component (built at P3) never actually carried `data-testid="skeleton"`, even though B3's own test contract already named it as one of the shared hooks — nothing had asserted on it directly until this bundle's loading-state tests did. Added the host binding rather than flagging it, since B3 couldn't pass without it.
+
+`.skip` removed from `e2e/spend-schedule.spec.ts` only, assertions unchanged; all 8 pass. Full suite re-run clean otherwise (twice): items 1/2/4 unaffected, item 5 still correctly pending, the two P7 flaky tests are still just flaky (each passes alone, independent of this build).
+
+Same Node-version gotcha as the P6/P7 notes below (`ng serve`/Playwright's webServer need ≥22.22.3, the sandbox pins 22.22.2) — fixed at the session level this time (`/usr/bin`'s 24.x first on `PATH`, via `/root/.portal-lite-env`) rather than a one-off workaround, so it should hold for the rest of this session.
+
+### Pre-existing, not fixed here
+- The two P7 flaky tests (above) are still just flaky, unrelated to this build.
+- Design's Spend screen also named a "Top 5 products" bar and a 12/24-month toggle. Neither is in B3's finalised test contract (which fixes Spend at one 12-month window), and Top 5 products has no reachable data source without a new endpoint — `GET /api/orders` returns order summaries, never line items. Left both unbuilt; wants its own item if WL still wants them.
+- The initial bundle-size budget (1.50 MB) was already breached before this round (1.56 MB). B3's own new dependencies are lazy per-route, so they don't add to it, but hoisting the order drawer into the shell's chunk added it to a bundle Orders no longer carries alone, taking the total to 1.58 MB. Not fixed here — would mean dieting the existing main bundle, which nothing in this issue touches.

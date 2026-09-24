@@ -4,6 +4,7 @@ import { Component, computed, input } from '@angular/core';
   selector: 'app-skeleton',
   templateUrl: './skeleton.html',
   styleUrl: './skeleton.css',
+  host: { 'data-testid': 'skeleton' },
 })
 export class Skeleton {
   readonly rows = input(3);
