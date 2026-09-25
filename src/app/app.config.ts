@@ -1,10 +1,11 @@
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
-import { MAT_DATE_LOCALE, provideNativeDateAdapter } from '@angular/material/core';
+import { DateAdapter, MAT_DATE_LOCALE, provideNativeDateAdapter } from '@angular/material/core';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { provideRouter } from '@angular/router';
 import { demoCustomerInterceptor } from './core/api/demo-customer.interceptor';
 import { errorInterceptor } from './core/api/error.interceptor';
+import { UkDateAdapter } from './shared/uk-date-adapter';
 import { routes } from './app.routes';
 
 export const appConfig: ApplicationConfig = {
@@ -17,5 +18,9 @@ export const appConfig: ApplicationConfig = {
     // range), matching every other date in the app — see showcase-2-spec S8.
     { provide: MAT_DATE_LOCALE, useValue: 'en-GB' },
     provideNativeDateAdapter(),
+    // After provideNativeDateAdapter(): same token, last provider wins: its
+    // display formatting is fine, only parse() needs overriding — see
+    // UkDateAdapter's own why-not-the-obvious-way comment.
+    { provide: DateAdapter, useClass: UkDateAdapter },
   ],
 };
