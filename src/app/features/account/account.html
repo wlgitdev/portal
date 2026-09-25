@@ -1,5 +1,37 @@
 <app-page-header title="Account" />
 
+<div role="tablist" class="tab-strip" aria-label="Account sections">
+  <button
+    type="button"
+    role="tab"
+    id="tab-contact"
+    [attr.aria-selected]="activeTab() === 'contact'"
+    aria-controls="tabpanel-contact"
+    class="tab"
+    [class.active]="activeTab() === 'contact'"
+    (click)="selectTab('contact')"
+  >
+    Contact details
+  </button>
+  <button
+    type="button"
+    role="tab"
+    id="tab-delivery"
+    [attr.aria-selected]="activeTab() === 'delivery'"
+    aria-controls="tabpanel-delivery"
+    class="tab"
+    [class.active]="activeTab() === 'delivery'"
+    (click)="selectTab('delivery')"
+  >
+    Delivery preferences
+  </button>
+</div>
+
+<div id="tabpanel-delivery" role="tabpanel" aria-labelledby="tab-delivery" [hidden]="activeTab() !== 'delivery'">
+  <app-delivery-preferences />
+</div>
+
+<div id="tabpanel-contact" role="tabpanel" aria-labelledby="tab-contact" [hidden]="activeTab() !== 'contact'">
 @if (form(); as value) {
   <form class="account-form" (ngSubmit)="save()">
     <app-form-field label="Company name" [value]="value.companyName" [readonlyField]="true" />
@@ -79,3 +111,4 @@
 } @else {
   <p class="loading">Loading your details…</p>
 }
+</div>

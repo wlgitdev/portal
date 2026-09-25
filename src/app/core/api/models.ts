@@ -83,3 +83,30 @@ export interface Product {
   categoryName: string;
   discontinued: boolean;
 }
+
+export type Unloading = 'dock' | 'tail-lift' | 'by-hand';
+export type InvoiceFormat = 'pdf' | 'paper' | 'both';
+
+export interface SiteMap {
+  name: string;
+  type: string;
+  dataUrl: string;
+}
+
+export interface DeliveryPreferences {
+  shipperId: number | null;
+  deliveryDays: number[];
+  windowFrom: string;
+  windowTo: string;
+  unloading: Unloading;
+  maxPallets: number;
+  chilled: boolean;
+  maxTempC: number | null;
+  closedFrom: string | null;
+  closedTo: string | null;
+  notifyEmails: string[];
+  standingProductIds: number[];
+  invoiceFormat: InvoiceFormat;
+  instructions: string;
+  siteMap: SiteMap | null;
+}

@@ -13,5 +13,6 @@ app.MapCustomersEndpoints();
 app.MapOrdersEndpoints();
 app.MapMeEndpoints();
 app.MapReferenceDataEndpoints();
+app.MapDeliveryPreferencesEndpoints();
 
 app.Run();

@@ -32,9 +32,11 @@ internal static class SqlQuery
         return await reader.ReadAsync() ? map(reader) : null;
     }
 
-    public static async Task ExecuteAsync(SqlConnection connection, string sql, IReadOnlyList<SqlParam> parameters)
+    public static async Task ExecuteAsync(
+        SqlConnection connection, string sql, IReadOnlyList<SqlParam> parameters, SqlTransaction? transaction = null)
     {
         await using var command = Command(connection, sql, parameters);
+        command.Transaction = transaction;
         await OpenIfNeeded(connection);
         await command.ExecuteNonQueryAsync();
     }

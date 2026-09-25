@@ -68,7 +68,7 @@ async function setWindow(panel: Locator, from: string, to: string): Promise<void
   await panel.getByRole('textbox', { name: 'Delivery window to' }).blur();
 }
 
-test.describe.skip('set your delivery preferences (B10)', () => {
+test.describe('set your delivery preferences (B10)', () => {
   test.describe.configure({ mode: 'serial' });
 
   test.beforeAll(async ({ request }) => resetPreferences(request));

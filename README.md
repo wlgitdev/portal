@@ -82,6 +82,7 @@ Invoke-WebRequest -Uri "https://raw.githubusercontent.com/microsoft/sql-server-s
 sqlcmd -S "localhost\SQLEXPRESS" -E -Q "CREATE DATABASE Northwind"
 sqlcmd -S "localhost\SQLEXPRESS" -E -d Northwind -i instnwnd.sql
 Remove-Item instnwnd.sql
+sqlcmd -S "localhost\SQLEXPRESS" -E -d Northwind -i db\portal-lite-schema.sql
 ```
 
 `-E` means "use my Windows login" — the same auth the app will use, so

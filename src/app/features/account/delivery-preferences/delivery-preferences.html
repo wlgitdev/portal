@@ -1,0 +1,209 @@
+<div class="layout">
+  <div class="fields">
+    <mat-form-field>
+      <mat-label>Preferred carrier</mat-label>
+      <mat-select [formControl]="form.controls.shipperId">
+        @for (shipper of shippersResource.value(); track shipper.id) {
+          <mat-option [value]="shipper.id">
+            {{ shipper.companyName }}
+            @if (shipper.phone) {
+              <span class="option-secondary">{{ shipper.phone }}</span>
+            }
+          </mat-option>
+        }
+      </mat-select>
+      @if (form.controls.shipperId.invalid && form.controls.shipperId.touched) {
+        <mat-error>Choose a carrier</mat-error>
+      }
+    </mat-form-field>
+
+    <div role="group" aria-label="Delivery days" class="day-group">
+      @for (day of dayOptions; track day.value; let i = $index) {
+        <mat-checkbox [formControl]="form.controls.deliveryDays.controls[i]">{{ day.label }}</mat-checkbox>
+      }
+    </div>
+    @if (form.controls.deliveryDays.invalid && form.controls.deliveryDays.touched) {
+      <p class="field-error">{{ errorMessages.noDays }}</p>
+    }
+
+    <div class="field-pair">
+      <mat-form-field>
+        <mat-label>Delivery window from</mat-label>
+        <input matInput placeholder="08:00" [formControl]="form.controls.windowFrom" />
+        @if (form.controls.windowFrom.invalid) {
+          <mat-error>Enter a time as HH:mm</mat-error>
+        }
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>Delivery window to</mat-label>
+        <input matInput placeholder="17:00" [formControl]="form.controls.windowTo" />
+        @if (form.controls.windowTo.invalid) {
+          <mat-error>{{ form.controls.windowTo.hasError('windowTooShort') ? errorMessages.windowTooShort : 'Enter a time as HH:mm' }}</mat-error>
+        }
+      </mat-form-field>
+    </div>
+
+    <div role="radiogroup" aria-label="Unloading" class="radio-row">
+      @for (option of unloadingOptions; track option.value) {
+        <button
+          type="button"
+          role="radio"
+          [attr.aria-checked]="form.controls.unloading.value === option.value"
+          [class.selected]="form.controls.unloading.value === option.value"
+          (click)="selectUnloading(option.value)"
+        >
+          {{ option.label }}
+        </button>
+      }
+    </div>
+    @if (form.controls.unloading.invalid && form.controls.unloading.touched) {
+      <p class="field-error">Choose how deliveries are unloaded</p>
+    }
+
+    <div class="slider-field">
+      <label id="pallets-label">Pallets per delivery</label>
+      <mat-slider min="1" max="26" step="1" discrete>
+        <input matSliderThumb aria-labelledby="pallets-label" [formControl]="form.controls.maxPallets" />
+      </mat-slider>
+    </div>
+
+    <mat-slide-toggle [formControl]="form.controls.chilled">Chilled goods</mat-slide-toggle>
+    @if (form.controls.chilled.value) {
+      <mat-form-field>
+        <mat-label>Maximum temperature (°C)</mat-label>
+        <input matInput type="number" [formControl]="form.controls.maxTempC" />
+        <button matIconSuffix type="button" aria-label="Decrease maximum temperature" (click)="form.controls.maxTempC.setValue((form.controls.maxTempC.value ?? 0) - 1)">
+          −
+        </button>
+        <button matIconSuffix type="button" aria-label="Increase maximum temperature" (click)="form.controls.maxTempC.setValue((form.controls.maxTempC.value ?? 0) + 1)">
+          +
+        </button>
+        @if (form.controls.maxTempC.invalid) {
+          <mat-error>{{ errorMessages.tempRange }}</mat-error>
+        }
+      </mat-form-field>
+    }
+
+    <mat-form-field>
+      <mat-label>Closed for deliveries</mat-label>
+      <mat-date-range-input [formGroup]="form.controls.closedRange" [rangePicker]="closedPicker">
+        <input matStartDate formControlName="closedFrom" placeholder="Closed from" aria-label="Closed from" />
+        <input matEndDate formControlName="closedTo" placeholder="Closed to" aria-label="Closed to" />
+      </mat-date-range-input>
+      <mat-datepicker-toggle matIconSuffix [for]="closedPicker" />
+      <mat-date-range-picker #closedPicker />
+      @if (form.controls.closedRange.hasError('closedPast')) {
+        <mat-error>{{ errorMessages.closedPast }}</mat-error>
+      } @else if (form.controls.closedRange.hasError('closedOrder')) {
+        <mat-error>{{ errorMessages.closedOrder }}</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field>
+      <mat-label>Also notify</mat-label>
+      <mat-chip-grid #emailChips aria-label="Also notify">
+        @for (email of form.controls.notifyEmails.value; track email) {
+          <mat-chip-row (removed)="removeEmail(email)">
+            <span data-testid="notify-email">{{ email }}</span>
+            <button matChipRemove [attr.aria-label]="'Remove ' + email"><span aria-hidden="true">×</span></button>
+          </mat-chip-row>
+        }
+      </mat-chip-grid>
+      <input
+        placeholder="Add an email"
+        aria-label="Also notify"
+        [matChipInputFor]="emailChips"
+        [matChipInputSeparatorKeyCodes]="emailSeparatorKeys"
+        (matChipInputTokenEnd)="addEmail($event)"
+      />
+      @if (emailError()) {
+        <mat-error>{{ emailError() }}</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field>
+      <mat-label>Standing order products</mat-label>
+      <mat-chip-grid #productChips aria-label="Standing order products">
+        @for (id of form.controls.standingProductIds.value; track id) {
+          <mat-chip-row (removed)="removeProduct(id)">
+            <span>{{ productName(id) }}</span>
+            <button matChipRemove [attr.aria-label]="'Remove ' + productName(id)"><span aria-hidden="true">×</span></button>
+          </mat-chip-row>
+        }
+      </mat-chip-grid>
+      <input
+        #productInput
+        aria-label="Standing order products"
+        [matChipInputFor]="productChips"
+        [matAutocomplete]="productAuto"
+        [formControl]="productSearch"
+      />
+      <mat-autocomplete #productAuto="matAutocomplete" (optionSelected)="selectProduct($event, productInput)">
+        @for (product of filteredProducts(); track product.id) {
+          <mat-option [value]="product.id">{{ product.name }} <span class="option-secondary">{{ product.categoryName }}</span></mat-option>
+        }
+      </mat-autocomplete>
+    </mat-form-field>
+
+    <div role="group" aria-label="Invoice format" class="toggle-group">
+      @for (option of invoiceFormatOptions; track option.value) {
+        <button
+          type="button"
+          [class.selected]="form.controls.invoiceFormat.value === option.value"
+          [attr.aria-pressed]="form.controls.invoiceFormat.value === option.value"
+          (click)="selectInvoiceFormat(option.value)"
+        >
+          {{ option.label }}
+        </button>
+      }
+    </div>
+
+    <mat-form-field>
+      <mat-label>Delivery instructions</mat-label>
+      <textarea matInput cdkTextareaAutosize [formControl]="form.controls.instructions" maxlength="500"></textarea>
+      <mat-hint data-testid="instructions-counter" align="end">{{ instructionsCount() }} / 500</mat-hint>
+      @if (form.controls.instructions.invalid) {
+        <mat-error>Keep delivery instructions to 500 characters or fewer</mat-error>
+      }
+    </mat-form-field>
+
+    <div class="site-map-zone" (dragover)="$event.preventDefault()" (drop)="onSiteMapDrop($event)">
+      <label class="site-map-label">
+        Site map for drivers
+        <input type="file" accept="image/png,image/jpeg,application/pdf" (change)="onSiteMapFileSelected($event)" />
+      </label>
+      @if (form.controls.siteMap.value; as siteMap) {
+        <span data-testid="site-map-name">{{ siteMap.name }}</span>
+        <button type="button" (click)="removeSiteMap()">Remove site map</button>
+      }
+      @if (siteMapError()) {
+        <p class="field-error">{{ siteMapError() }}</p>
+      }
+    </div>
+
+    <div class="actions">
+      <button type="button" [disabled]="saving()" (click)="save()">Save changes</button>
+    </div>
+
+    @if (developerDetails.enabled()) {
+      <details open data-testid="form-state-panel" class="dev-panel">
+        <summary>Form state</summary>
+        <p>{{ form.valid ? 'valid' : 'invalid' }} · {{ form.dirty ? 'dirty' : 'pristine' }} · {{ form.touched ? 'touched' : 'untouched' }}</p>
+        @for (row of formStateRows(); track row.name) {
+          <p class="form-state-row" data-testid="form-state-row" [attr.data-control]="row.name">
+            {{ row.name }}: {{ row.value }} — {{ row.status }}
+          </p>
+        }
+      </details>
+    }
+  </div>
+
+  <aside class="summary" data-testid="delivery-summary">
+    <h2>Summary</h2>
+    <p>
+      @for (clause of summary(); track $index; let last = $last) {
+        <span [class.needs-fixing]="clause.invalid">{{ clause.text }}</span>{{ last ? '.' : ', ' }}
+      }
+    </p>
+  </aside>
+</div>

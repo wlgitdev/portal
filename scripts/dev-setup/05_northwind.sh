@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
-# Purpose: restore stock Northwind if absent or broken, then assert the row counts portal-lite's P1 fixtures rely on.
+# Purpose: restore stock Northwind if absent or broken, then assert the row counts portal-lite's P1 fixtures rely on,
+#          then apply portal-lite-schema.sql (S8's own tables; idempotent, so this runs every pass, not just the first).
 #          Destructive only when the Orders count is wrong: the broken database is dropped and restored.
 # Parameters: MSSQL_SA_PASSWORD (required); NORTHWIND_DB, NORTHWIND_SQL_URL, NORTHWIND_SHA256 (optional) (lib/config.sh).
-# Expected output: "OK Northwind restored" or "SKIP ...", then one "OK <fixture> = <n>" per fixture; exit 0.
+# Expected output: "OK Northwind restored" or "SKIP ...", one "OK <fixture> = <n>" per fixture, "OK portal-lite-schema.sql applied"; exit 0.
 
 source "$(dirname "${BASH_SOURCE[0]}")/lib/common.sh"
 
@@ -55,5 +56,12 @@ assert_fixtures() {
   done
 }
 
+apply_schema() {
+  local schema="$(dirname "${BASH_SOURCE[0]}")/../../db/portal-lite-schema.sql"
+  sqlcmd_run -d "$NORTHWIND_DB" -i "$schema" >/dev/null
+  ok "portal-lite-schema.sql applied"
+}
+
 if northwind_intact; then skip "Northwind already restored"; else restore; fi
 assert_fixtures
+apply_schema
