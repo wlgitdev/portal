@@ -1,9 +1,10 @@
-import { CdkMenu, CdkMenuItem } from '@angular/cdk/menu';
+import { CdkMenu, CdkMenuItem, CdkMenuItemCheckbox } from '@angular/cdk/menu';
 import { MatBottomSheetRef } from '@angular/material/bottom-sheet';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Component, computed, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { CustomerSession } from '../../core/auth/customer-session';
+import { DeveloperDetails } from '../../core/developer-details';
 import { FEATURED, type FeaturedCustomer } from '../../core/auth/featured-customers';
 import { OrdersStore } from '../../core/orders/orders-store';
 import { Icon } from '../../shared/icon/icon';
@@ -18,7 +19,7 @@ const TOAST_DURATION_MS = 5000;
 // input, so both hosts can open it with no wiring beyond "open this type".
 @Component({
   selector: 'app-account-menu',
-  imports: [CdkMenu, CdkMenuItem, Icon, Monogram],
+  imports: [CdkMenu, CdkMenuItem, CdkMenuItemCheckbox, Icon, Monogram],
   templateUrl: './account-menu.html',
   styleUrl: './account-menu.css',
 })
@@ -28,6 +29,7 @@ export class AccountMenu {
   private readonly router = inject(Router);
   private readonly snackBar = inject(MatSnackBar);
   private readonly bottomSheetRef = inject(MatBottomSheetRef, { optional: true });
+  protected readonly developerDetails = inject(DeveloperDetails);
 
   protected readonly current = computed(() => ({
     id: this.session.customerId() ?? '',

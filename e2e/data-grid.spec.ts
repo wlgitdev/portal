@@ -119,7 +119,7 @@ function plainCsv(text: string): string[][] {
   return rows;
 }
 
-test.describe.skip('sort and group orders like a desktop grid (B6)', () => {
+test.describe('sort and group orders like a desktop grid (B6)', () => {
   test.describe('sorting', () => {
     test('Shift+click adds a second sort key, ranked in the headers and status bar', async ({
       page,

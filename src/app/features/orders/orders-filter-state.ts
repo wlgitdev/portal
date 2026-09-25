@@ -52,6 +52,16 @@ export class OrdersFilterState {
     }),
   );
 
+  // Search + filters applied, ungrouped — what the desktop grid's own
+  // [rows] binds to; it does its own grouping (item 6) from this flat list.
+  readonly filteredOrders = computed(() =>
+    matchingOrders(this.store.orders(), {
+      search: this.search(),
+      filters: this.filters(),
+      today: new Date(),
+    }),
+  );
+
   readonly visibleOrderCount = computed(() =>
     this.orderView().groups.reduce((sum, group) => sum + group.orders.length, 0),
   );

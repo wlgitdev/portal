@@ -15,7 +15,7 @@
     </button>
     <div
       class="grid-cell grid-group-label"
-      [attr.data-testid]="rowNoun() + '-group'"
+      [attr.data-testid]="singularRowNoun() + '-group'"
       [style.inline-size.px]="labelSpanWidth() - 24"
     >
       {{ groupLabelText() }}
@@ -89,8 +89,8 @@
     }
     @for (column of columns(); track column.id) {
       <div
-        ngGridCell
         role="gridcell"
+        tabindex="0"
         class="grid-cell"
         [class.align-end]="column.align === 'end'"
         [class.mono]="column.mono"

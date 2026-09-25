@@ -1,6 +1,5 @@
 import { NgTemplateOutlet } from '@angular/common';
 import { Component, type TemplateRef, computed, input, output } from '@angular/core';
-import { GridCell } from '@angular/aria/grid';
 import type { CellTemplateContext, Density, GridColumn, VisibleRow } from './grid-types';
 import { pluralize } from './grid-view';
 import { GridTooltipTarget } from './grid-tooltip';
@@ -8,15 +7,16 @@ import { GridTooltipTarget } from './grid-tooltip';
 // Renders one row of any kind (data/group/detail/preview/footer) generically
 // over columns — the only thing that changes between rowNouns (orders,
 // lines, …) is the data passed in, never a branch here. Group/footer/
-// preview "cells" are a single spanned block, not one gridcell per column,
-// so only data-row cells (and the header row, separately) opt into
-// ngGridCell's keyboard navigation.
+// preview "cells" are a single spanned block, not one gridcell per column;
+// keyboard navigation between cells is the grid root's job (data-grid.ts),
+// not this row's.
 @Component({
   selector: 'app-grid-row',
-  imports: [GridCell, GridTooltipTarget, NgTemplateOutlet],
+  imports: [GridTooltipTarget, NgTemplateOutlet],
   templateUrl: './grid-row.html',
   styleUrl: './grid-row.css',
   host: {
+    role: 'row',
     class: 'grid-row',
     '[attr.data-grid-id]': 'gridId()',
     '[attr.data-row-id]': 'visible().id',
@@ -52,6 +52,10 @@ export class GridRow<Row> {
     if (visible.kind !== 'group') return '';
     return `${visible.label} · ${visible.count} ${pluralize(this.rowNoun(), visible.count ?? 0)}`;
   });
+
+  // "orders" -> "order-group": spec pins the group label's testid to the
+  // singular noun regardless of the group's own count.
+  protected readonly singularRowNoun = computed(() => pluralize(this.rowNoun(), 1));
 
   protected cellContext(row: Row): CellTemplateContext<Row> {
     return { $implicit: row, row, density: this.density() };

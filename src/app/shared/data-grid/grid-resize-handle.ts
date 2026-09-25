@@ -1,4 +1,4 @@
-import { Component, ElementRef, HostListener, inject, input, output } from '@angular/core';
+import { Component, ElementRef, HostListener, computed, inject, input, output, signal } from '@angular/core';
 
 const ARROW_STEP_PX = 10;
 
@@ -15,8 +15,9 @@ const ARROW_STEP_PX = 10;
     tabindex: '0',
     class: 'grid-resize-handle',
     '[attr.aria-label]': '"Resize " + header()',
-    '[attr.aria-valuenow]': 'width()',
+    '[attr.aria-valuenow]': 'displayWidth()',
     '[attr.aria-valuemin]': 'minWidth()',
+    '(blur)': 'pendingWidth.set(null)',
   },
 })
 export class GridResizeHandle {
@@ -28,19 +29,31 @@ export class GridResizeHandle {
   readonly widthChange = output<number>();
   readonly fitContent = output<void>();
 
+  // Two ArrowRight presses can outrun a single round trip back through the
+  // width input (emit -> parent persists -> new width flows back down), so
+  // each press advances from the last value THIS handle produced, not from
+  // a width() that might still be mid-flight. Cleared on blur, so a later
+  // external change (Reset view, a different column) is picked up fresh.
+  protected readonly pendingWidth = signal<number | null>(null);
+  protected readonly displayWidth = computed(() => this.pendingWidth() ?? this.width());
+
   @HostListener('keydown', ['$event'])
   protected onKeydown(event: KeyboardEvent): void {
-    if (event.key === 'ArrowRight') {
-      event.preventDefault();
-      this.widthChange.emit(this.width() + ARROW_STEP_PX);
-    } else if (event.key === 'ArrowLeft') {
-      event.preventDefault();
-      this.widthChange.emit(Math.max(this.minWidth(), this.width() - ARROW_STEP_PX));
-    }
+    if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') return;
+    event.preventDefault();
+    // Otherwise the same Arrow keydown also reaches the grid's own
+    // onGridKeydown (it bubbles from inside the columnheader cell), which
+    // moves focus to the next header as cell-to-cell navigation.
+    event.stopPropagation();
+    const base = this.displayWidth();
+    const next = event.key === 'ArrowRight' ? base + ARROW_STEP_PX : Math.max(this.minWidth(), base - ARROW_STEP_PX);
+    this.pendingWidth.set(next);
+    this.widthChange.emit(next);
   }
 
   @HostListener('dblclick')
   protected onDoubleClick(): void {
+    this.pendingWidth.set(null);
     this.fitContent.emit();
   }
 
@@ -48,11 +61,13 @@ export class GridResizeHandle {
   protected onPointerDown(event: PointerEvent): void {
     event.preventDefault();
     const startX = event.clientX;
-    const startWidth = this.width();
+    const startWidth = this.displayWidth();
     this.element.setPointerCapture(event.pointerId);
 
     const onMove = (moveEvent: PointerEvent): void => {
-      this.widthChange.emit(Math.max(this.minWidth(), startWidth + (moveEvent.clientX - startX)));
+      const next = Math.max(this.minWidth(), startWidth + (moveEvent.clientX - startX));
+      this.pendingWidth.set(next);
+      this.widthChange.emit(next);
     };
     const onUp = (): void => {
       this.element.releasePointerCapture(event.pointerId);

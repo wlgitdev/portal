@@ -1,0 +1,36 @@
+<h2 class="sheet-title">Sort</h2>
+
+@for (key of keys(); track $index; let i = $index) {
+  <div class="sort-row">
+    <label>
+      <span>Sort key {{ i + 1 }}</span>
+      <select
+        [attr.aria-label]="'Sort key ' + (i + 1)"
+        [value]="labelFor(key?.colId)"
+        (change)="setColumn(i, $any($event.target).value)"
+      >
+        <option value="" disabled>Choose a column</option>
+        @for (option of options; track option.colId) {
+          <option [value]="option.label">{{ option.label }}</option>
+        }
+      </select>
+    </label>
+    <label>
+      <span>Direction {{ i + 1 }}</span>
+      <select
+        [attr.aria-label]="'Direction ' + (i + 1)"
+        [value]="key?.dir === 'desc' ? 'Descending' : 'Ascending'"
+        (change)="setDirection(i, $any($event.target).value)"
+      >
+        <option value="Ascending">Ascending</option>
+        <option value="Descending">Descending</option>
+      </select>
+    </label>
+  </div>
+}
+
+@if (canAddKey()) {
+  <button type="button" class="add-key" (click)="addKey()">Add sort key</button>
+}
+
+<button type="button" class="done-button" (click)="done()">Done</button>

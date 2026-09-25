@@ -1,5 +1,4 @@
 import { LiveAnnouncer } from '@angular/cdk/a11y';
-import { Grid } from '@angular/aria/grid';
 import { Viewport } from '../viewport/viewport';
 import {
   Component,
@@ -42,7 +41,7 @@ import { GridTooltip } from './grid-tooltip';
 // nothing here names "orders" or any other caller.
 @Component({
   selector: 'app-data-grid',
-  imports: [Grid, GridGroupBox, GridHeaderRow, GridRow, GridStatusBar],
+  imports: [GridGroupBox, GridHeaderRow, GridRow, GridStatusBar],
   templateUrl: './data-grid.html',
   styleUrl: './data-grid.css',
   providers: [GridTooltip],
@@ -76,15 +75,22 @@ export class DataGrid<Row> implements OnInit {
   readonly rowActivated = output<Row>();
   readonly selectionChange = output<Row[]>();
   readonly viewStateChange = output<GridViewState>();
+  /** A row's detail (master-detail) opened or closed — e.g. to lazily fetch its content. */
+  readonly detailToggled = output<Row>();
 
   // Placeholder until ngOnInit: required inputs (gridId, columns — the
   // localStorage key and its defaults) aren't readable before then (NG8118).
-  protected readonly viewState = signal<GridViewState>(defaultViewState([]));
+  private readonly viewStateSignal = signal<GridViewState>(defaultViewState([]));
+  // Public and read-only: the toolbar around a grid (Group by pill label,
+  // Columns/View menus, a developer-details panel) reads this from outside;
+  // every write goes through setViewState so it's always persisted and
+  // emitted, never set directly.
+  readonly viewState = this.viewStateSignal.asReadonly();
   protected readonly selectedIds = signal<ReadonlySet<string>>(new Set());
   private readonly expandedDetailIds = signal<ReadonlySet<string>>(new Set());
 
   ngOnInit(): void {
-    this.viewState.set(this.persistence.load(this.gridId(), this.columns()));
+    this.viewStateSignal.set(this.persistence.load(this.gridId(), this.columns()));
   }
 
   protected readonly visibleColumns = computed(() =>
@@ -195,8 +201,12 @@ export class DataGrid<Row> implements OnInit {
     const link = document.createElement('a');
     link.href = url;
     link.download = `${this.gridId()}.csv`;
+    // Some browsers only honour a download on an <a> that's actually in the
+    // document at click time.
+    document.body.appendChild(link);
     link.click();
-    URL.revokeObjectURL(url);
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url));
   }
 
   resetView(): void {
@@ -204,6 +214,12 @@ export class DataGrid<Row> implements OnInit {
     this.setViewState(defaultViewState(this.columns()));
     const ref = this.snackBar.open('View reset', 'Undo', { duration: 6000 });
     ref.onAction().subscribe(() => this.setViewState(previous));
+  }
+
+  /** Columns menu's "Reset columns": order/hidden/widths only, unlike Reset view it leaves sort, grouping, density and preview alone. */
+  resetColumns(): void {
+    const { columnOrder, hidden, widths } = defaultViewState(this.columns());
+    this.setViewState({ ...this.viewState(), columnOrder, hidden, widths });
   }
 
   protected onSelectionToggled(event: { row: Row; shiftKey: boolean }): void {
@@ -267,11 +283,52 @@ export class DataGrid<Row> implements OnInit {
     const next = new Set(this.expandedDetailIds());
     next.has(id) ? next.delete(id) : next.add(id);
     this.expandedDetailIds.set(next);
+    this.detailToggled.emit(row);
   }
 
   private setViewState(next: GridViewState): void {
-    this.viewState.set(next);
+    this.viewStateSignal.set(next);
     this.persistence.save(this.gridId(), next);
     this.viewStateChange.emit(next);
   }
+
+  // Arrow-key grid navigation (WAI-ARIA grid pattern): same column, next/
+  // previous row for Up/Down; nearest cell sibling for Left/Right. Enter,
+  // Space and the header menu's Shift+F10 are each the relevant cell's own
+  // concern, not the grid's, so they aren't handled here.
+  protected onGridKeydown(event: KeyboardEvent): void {
+    const cell = (event.target as HTMLElement).closest<HTMLElement>(
+      '[role="gridcell"], [role="columnheader"]',
+    );
+    const row = cell?.closest('[role="row"]');
+    const colId = cell?.getAttribute('data-col-id');
+    if (!cell || !row || !colId) return;
+
+    if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+      const direction = event.key === 'ArrowLeft' ? 'previousElementSibling' : 'nextElementSibling';
+      adjacentCell(cell, direction)?.focus();
+      event.preventDefault();
+      return;
+    }
+
+    if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
+    const targetRow = event.key === 'ArrowUp' ? row.previousElementSibling : row.nextElementSibling;
+    const targetCell = targetRow?.querySelector<HTMLElement>(`[data-col-id="${CSS.escape(colId)}"]`);
+    if (targetCell) {
+      targetCell.focus();
+      event.preventDefault();
+    }
+  }
+}
+
+function adjacentCell(
+  cell: Element,
+  direction: 'previousElementSibling' | 'nextElementSibling',
+): HTMLElement | null {
+  let sibling = cell[direction];
+  while (sibling) {
+    if (sibling.matches('[role="gridcell"], [role="columnheader"]')) return sibling as HTMLElement;
+    sibling = sibling[direction];
+  }
+  return null;
 }

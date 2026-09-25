@@ -339,18 +339,39 @@
 }
 
 /* Which of these two renders is now an @if/@else on viewport.isPhone() in
-   the template (one DOM, not a hidden AG Grid sitting behind the cards) —
-   these rules only need to lay each one out, not decide when it shows. */
+   the template (one DOM) — these rules only need to lay each one out, not
+   decide when it shows. */
 .grid-view {
   flex: 1;
   min-height: 240px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
   padding: 0 var(--space-6) var(--space-6);
 }
 
-.grid-view ag-grid-angular {
+.grid-view app-data-grid {
   display: block;
-  height: 100%;
-  width: 100%;
+  flex: 1;
+  min-height: 0;
+  border: 1px solid var(--color-line-soft);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.dev-panel {
+  flex: none;
+  background: var(--mat-sys-surface-container-low);
+  border: 1px solid var(--color-line-soft);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-xs);
+}
+
+.dev-panel pre {
+  margin: var(--space-2) 0 0;
+  white-space: pre-wrap;
+  font-family: var(--font-mono);
 }
 
 .card-view {
@@ -369,44 +390,53 @@
   padding: 0;
 }
 
-/* AG Grid builds its own row/header DOM outside Angular's template, so
-   plain component-scoped rules never reach it (its elements carry none of
-   Angular's emulated-encapsulation attributes) — :host ::ng-deep opts these
-   three rules out of that scoping instead. The header's text + sort
-   indicator are laid out as a flex row, so right-aligning the cell needs a
-   second rule reaching its label container (spec P7 R15). */
-:host ::ng-deep .align-right {
-  text-align: right;
+.sort-icon-button {
+  flex: none;
+  height: 44px;
+  padding-inline: var(--space-4);
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--mat-sys-outline-variant);
+  background: var(--color-surface);
+  color: var(--color-deep-water);
+  font: 500 var(--text-sm) var(--font-body);
+  cursor: pointer;
 }
 
-:host ::ng-deep .ag-header-cell.align-right .ag-header-cell-label {
-  justify-content: flex-end;
+[data-testid='order-row'] {
+  border-radius: var(--radius-md);
+  border: 1px solid var(--mat-sys-outline-variant);
+  background: var(--color-surface);
+  overflow: hidden;
 }
 
-.card-view button {
+.card-open {
   width: 100%;
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
   padding: var(--space-4);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--mat-sys-outline-variant);
-  background: var(--color-surface);
+  border: none;
+  background: none;
   font: inherit;
   text-align: left;
   cursor: pointer;
 }
 
-.card-view button:hover,
-.card-view button:focus-visible {
-  border-color: var(--color-fjord);
+.card-open:hover,
+.card-open:focus-visible {
   outline: none;
+}
+
+[data-testid='order-row']:has(.card-open:focus-visible) {
+  border-color: var(--color-fjord);
 }
 
 .card-bottom {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  font-size: var(--text-sm);
+  color: var(--mat-sys-on-surface-variant);
 }
 
 .order-number {
@@ -414,11 +444,34 @@
   color: var(--color-deep-water);
 }
 
-:host ::ng-deep .mono {
+.mono {
   font-family: var(--font-mono);
 }
 
-.card-bottom {
+.card-lines-toggle {
+  width: 100%;
+  padding: var(--space-2) var(--space-4);
+  border: none;
+  border-top: 1px solid var(--color-line-soft);
+  background: var(--mat-sys-surface-container-low);
+  color: var(--color-fjord);
+  font: 500 var(--text-sm) var(--font-body);
+  text-align: left;
+  cursor: pointer;
+}
+
+.card-lines {
+  list-style: none;
+  margin: 0;
+  padding: 0 var(--space-4) var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.card-lines li {
+  display: flex;
+  justify-content: space-between;
   font-size: var(--text-sm);
   color: var(--mat-sys-on-surface-variant);
 }

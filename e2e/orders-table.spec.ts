@@ -265,7 +265,7 @@ test.describe('orders table at desktop width', () => {
 
   // Pending (DES, showcase-2 S4): the group label reads "Late · 2 orders" and
   // the group's sum moves into its own Total cell, aligned under the column.
-  test.skip('group by Status shows urgent groups first, with counts and totals', async ({
+  test('group by Status shows urgent groups first, with counts and totals', async ({
     page,
     request,
   }) => {

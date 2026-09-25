@@ -1,7 +1,7 @@
 @for (column of columns(); track column.id) {
   <div
-    ngGridCell
     role="columnheader"
+    tabindex="0"
     class="grid-header-cell"
     [class.mono]="column.mono"
     [class.align-end]="column.align === 'end'"
@@ -22,6 +22,7 @@
         : null
     "
     (mousedown)="onHeaderMouseDown(column.id, column.groupable)"
+    (keydown.shift.F10)="menuTrigger.open()"
   >
     <button
       type="button"
@@ -41,6 +42,7 @@
     </button>
 
     <button
+      #menuTrigger="cdkMenuTriggerFor"
       type="button"
       class="grid-header-menu-trigger"
       [attr.aria-label]="column.header + ' column menu'"

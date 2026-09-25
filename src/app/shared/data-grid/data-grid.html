@@ -9,18 +9,15 @@
 }
 
 <div
-  ngGrid
-  [enableSelection]="false"
-  focusMode="roving"
-  rowWrap="nowrap"
-  colWrap="nowrap"
+  role="grid"
   class="grid-scroll-area"
   data-testid="data-grid"
   [attr.data-grid-id]="gridId()"
   [attr.aria-rowcount]="visibleRows().length + 1"
+  (keydown)="onGridKeydown($event)"
 >
   <app-grid-header-row
-    ngGridRow
+    [attr.aria-rowindex]="1"
     [gridId]="gridId()"
     [columns]="visibleColumns()"
     [columnOrder]="viewState().columnOrder"
@@ -35,9 +32,9 @@
     (columnFitted)="onColumnFitted($event)"
   />
 
-  @for (visible of visibleRows(); track visible.id) {
+  @for (visible of visibleRows(); track visible.id; let i = $index) {
     <app-grid-row
-      ngGridRow
+      [attr.aria-rowindex]="i + 2"
       [gridId]="gridId()"
       [visible]="visible"
       [columns]="visibleColumns()"

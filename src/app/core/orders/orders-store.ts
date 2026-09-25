@@ -1,7 +1,7 @@
 import { httpResource } from '@angular/common/http';
 import { ApplicationRef, Injectable, computed, effect, inject, signal } from '@angular/core';
 import { CustomerSession } from '../auth/customer-session';
-import type { OrderDetail, OrderSummary } from '../api/models';
+import type { OrderDetail, OrderLineRow, OrderSummary } from '../api/models';
 
 // One fetch per session: Orders, Overview, Spend and Schedule all read the
 // same order list from here rather than each calling the API themselves.
@@ -35,6 +35,28 @@ export class OrdersStore {
   );
   readonly selectedOrder = computed(() => this.orderDetailResource.value());
   readonly selectedOrderLoading = this.orderDetailResource.isLoading;
+
+  // Every line of every one of the customer's orders, one request total —
+  // fetched only once something actually needs a line (item 6's expanded
+  // rows and preview, item 9's Top 5 products), not on every Orders visit.
+  private readonly linesNeeded = signal(false);
+  private readonly orderLinesResource = httpResource<OrderLineRow[]>(() =>
+    this.session.customerId() && this.linesNeeded() ? '/api/order-lines' : undefined,
+  );
+  readonly orderLinesLoading = this.orderLinesResource.isLoading;
+  readonly linesByOrder = computed(() => {
+    const byOrder = new Map<number, OrderLineRow[]>();
+    for (const line of this.orderLinesResource.value() ?? []) {
+      const bucket = byOrder.get(line.orderId);
+      if (bucket) bucket.push(line);
+      else byOrder.set(line.orderId, [line]);
+    }
+    return byOrder;
+  });
+
+  needLines(): void {
+    this.linesNeeded.set(true);
+  }
 
   constructor() {
     effect(() => {

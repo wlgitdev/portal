@@ -20,6 +20,23 @@
   }
 </ng-template>
 
+<ng-template #statusCellTpl let-row let-density="density">
+  <app-status-tracker
+    [status]="row.status"
+    [size]="density === 'compact' ? 'compact-dots' : 'compact'"
+  />
+</ng-template>
+
+<ng-template #linesTpl let-row>
+  <app-data-grid
+    [gridId]="'order-lines-' + row.id"
+    rowNoun="lines"
+    [rows]="linesFor(row)"
+    [columns]="lineColumns"
+    [rowId]="lineRowId"
+  />
+</ng-template>
+
 <ng-template #statusTabsContent>
   @for (tab of filterState.statusTabs(); track tab.value) {
     <label class="tab" [class.on]="filterState.filters().status === tab.value">
@@ -58,6 +75,7 @@
             <span class="badge mono" aria-hidden="true">{{ filterState.filterCount() }}</span>
           }
         </button>
+        <button type="button" class="sort-icon-button" (click)="openSortSheet()">Sort</button>
       </div>
     </app-page-header>
 
@@ -110,7 +128,7 @@
         >
           <app-icon name="group" [size]="16" />
           <span class="pill-label">Group by</span>
-          <span class="pill-value">{{ currentGroupByLabel() }}</span>
+          <span class="pill-value">{{ gridGroupByLabel() }}</span>
           <app-icon
             name="chevron-down"
             [size]="14"
@@ -130,13 +148,103 @@
                 type="button"
                 cdkMenuItemRadio
                 class="menu-radio-item"
-                [cdkMenuItemChecked]="option.value === filterState.groupBy()"
-                (click)="filterState.setGroupBy(option.value)"
+                [cdkMenuItemChecked]="option.value === gridGroupByChecked()"
+                (click)="onGroupBySelected(option.value)"
               >
                 <app-icon name="check" [size]="16" class="check-icon" />
                 {{ option.label }}
               </button>
             }
+          </div>
+        </ng-template>
+
+        <button
+          type="button"
+          class="filters-pill"
+          [class.open]="columnsTrigger.isOpen()"
+          #columnsTrigger="cdkMenuTriggerFor"
+          [cdkMenuTriggerFor]="columnsMenuTpl"
+          [cdkMenuPosition]="menuPosition"
+          aria-haspopup="menu"
+          [attr.aria-expanded]="columnsTrigger.isOpen()"
+        >
+          Columns
+        </button>
+        <ng-template #columnsMenuTpl>
+          <div
+            cdkMenu
+            aria-label="Columns"
+            class="popover-surface group-by-menu"
+            data-testid="popover-surface"
+          >
+            @for (column of columns(); track column.id) {
+              <button
+                type="button"
+                cdkMenuItemCheckbox
+                class="menu-radio-item"
+                [cdkMenuItemChecked]="!ordersGrid()?.viewState().hidden.includes(column.id)"
+                (click)="toggleColumn(column.id)"
+              >
+                <app-icon name="check" [size]="16" class="check-icon" />
+                {{ column.header }}
+              </button>
+            }
+            <button type="button" cdkMenuItem class="menu-radio-item" (click)="ordersGrid()?.resetColumns()">
+              Reset columns
+            </button>
+          </div>
+        </ng-template>
+
+        <button
+          type="button"
+          class="filters-pill"
+          [class.open]="viewTrigger.isOpen()"
+          #viewTrigger="cdkMenuTriggerFor"
+          [cdkMenuTriggerFor]="viewMenuTpl"
+          [cdkMenuPosition]="menuPosition"
+          aria-haspopup="menu"
+          [attr.aria-expanded]="viewTrigger.isOpen()"
+        >
+          View
+        </button>
+        <ng-template #viewMenuTpl>
+          <div cdkMenu aria-label="View" class="popover-surface group-by-menu" data-testid="popover-surface">
+            <button
+              type="button"
+              cdkMenuItemRadio
+              class="menu-radio-item"
+              [cdkMenuItemChecked]="ordersGrid()?.viewState().density === 'comfortable'"
+              (click)="ordersGrid()?.setDensity('comfortable')"
+            >
+              <app-icon name="check" [size]="16" class="check-icon" />
+              Comfortable
+            </button>
+            <button
+              type="button"
+              cdkMenuItemRadio
+              class="menu-radio-item"
+              [cdkMenuItemChecked]="ordersGrid()?.viewState().density === 'compact'"
+              (click)="ordersGrid()?.setDensity('compact')"
+            >
+              <app-icon name="check" [size]="16" class="check-icon" />
+              Compact
+            </button>
+            <button
+              type="button"
+              cdkMenuItemCheckbox
+              class="menu-radio-item"
+              [cdkMenuItemChecked]="!!ordersGrid()?.viewState().preview"
+              (click)="togglePreview()"
+            >
+              <app-icon name="check" [size]="16" class="check-icon" />
+              Show preview
+            </button>
+            <button type="button" cdkMenuItem class="menu-radio-item" (click)="ordersGrid()?.exportCsv()">
+              Export CSV
+            </button>
+            <button type="button" cdkMenuItem class="menu-radio-item" (click)="ordersGrid()?.resetView()">
+              Reset view
+            </button>
           </div>
         </ng-template>
       </div>
@@ -194,26 +302,46 @@
       }
       @if (filterState.groupBy() === 'none' || !filterState.collapsedGroups().has(group.key)) {
         <ul class="card-list">
-          @for (order of group.orders; track order.id) {
+          @for (order of sortedOrders(group.orders); track order.id) {
             <li>
-              <button
-                type="button"
+              <div
                 data-testid="order-row"
                 [attr.data-status]="order.status"
                 [attr.data-order-id]="order.id"
-                (click)="openOrder(order.id)"
               >
-                <span class="order-number mono" data-testid="order-row-number">{{
-                  '#' + order.id
-                }}</span>
-                <app-status-tracker [status]="order.status" />
-                <div class="card-bottom">
-                  <span>{{ order.itemCount }} {{ plural(order.itemCount, 'item') }}</span>
-                  <span class="mono" data-testid="order-row-total">{{
-                    displayedText(order).total
+                <button type="button" class="card-open" (click)="openOrder(order.id)">
+                  <span class="order-number mono" data-testid="order-row-number">{{
+                    '#' + order.id
                   }}</span>
-                </div>
-              </button>
+                  <app-status-tracker [status]="order.status" />
+                  <div class="card-bottom">
+                    <span>{{ order.itemCount }} {{ plural(order.itemCount, 'item') }}</span>
+                    <span class="mono" data-testid="order-row-total">{{
+                      displayedText(order).total
+                    }}</span>
+                  </div>
+                </button>
+                <button
+                  type="button"
+                  class="card-lines-toggle"
+                  [attr.aria-expanded]="expandedCardLines().has(order.id)"
+                  (click)="toggleCardLines(order.id)"
+                >
+                  Lines
+                </button>
+                @if (expandedCardLines().has(order.id)) {
+                  <ul class="card-lines">
+                    @for (line of linesFor(order); track line.productId) {
+                      <li data-testid="order-card-line">
+                        <span>{{ line.productName }}</span>
+                        <span class="mono" data-testid="order-card-line-amount">{{
+                          formatMoney(line.lineTotal)
+                        }}</span>
+                      </li>
+                    }
+                  </ul>
+                }
+              </div>
             </li>
           }
         </ul>
@@ -222,19 +350,25 @@
   </div>
 } @else {
   <div class="grid-view">
-    <ag-grid-angular
-      [rowData]="gridRows()"
-      [columnDefs]="columnDefs"
-      [getRowId]="getRowId"
-      [theme]="gridTheme"
-      [rowHeight]="rowHeight"
-      [tooltipShowMode]="tooltipShowMode"
-      [tooltipShowDelay]="tooltipShowDelay"
-      [isFullWidthRow]="isFullWidthRow"
-      [fullWidthCellRenderer]="fullWidthCellRenderer"
-      [fullWidthCellRendererParams]="fullWidthCellRendererParams"
-      [postSortRows]="postSortRows"
-      (cellClicked)="onCellClicked($event)"
+    <app-data-grid
+      #ordersGrid
+      gridId="orders"
+      rowNoun="orders"
+      [selectable]="true"
+      [rows]="filterState.filteredOrders()"
+      [columns]="columns()"
+      [rowId]="orderRowId"
+      [detailTemplate]="detailTemplate()"
+      [detailButtonLabel]="detailButtonLabel"
+      [previewText]="previewText"
+      (rowActivated)="openOrder($event.id)"
+      (detailToggled)="onDetailToggled()"
     />
+    @if (developerDetails.enabled()) {
+      <details open data-testid="grid-state-panel" class="dev-panel">
+        <summary>Grid state</summary>
+        <pre>{{ gridStateJson() }}</pre>
+      </details>
+    }
   </div>
 }

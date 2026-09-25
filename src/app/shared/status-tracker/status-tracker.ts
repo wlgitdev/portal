@@ -21,11 +21,12 @@ interface Stop {
     'data-testid': 'status-tracker',
     '[attr.data-status]': 'status()',
     '[class.large]': "size() === 'large'",
+    '[class.dots]': "size() === 'compact-dots'",
   },
 })
 export class StatusTracker {
   readonly status = input.required<OrderStatus>();
-  readonly size = input<'compact' | 'large'>('compact');
+  readonly size = input<'compact' | 'compact-dots' | 'large'>('compact');
 
   protected readonly iconSize = computed(() => (this.size() === 'large' ? 18 : 12));
 

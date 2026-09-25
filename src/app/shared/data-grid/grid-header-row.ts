@@ -1,6 +1,5 @@
 import { CdkMenu, CdkMenuItem, CdkMenuTrigger } from '@angular/cdk/menu';
 import { Component, input, output } from '@angular/core';
-import { GridCell } from '@angular/aria/grid';
 import { END_ALIGNED_MENU_POSITION } from '../menu-position';
 import { nextSort, moveColumn } from './grid-view-actions';
 import type { GridColumn, SortDirection, SortKey } from './grid-types';
@@ -10,15 +9,14 @@ import { GridTooltipTarget } from './grid-tooltip';
 // One row of column headers: sort (click / Shift+click / menu), the
 // per-column menu (sort, group, move, hide), and its resize handle. How a
 // header interaction changes sort/columnOrder/hidden lives here, next to
-// the interactions that trigger it; the parent just applies the result.
-// Row-level concerns (role, aria-rowindex) are applied by the parent, which
-// hosts this behind ngGridRow.
+// the interactions that trigger it; the parent sets aria-rowindex (it
+// numbers every row, header included).
 @Component({
   selector: 'app-grid-header-row',
-  imports: [CdkMenu, CdkMenuItem, CdkMenuTrigger, GridCell, GridResizeHandle, GridTooltipTarget],
+  imports: [CdkMenu, CdkMenuItem, CdkMenuTrigger, GridResizeHandle, GridTooltipTarget],
   templateUrl: './grid-header-row.html',
   styleUrl: './grid-header-row.css',
-  host: { class: 'grid-header-row', '[attr.data-grid-id]': 'gridId()' },
+  host: { role: 'row', class: 'grid-header-row', '[attr.data-grid-id]': 'gridId()' },
 })
 export class GridHeaderRow<Row> {
   readonly gridId = input.required<string>();

@@ -28,6 +28,19 @@
 
   <div class="separator"></div>
 
+  <button
+    type="button"
+    cdkMenuItemCheckbox
+    class="menu-item"
+    [cdkMenuItemChecked]="developerDetails.enabled()"
+    (click)="developerDetails.toggle()"
+  >
+    <app-icon name="info" />
+    <span class="menu-item-label">Show developer details</span>
+  </button>
+
+  <div class="separator"></div>
+
   <button type="button" cdkMenuItem class="menu-item" (click)="signOut()">
     <app-icon name="sign-out" />
     <span class="menu-item-label">Sign out</span>

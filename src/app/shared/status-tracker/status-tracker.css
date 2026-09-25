@@ -52,6 +52,22 @@
   font-size: 14px;
 }
 
+/* Compact grid rows (34px) aren't tall enough for icons + a label line
+   (spec S2: "the status tracker gets size compact-dots in Compact"); the
+   label stays for assistive tech via the standard clip-based sr-only
+   technique rather than a hidden/removed dead end. */
+:host(.dots) .label {
+  position: absolute;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+}
+
 .label.end {
   text-align: right;
 }
