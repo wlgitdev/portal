@@ -1,6 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 import { signInAs } from './support/portal';
-import { waitForGrid } from './support/grid';
+import { grid, gridRows, waitForGrid } from './support/grid';
 
 // Bundle B1, third rework (roadmap item 1, tester comments 23/09/2026):
 // spec P8 R17–R19, design "Revision 4".
@@ -37,7 +37,7 @@ test.describe('navigation is always reachable', () => {
     }) => {
       await page.setViewportSize(viewport);
       await signInAs(page, 'customer-card-late-orders');
-      await expect(page.getByTestId('order-row').or(page.locator('.ag-row')).first()).toBeVisible();
+      await expect(page.getByTestId('order-row').or(gridRows(page)).first()).toBeVisible();
 
       await scrollToBottom(page);
 
@@ -68,9 +68,9 @@ test.describe('navigation is always reachable', () => {
         () => document.documentElement.scrollHeight - window.innerHeight,
       );
       expect(overflow).toBeLessThanOrEqual(1);
-      await expect(page.locator('.ag-root')).toBeInViewport({ ratio: 1 });
+      await expect(grid(page)).toBeInViewport({ ratio: 1 });
 
-      const gridBox = (await page.locator('.ag-root').boundingBox())!;
+      const gridBox = (await grid(page).boundingBox())!;
       const navBox = (await visiblePrimaryNavs(page).boundingBox())!;
       const overlaps =
         gridBox.x < navBox.x + navBox.width &&

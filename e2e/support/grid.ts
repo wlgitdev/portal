@@ -1,8 +1,15 @@
 import { expect, type Locator, type Page } from '@playwright/test';
 
-// The only file allowed to know AG Grid's DOM: `.ag-*` classes and the
-// `row-id` / `row-index` / `col-id` attributes are AG Grid's own, not ours.
-// If a grid upgrade renames them, fix it here and nowhere else.
+// The only file allowed to know either grid's DOM. Until bundle B6 (showcase-2
+// spec S2/S4) lands, the Orders grid is AG Grid (`.ag-*` classes, `row-id` /
+// `row-index` / `col-id`); afterwards it is the in-house <app-data-grid>
+// (role/data-* contract in S2). Every locator matches both, so the item-1
+// suite runs unchanged across the switch. After B6, DEV deletes the AG halves.
+
+const NEW_GRID = '[data-testid="data-grid"][data-grid-id="orders"]';
+const NEW_ROW = '[role="row"][data-grid-id="orders"]';
+const NEW_DATA_ROW = `${NEW_ROW}[data-row-kind="data"]`;
+const NEW_HEADER = '[role="columnheader"][data-grid-id="orders"]';
 
 export type ColId = 'orderNo' | 'orderedOn' | 'status' | 'itemCount' | 'total' | 'shipTo';
 
@@ -13,64 +20,88 @@ export interface GridEntry {
 
 // Tall enough that AG Grid's row virtualisation renders every row of the
 // largest demo customer (SAVEA, 31 orders) plus group rows, so DOM counts are
-// real counts.
+// real counts. The in-house grid doesn't virtualise; the size is harmless there.
 export const TALL_DESKTOP = { width: 1280, height: 2400 };
 export const NARROW_DESKTOP = { width: 800, height: 2400 };
 
 export function grid(page: Page): Locator {
-  return page.locator('.ag-root');
+  return page.locator(`.ag-root, ${NEW_GRID}`);
 }
 
 export async function waitForGrid(page: Page): Promise<void> {
-  await expect(grid(page).locator('.ag-row').first()).toBeVisible();
+  await expect(gridRows(page).first()).toBeVisible();
+}
+
+export function gridRows(page: Page): Locator {
+  return page.locator(`.ag-root .ag-row, ${NEW_DATA_ROW}`);
 }
 
 export function orderRow(page: Page, orderId: number): Locator {
-  return grid(page).locator(`.ag-center-cols-container .ag-row[row-id="${orderId}"]`);
+  return page.locator(
+    `.ag-center-cols-container .ag-row[row-id="${orderId}"], ${NEW_DATA_ROW}[data-row-id="${orderId}"]`,
+  );
 }
 
 export function cell(row: Locator, colId: ColId): Locator {
-  return row.locator(`.ag-cell[col-id="${colId}"]`);
+  return row.locator(
+    `.ag-cell[col-id="${colId}"], :scope > [role="gridcell"][data-col-id="${colId}"]`,
+  );
 }
 
 export function cellsInColumn(page: Page, colId: ColId): Locator {
-  return grid(page).locator(`.ag-center-cols-container .ag-cell[col-id="${colId}"]`);
+  return page.locator(
+    `.ag-center-cols-container .ag-cell[col-id="${colId}"], ${NEW_DATA_ROW} > [role="gridcell"][data-col-id="${colId}"]`,
+  );
 }
 
 export function headerCell(page: Page, colId: ColId): Locator {
-  return grid(page).locator(`.ag-header-cell[col-id="${colId}"]`);
+  return page.locator(`.ag-header-cell[col-id="${colId}"], ${NEW_HEADER}[data-col-id="${colId}"]`);
+}
+
+export function headerText(page: Page, colId: ColId): Locator {
+  return headerCell(page, colId).locator(
+    '.ag-header-cell-text, [data-testid="column-header-text"]',
+  );
 }
 
 export async function headerNames(page: Page): Promise<string[]> {
-  const names = await grid(page).locator('.ag-header-cell .ag-header-cell-text').allInnerTexts();
+  const names = await page
+    .locator(
+      `.ag-header-cell .ag-header-cell-text, ${NEW_HEADER} [data-testid="column-header-text"]`,
+    )
+    .allInnerTexts();
   return names.map((name) => name.trim());
 }
 
 export function tooltip(page: Page): Locator {
-  return page.locator('.ag-tooltip:not(.ag-tooltip-hiding)');
+  return page.locator('.ag-tooltip:not(.ag-tooltip-hiding), [data-testid="grid-tooltip"]');
 }
 
 export async function moveMouseAway(page: Page): Promise<void> {
   await page.mouse.move(0, 0);
-  await expect(page.locator('.ag-tooltip')).toHaveCount(0);
+  await expect(page.locator('.ag-tooltip, [data-testid="grid-tooltip"]')).toHaveCount(0);
 }
 
 export async function visibleOrderIds(page: Page): Promise<number[]> {
-  const ids = await grid(page)
-    .locator('.ag-center-cols-container .ag-row[row-id]')
-    .evaluateAll((rows) => rows.map((row) => row.getAttribute('row-id') ?? ''));
+  const ids = await page
+    .locator(`.ag-center-cols-container .ag-row[row-id], ${NEW_DATA_ROW}`)
+    .evaluateAll((rows) =>
+      rows.map((row) => row.getAttribute('row-id') ?? row.getAttribute('data-row-id') ?? ''),
+    );
   return ids.map(Number).sort((a, b) => a - b);
 }
 
-// Group headers are full-width rows and live in a different container from
-// order rows, so visual order comes from AG Grid's row-index, not DOM order.
+// AG Grid keeps group rows in a different container from order rows, so
+// visual order comes from row-index (aria-rowindex on the new grid), not DOM order.
 export async function entriesInDisplayOrder(page: Page): Promise<GridEntry[]> {
-  const rows = await grid(page)
-    .locator('.ag-row[row-id][row-index]')
+  const rows = await page
+    .locator(
+      `.ag-root .ag-row[row-id][row-index], ${NEW_DATA_ROW}, ${NEW_ROW}[data-row-kind="group"]`,
+    )
     .evaluateAll((elements) =>
       elements.map((row) => ({
-        rowId: row.getAttribute('row-id') ?? '',
-        index: Number(row.getAttribute('row-index')),
+        rowId: row.getAttribute('row-id') ?? row.getAttribute('data-row-id') ?? '',
+        index: Number(row.getAttribute('row-index') ?? row.getAttribute('aria-rowindex')),
       })),
     );
   const seen = new Set<string>();
@@ -82,7 +113,7 @@ export async function entriesInDisplayOrder(page: Page): Promise<GridEntry[]> {
 
 export async function isTruncated(target: Locator): Promise<boolean> {
   return target.evaluate((element) => {
-    const value = element.querySelector('.ag-cell-value') ?? element;
+    const value = element.querySelector('.ag-cell-value, [data-testid="cell-value"]') ?? element;
     return value.scrollWidth > value.clientWidth;
   });
 }

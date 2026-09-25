@@ -263,8 +263,9 @@ test.describe('orders table at desktop width', () => {
     await expect(page.getByRole('button', { name: 'Filters (2)', exact: true })).toBeVisible();
   });
 
-  // Pending (DES, P8 R24): Group by is a menu, not a native select.
-  test('group by Status shows urgent groups first, with counts and totals', async ({
+  // Pending (DES, showcase-2 S4): the group label reads "Late · 2 orders" and
+  // the group's sum moves into its own Total cell, aligned under the column.
+  test.skip('group by Status shows urgent groups first, with counts and totals', async ({
     page,
     request,
   }) => {
@@ -279,7 +280,17 @@ test.describe('orders table at desktop width', () => {
     await chooseGroupBy(page, 'Status');
 
     const headers = page.getByTestId('order-group').filter({ visible: true });
-    await expect(headers).toHaveText(groups.map((g) => groupHeaderText(g.status, g.orders)));
+    await expect(headers).toHaveText(
+      groups.map(
+        (g) => `${g.status} · ${g.orders.length} order${g.orders.length === 1 ? '' : 's'}`,
+      ),
+    );
+    for (const group of groups) {
+      const groupRow = page.locator(
+        `[role="row"][data-grid-id="orders"][data-row-kind="group"][data-row-id="group:${group.status}"]`,
+      );
+      await expect(cell(groupRow, 'total')).toHaveText(sumTotals(group.orders));
+    }
 
     const statusById = new Map(orders.map((o) => [String(o.id), o.status]));
     const entries = await entriesInDisplayOrder(page);

@@ -1,6 +1,12 @@
 import { test, expect, type Locator } from '@playwright/test';
 import { fetchOrdersAs, signInAs } from './support/portal';
-import { TALL_DESKTOP, entriesInDisplayOrder, headerCell, waitForGrid } from './support/grid';
+import {
+  TALL_DESKTOP,
+  entriesInDisplayOrder,
+  headerCell,
+  orderRow,
+  waitForGrid,
+} from './support/grid';
 import type { OrderStatus, OrderSummary } from '../src/app/core/api/models';
 
 // Bundle B1, third rework (roadmap item 1, tester comments 23/09/2026):
@@ -46,7 +52,7 @@ test.describe('status tracker', () => {
     for (const status of URGENCY) {
       const order = orders.find((o) => o.status === status);
       if (!order) continue;
-      const row = page.locator(`.ag-center-cols-container .ag-row[row-id="${order.id}"]`);
+      const row = orderRow(page, order.id);
       await expectTracker(row.getByTestId('status-tracker'), order);
     }
   });

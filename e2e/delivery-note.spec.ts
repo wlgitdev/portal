@@ -1,15 +1,16 @@
-import { readFile } from 'node:fs/promises';
 import { test, expect, type Locator, type Page } from '@playwright/test';
 import { signInAs } from './support/portal';
 import { isA4Portrait, readPdf, withoutWhitespace } from './support/pdf';
+import { readPackageJson } from './support/showcase';
 
-// Bundle B2 (roadmap item 2): download a delivery note for any order.
-// To test: open an order, download its delivery note, check the PDF totals
-// match the screen.
-// Rule 3b: DEV may only remove this .skip, never edit the assertions below.
-test.describe('download a delivery note', () => {
+// Bundle B11 (roadmap item 11): print a delivery note or save it as PDF.
+// Spec showcase-2 S9; design showcase-2 "Delivery note — print-ready page".
+// Replaces item 2's download tests: the generated download is removed on
+// purpose (design "Told to WL"); these pin the print-ready page instead.
+// Rule 3b: DEV may only remove the .skip marker, never edit the assertions.
+test.describe.skip('print a delivery note or save it as PDF (B11)', () => {
   // ALFKI's order 10643 has a 25% discount on every line, so it proves the
-  // PDF carries the discounted amounts the drawer shows, not list price x qty.
+  // note carries the discounted amounts the drawer shows, not list price x qty.
   const DISCOUNTED_ORDER_ID = 10643;
 
   async function openOrderDrawer(page: Page, orderId: number): Promise<Locator> {
@@ -24,21 +25,67 @@ test.describe('download a delivery note', () => {
     return drawer;
   }
 
-  async function downloadDeliveryNote(page: Page, drawer: Locator) {
-    const [download] = await Promise.all([
-      page.waitForEvent('download'),
-      drawer.getByRole('button', { name: 'Download delivery note', exact: true }).click(),
+  async function openDeliveryNote(page: Page, drawer: Locator): Promise<Page> {
+    const [note] = await Promise.all([
+      page.context().waitForEvent('page'),
+      drawer.getByRole('button', { name: 'Delivery note', exact: true }).click(),
     ]);
-    return download;
+    await note.waitForLoadState();
+    await expect(note.getByTestId('delivery-note-total')).toBeVisible();
+    return note;
   }
 
-  test('downloads an A4 PDF named after the order', async ({ page }) => {
+  test('the drawer opens the note in a new tab titled after the order', async ({ page }) => {
     const drawer = await openOrderDrawer(page, DISCOUNTED_ORDER_ID);
+    await expect(
+      drawer.getByRole('button', { name: 'Download delivery note', exact: true }),
+    ).toHaveCount(0);
 
-    const download = await downloadDeliveryNote(page, drawer);
-    expect(download.suggestedFilename()).toBe(`delivery-note-${DISCOUNTED_ORDER_ID}.pdf`);
+    const note = await openDeliveryNote(page, drawer);
+    expect(new URL(note.url()).pathname).toBe(`/orders/${DISCOUNTED_ORDER_ID}/delivery-note`);
+    await expect(note).toHaveTitle(`delivery-note-${DISCOUNTED_ORDER_ID}`);
+  });
 
-    const pdf = await readPdf(await readFile(await download.path()));
+  test("the note's line amounts, freight and total match the drawer", async ({ page }) => {
+    const drawer = await openOrderDrawer(page, DISCOUNTED_ORDER_ID);
+    const lineAmounts = await drawer.getByTestId('order-drawer-line-amount').allInnerTexts();
+    const freight = await drawer.getByTestId('order-drawer-freight').innerText();
+    const total = await drawer.getByTestId('order-drawer-total').innerText();
+    expect(lineAmounts.length).toBeGreaterThan(0);
+
+    const note = await openDeliveryNote(page, drawer);
+    await expect(note.getByTestId('delivery-note-line-amount')).toHaveText(lineAmounts);
+    await expect(note.getByTestId('delivery-note-freight')).toHaveText(freight);
+    await expect(note.getByTestId('delivery-note-total')).toHaveText(total);
+  });
+
+  test('"Print or save as PDF" opens the browser print dialog', async ({ page }) => {
+    const drawer = await openOrderDrawer(page, DISCOUNTED_ORDER_ID);
+    await page.context().addInitScript(() => {
+      (window as unknown as { printCalls: number }).printCalls = 0;
+      window.print = () => {
+        (window as unknown as { printCalls: number }).printCalls++;
+      };
+    });
+
+    const note = await openDeliveryNote(page, drawer);
+    await note.getByRole('button', { name: 'Print or save as PDF', exact: true }).click();
+
+    expect(
+      await note.evaluate(() => (window as unknown as { printCalls: number }).printCalls),
+    ).toBe(1);
+  });
+
+  test('printed to PDF it is A4 portrait, with the manifest and without the toolbar', async ({
+    page,
+  }) => {
+    const drawer = await openOrderDrawer(page, DISCOUNTED_ORDER_ID);
+    const total = await drawer.getByTestId('order-drawer-total').innerText();
+    const note = await openDeliveryNote(page, drawer);
+
+    await note.emulateMedia({ media: 'print' });
+    const pdf = await readPdf(await note.pdf({ preferCSSPageSize: true, printBackground: true }));
+
     expect(pdf.pages.length).toBeGreaterThan(0);
     for (const size of pdf.pages) {
       expect(isA4Portrait(size), `page is ${size.widthPt} x ${size.heightPt}pt`).toBe(true);
@@ -47,45 +94,21 @@ test.describe('download a delivery note', () => {
     expect(text).toContain(`#${DISCOUNTED_ORDER_ID}`);
     expect(text).toContain(withoutWhitespace('Delivery note'));
     expect(text).toContain(withoutWhitespace('Received by'));
-  });
-
-  test("the PDF's line amounts, freight and total match the drawer", async ({ page }) => {
-    const drawer = await openOrderDrawer(page, DISCOUNTED_ORDER_ID);
-    const lineAmounts = await drawer.getByTestId('order-drawer-line-amount').allInnerTexts();
-    const freight = await drawer.getByTestId('order-drawer-freight').innerText();
-    const total = await drawer.getByTestId('order-drawer-total').innerText();
-    expect(lineAmounts.length).toBeGreaterThan(0);
-
-    const download = await downloadDeliveryNote(page, drawer);
-    const text = withoutWhitespace((await readPdf(await readFile(await download.path()))).text);
-
-    for (const amount of lineAmounts) {
-      expect(text).toContain(withoutWhitespace(amount));
-    }
-    expect(text).toContain(withoutWhitespace(freight));
     expect(text).toContain(withoutWhitespace(total));
+    expect(text).not.toContain(withoutWhitespace('Print or save as PDF'));
   });
 
-  test('works for an order whose drawer was not the first one opened', async ({ page }) => {
+  test("another customer's order says it isn't yours", async ({ page }) => {
     await signInAs(page, 'customer-card-ALFKI');
-    const rows = page.getByTestId('order-row');
-    const drawer = page.getByTestId('order-drawer');
+    // 10248 belongs to VINET, not ALFKI.
+    await page.goto('/orders/10248/delivery-note');
+    await expect(page.getByText("This order isn't one of yours")).toBeVisible();
+    await expect(page.getByTestId('delivery-note-total')).toHaveCount(0);
+  });
 
-    await rows.first().click();
-    await expect(drawer.getByTestId('order-drawer-total')).toBeVisible();
-    await drawer.getByRole('button', { name: 'Close order detail' }).click();
-
-    const second = rows.nth(1);
-    const secondId = await second.getAttribute('data-order-id');
-    await second.click();
-    await expect(drawer.getByText(`#${secondId}`)).toBeVisible();
-    await expect(drawer.getByTestId('order-drawer-total')).toBeVisible();
-    const total = await drawer.getByTestId('order-drawer-total').innerText();
-
-    const download = await downloadDeliveryNote(page, drawer);
-    expect(download.suggestedFilename()).toBe(`delivery-note-${secondId}.pdf`);
-    const text = withoutWhitespace((await readPdf(await readFile(await download.path()))).text);
-    expect(text).toContain(`#${secondId}`);
-    expect(text).toContain(withoutWhitespace(total));
+  test('pdfmake is gone from package.json', async () => {
+    const pkg = await readPackageJson();
+    expect(Object.keys(pkg.dependencies)).not.toContain('pdfmake');
+    expect(Object.keys(pkg.devDependencies)).not.toContain('@types/pdfmake');
   });
 });
