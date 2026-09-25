@@ -1,5 +1,6 @@
 import { LiveAnnouncer } from '@angular/cdk/a11y';
 import { Grid } from '@angular/aria/grid';
+import { Viewport } from '../viewport/viewport';
 import {
   Component,
   ElementRef,
@@ -27,6 +28,7 @@ import {
   withWidth,
 } from './grid-view-actions';
 import { GridViewPersistence } from './grid-view-persistence';
+import { GridGroupBox } from './grid-group-box';
 import { GridHeaderRow } from './grid-header-row';
 import { GridRow } from './grid-row';
 import { GridStatusBar } from './grid-status-bar';
@@ -40,7 +42,7 @@ import { GridTooltip } from './grid-tooltip';
 // nothing here names "orders" or any other caller.
 @Component({
   selector: 'app-data-grid',
-  imports: [Grid, GridHeaderRow, GridRow, GridStatusBar],
+  imports: [Grid, GridGroupBox, GridHeaderRow, GridRow, GridStatusBar],
   templateUrl: './data-grid.html',
   styleUrl: './data-grid.css',
   providers: [GridTooltip],
@@ -50,6 +52,7 @@ export class DataGrid<Row> implements OnInit {
   private readonly persistence = inject(GridViewPersistence);
   private readonly snackBar = inject(MatSnackBar);
   private readonly liveAnnouncer = inject(LiveAnnouncer);
+  private readonly viewport = inject(Viewport);
   private readonly hostElement: HTMLElement = inject(ElementRef).nativeElement;
 
   // A nested grid (master-detail lines) reuses its ancestor grid's tooltip
@@ -86,6 +89,9 @@ export class DataGrid<Row> implements OnInit {
 
   protected readonly visibleColumns = computed(() =>
     computeVisibleColumns(this.columns(), this.viewState()),
+  );
+  protected readonly showGroupBox = computed(
+    () => !this.viewport.isPhone() && this.columns().some((column) => column.groupable),
   );
   protected readonly statusBarColumn = computed(() =>
     this.columns().find((column) => column.statusBar),
@@ -227,6 +233,21 @@ export class DataGrid<Row> implements OnInit {
     }
     const [start, end] = anchor < target ? [anchor, target] : [target, anchor];
     for (let i = start; i <= end; i++) next.add(ids[i]);
+  }
+
+  protected onExpandAll(): void {
+    this.setViewState({ ...this.viewState(), collapsedGroups: [] });
+  }
+
+  protected onCollapseAll(): void {
+    const allExpanded = buildVisibleRows({
+      rows: this.rows(),
+      columns: this.visibleColumns(),
+      viewState: { ...this.viewState(), collapsedGroups: [] },
+      rowId: this.rowId(),
+    });
+    const groupIds = allExpanded.filter((v) => v.kind === 'group').map((v) => v.id);
+    this.setViewState({ ...this.viewState(), collapsedGroups: groupIds });
   }
 
   protected onGroupToggled(groupId: string): void {

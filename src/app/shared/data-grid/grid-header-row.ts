@@ -65,4 +65,19 @@ export class GridHeaderRow<Row> {
     const active = this.groupByIds();
     return active.length < 3 || active.includes(colId);
   }
+
+  // Dragging a header onto the group box: the drop target can be resolved
+  // with elementFromPoint at mouseup, so this needs no coordination with
+  // wherever the group box actually is (a sibling of this component).
+  protected onHeaderMouseDown(colId: string, groupable: boolean | undefined): void {
+    if (!groupable) return;
+    const onUp = (event: MouseEvent): void => {
+      document.removeEventListener('mouseup', onUp);
+      const target = document.elementFromPoint(event.clientX, event.clientY);
+      if (target?.closest('[data-testid="group-box"]') && this.canGroup(colId)) {
+        this.groupByColumn.emit(colId);
+      }
+    };
+    document.addEventListener('mouseup', onUp);
+  }
 }

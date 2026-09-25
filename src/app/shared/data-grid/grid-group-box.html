@@ -1,0 +1,38 @@
+@if (groupBy().length === 0) {
+  <span class="group-box-empty">Drag a column here to group by it</span>
+} @else {
+  <div
+    cdkDropList
+    cdkDropListOrientation="horizontal"
+    class="group-chips"
+    (cdkDropListDropped)="onDrop($event)"
+  >
+    @for (column of chipColumns(); track column.id; let i = $index; let last = $last) {
+      <span
+        cdkDrag
+        class="group-chip"
+        data-testid="group-chip"
+        tabindex="0"
+        [attr.data-col-id]="column.id"
+        (keydown)="onChipKeydown(column.id, $event)"
+      >
+        <span class="chip-level">{{ i + 1 }}</span>
+        {{ column.header }}
+        <button
+          type="button"
+          class="chip-remove"
+          [attr.aria-label]="'Remove ' + column.header + ' from grouping'"
+          (click)="removeLevel(column.id)"
+        >
+          ✕
+        </button>
+      </span>
+      @if (!last) {
+        <span class="group-arrow" aria-hidden="true">›</span>
+      }
+    }
+  </div>
+  <span class="spacer"></span>
+  <button type="button" class="group-box-action" (click)="expandAll.emit()">Expand all</button>
+  <button type="button" class="group-box-action" (click)="collapseAll.emit()">Collapse all</button>
+}

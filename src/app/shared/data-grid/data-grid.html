@@ -1,3 +1,13 @@
+@if (showGroupBox()) {
+  <app-grid-group-box
+    [columns]="columns()"
+    [groupBy]="viewState().groupBy"
+    (groupByChanged)="setGroupBy($event)"
+    (expandAll)="onExpandAll()"
+    (collapseAll)="onCollapseAll()"
+  />
+}
+
 <div
   ngGrid
   [enableSelection]="false"
