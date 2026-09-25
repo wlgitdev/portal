@@ -53,6 +53,13 @@
   overflow: hidden;
 }
 
+/* The last visible column absorbs any leftover row width instead of the
+   grid trailing off into blank space; shrink stays 0, so it still never
+   goes below its own set width. */
+.grid-cell:last-child {
+  flex: 1 0 auto;
+}
+
 .grid-cell.align-end {
   justify-content: flex-end;
   text-align: end;

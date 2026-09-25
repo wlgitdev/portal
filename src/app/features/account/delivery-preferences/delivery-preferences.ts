@@ -1,5 +1,15 @@
 import { httpResource } from '@angular/common/http';
-import { Component, ElementRef, Injector, afterNextRender, computed, effect, inject, signal } from '@angular/core';
+import {
+  ApplicationRef,
+  Component,
+  ElementRef,
+  Injector,
+  afterNextRender,
+  computed,
+  effect,
+  inject,
+  signal,
+} from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatAutocompleteModule, type MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
@@ -88,6 +98,7 @@ export class DeliveryPreferences {
   private readonly snackBar = inject(MatSnackBar);
   private readonly injector = inject(Injector);
   private readonly host: ElementRef<HTMLElement> = inject(ElementRef);
+  private readonly appRef = inject(ApplicationRef);
   protected readonly developerDetails = inject(DeveloperDetails);
 
   protected readonly dayOptions = DAY_OPTIONS;
@@ -237,6 +248,11 @@ export class DeliveryPreferences {
   protected selectUnloading(unloading: Unloading): void {
     this.form.controls.unloading.setValue(unloading);
     this.form.controls.unloading.markAsDirty();
+    // This hand-rolled radio's aria-checked is attribute-bound, not a native
+    // input's .checked — it needs a render before it's readable, which a
+    // click's own event-dispatch promise doesn't wait for (same root cause,
+    // same fix, as OrdersStore.reset()'s forced tick — see roadmap.md P8).
+    this.appRef.tick();
   }
 
   protected selectInvoiceFormat(format: InvoiceFormat): void {

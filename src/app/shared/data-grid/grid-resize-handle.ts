@@ -1,4 +1,4 @@
-import { Component, ElementRef, HostListener, computed, inject, input, output, signal } from '@angular/core';
+import { Component, ElementRef, HostListener, inject, input, output, signal } from '@angular/core';
 
 const ARROW_STEP_PX = 10;
 
@@ -35,7 +35,13 @@ export class GridResizeHandle {
   // a width() that might still be mid-flight. Cleared on blur, so a later
   // external change (Reset view, a different column) is picked up fresh.
   protected readonly pendingWidth = signal<number | null>(null);
-  protected readonly displayWidth = computed(() => this.pendingWidth() ?? this.width());
+
+  // Not a computed: the cell's rendered width can exceed width() when CSS
+  // grows it to fill leftover row space (the last column), so this reads
+  // the DOM directly rather than trusting the stored value.
+  protected displayWidth(): number {
+    return this.pendingWidth() ?? this.element.parentElement?.getBoundingClientRect().width ?? this.width();
+  }
 
   @HostListener('keydown', ['$event'])
   protected onKeydown(event: KeyboardEvent): void {

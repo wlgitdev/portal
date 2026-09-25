@@ -7,7 +7,7 @@
   display: grid;
   grid-template-columns: 1fr;
   gap: var(--space-5);
-  max-width: 1040px;
+  max-width: 1400px;
 }
 
 @media (min-width: 900px) {
@@ -26,6 +26,7 @@
 
 mat-form-field {
   width: 100%;
+  max-width: 480px;
 }
 
 .field-pair {
@@ -89,6 +90,7 @@ mat-form-field {
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-3);
+  max-width: 480px;
   padding: var(--space-4);
   border: 1px dashed var(--color-line-soft);
   border-radius: var(--radius-md);

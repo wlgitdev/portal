@@ -36,6 +36,12 @@
   z-index: 1;
 }
 
+/* Mirrors .grid-cell:last-child in grid-row.css so the header stays aligned
+   with the data columns it grows to match. */
+.grid-header-cell:last-child {
+  flex: 1 0 auto;
+}
+
 .grid-header-click {
   display: flex;
   align-items: center;

@@ -12,9 +12,6 @@
           </mat-option>
         }
       </mat-select>
-      @if (form.controls.shipperId.invalid && form.controls.shipperId.touched) {
-        <mat-error>Choose a carrier</mat-error>
-      }
     </mat-form-field>
 
     <div role="group" aria-label="Delivery days" class="day-group">
@@ -116,10 +113,10 @@
         [matChipInputSeparatorKeyCodes]="emailSeparatorKeys"
         (matChipInputTokenEnd)="addEmail($event)"
       />
-      @if (emailError()) {
-        <mat-error>{{ emailError() }}</mat-error>
-      }
     </mat-form-field>
+    @if (emailError()) {
+      <p class="field-error">{{ emailError() }}</p>
+    }
 
     <mat-form-field>
       <mat-label>Standing order products</mat-label>

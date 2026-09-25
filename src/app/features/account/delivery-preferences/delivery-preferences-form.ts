@@ -149,7 +149,7 @@ export function buildDeliveryPreferencesForm(): DeliveryPreferencesFormGroup {
   closedTo.valueChanges.subscribe(() => closedRange.updateValueAndValidity({ emitEvent: false }));
 
   return new FormGroup<DeliveryPreferencesControls>({
-    shipperId: new FormControl<number | null>(null, { validators: Validators.required }),
+    shipperId: new FormControl<number | null>(null),
     deliveryDays: new FormArray(
       DAY_OPTIONS.map((day) => new FormControl(DEFAULT_DAYS.includes(day.value), { nonNullable: true })),
       { validators: noDaysValidator() },
@@ -223,7 +223,7 @@ export function summaryClauses(form: DeliveryPreferencesFormGroup, shipperName: 
   const c = form.controls;
   const clauses: SummaryClause[] = [];
 
-  clauses.push({ text: c.shipperId.invalid ? 'carrier needs fixing' : (shipperName ?? 'no carrier chosen'), invalid: c.shipperId.invalid });
+  clauses.push({ text: shipperName ?? 'no carrier chosen', invalid: false });
 
   const daysInvalid = c.deliveryDays.invalid;
   const windowInvalid = c.windowFrom.invalid || c.windowTo.invalid;

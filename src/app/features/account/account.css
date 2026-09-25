@@ -1,7 +1,7 @@
 :host {
   display: block;
   padding: var(--space-5);
-  max-width: 1100px;
+  max-width: 1400px;
 }
 
 .tab-strip {
@@ -31,7 +31,6 @@
   flex-direction: column;
   gap: var(--space-5);
   margin-top: var(--space-4);
-  max-width: 640px;
 }
 
 .section {
@@ -48,10 +47,19 @@
   color: var(--mat-sys-on-surface-variant);
 }
 
-.field-pair {
+/* A single field reads badly stretched edge to edge (an 800px "Company
+   name" box), so standalone fields cap at a sensible line length; grouped
+   fields (field-grid) use the extra room as more columns instead. */
+.account-form > app-form-field,
+.section > app-form-field {
+  max-width: 520px;
+}
+
+.field-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: var(--space-3);
+  max-width: 900px;
 }
 
 .actions {

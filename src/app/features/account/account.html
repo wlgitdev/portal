@@ -54,7 +54,7 @@
         [error]="errors().address"
         (valueChange)="updateField('address', $event)"
       />
-      <div class="field-pair">
+      <div class="field-grid">
         <app-form-field
           label="City"
           [value]="value.city"
@@ -67,8 +67,6 @@
           [error]="errors().region"
           (valueChange)="updateField('region', $event)"
         />
-      </div>
-      <div class="field-pair">
         <app-form-field
           label="Postal code"
           [value]="value.postalCode"
@@ -86,7 +84,7 @@
 
     <section class="section">
       <h2>Phone</h2>
-      <div class="field-pair">
+      <div class="field-grid">
         <app-form-field
           label="Phone"
           type="tel"
