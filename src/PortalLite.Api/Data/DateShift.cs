@@ -1,5 +1,3 @@
-using Dapper;
-
 namespace PortalLite.Api.Data;
 
 // Northwind's order history ends in 1998; every date the API returns is
@@ -20,7 +18,11 @@ internal sealed record DateShift(int Months, DateTime Today)
         }
 
         using var connection = connections.Create();
-        var maxOrderDate = await connection.ExecuteScalarAsync<DateTime>("SELECT MAX(OrderDate) FROM dbo.Orders");
+        await connection.OpenAsync();
+        using var command = connection.CreateCommand();
+        command.CommandText = "SELECT MAX(OrderDate) FROM dbo.Orders";
+        var maxOrderDate = (DateTime)(await command.ExecuteScalarAsync())!;
+
         var shiftMonths = ((today.Year - maxOrderDate.Year) * 12) + today.Month - maxOrderDate.Month;
         return new DateShift(shiftMonths, today);
     }

@@ -1,4 +1,4 @@
-using Dapper;
+using System.Data;
 using PortalLite.Api.Data;
 
 namespace PortalLite.Api.Endpoints;
@@ -21,31 +21,46 @@ internal static class OrdersEndpoints
 {
     public static void MapOrdersEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/orders").AddEndpointFilter<DemoCustomerFilter>();
+        var orders = app.MapGroup("/api/orders").AddEndpointFilter<DemoCustomerFilter>();
 
-        group.MapGet("", async (HttpContext http, SqlConnectionFactory connections, DateShift dateShift) =>
+        orders.MapGet("", async (HttpContext http, SqlConnectionFactory connections, DateShift dateShift) =>
         {
             var customerId = http.Request.Headers["X-Demo-Customer"].ToString();
             using var connection = connections.Create();
-            var orders = await connection.QueryAsync<OrderSummary>(
-                OrdersQueries.List, new { customerId, shift = dateShift.Months, today = dateShift.Today });
-            return Results.Ok(orders);
+            var summaries = await SqlQuery.ListAsync(
+                connection,
+                OrdersQueries.List,
+                [
+                    new SqlParam("customerId", customerId, SqlDbType.NChar),
+                    new SqlParam("shift", dateShift.Months),
+                    new SqlParam("today", dateShift.Today, SqlDbType.DateTime),
+                ],
+                OrderSummary.Map);
+            return Results.Ok(summaries);
         });
 
-        group.MapGet("/{id:int}", async (int id, HttpContext http, SqlConnectionFactory connections, DateShift dateShift) =>
+        orders.MapGet("/{id:int}", async (int id, HttpContext http, SqlConnectionFactory connections, DateShift dateShift) =>
         {
             var customerId = http.Request.Headers["X-Demo-Customer"].ToString();
             using var connection = connections.Create();
 
-            var header = await connection.QuerySingleOrDefaultAsync<OrderHeaderRow>(
+            var header = await SqlQuery.SingleOrDefaultAsync(
+                connection,
                 OrdersQueries.DetailHeader,
-                new { orderId = id, customerId, shift = dateShift.Months, today = dateShift.Today });
+                [
+                    new SqlParam("orderId", id),
+                    new SqlParam("customerId", customerId, SqlDbType.NChar),
+                    new SqlParam("shift", dateShift.Months),
+                    new SqlParam("today", dateShift.Today, SqlDbType.DateTime),
+                ],
+                OrderHeaderRow.Map);
             if (header is null)
             {
                 return Results.NotFound();
             }
 
-            var lines = await connection.QueryAsync<OrderLine>(OrdersQueries.DetailLines, new { orderId = id });
+            var lines = await SqlQuery.ListAsync(
+                connection, OrdersQueries.DetailLines, [new SqlParam("orderId", id)], OrderLine.Map);
 
             return Results.Ok(new OrderDetail(
                 header.Id,
@@ -57,7 +72,21 @@ internal static class OrdersEndpoints
                     header.ShipToRegion, header.ShipToPostalCode, header.ShipToCountry),
                 header.Freight,
                 header.Total,
-                lines.AsList()));
+                lines));
+        });
+
+        var orderLines = app.MapGroup("/api/order-lines").AddEndpointFilter<DemoCustomerFilter>();
+
+        orderLines.MapGet("", async (HttpContext http, SqlConnectionFactory connections) =>
+        {
+            var customerId = http.Request.Headers["X-Demo-Customer"].ToString();
+            using var connection = connections.Create();
+            var lines = await SqlQuery.ListAsync(
+                connection,
+                OrdersQueries.LinesForCustomer,
+                [new SqlParam("customerId", customerId, SqlDbType.NChar)],
+                OrderLineRow.Map);
+            return Results.Ok(lines);
         });
     }
 }

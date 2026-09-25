@@ -1,5 +1,5 @@
+using System.Data;
 using System.Text.RegularExpressions;
-using Dapper;
 using PortalLite.Api.Data;
 
 namespace PortalLite.Api.Endpoints;
@@ -17,8 +17,12 @@ internal static class MeEndpoints
         {
             var customerId = http.Request.Headers["X-Demo-Customer"].ToString();
             using var connection = connections.Create();
-            var profile = await connection.QuerySingleAsync<CustomerProfile>(
-                CustomersQueries.GetProfile, new { customerId });
+            var profile = await SqlQuery.SingleOrDefaultAsync(
+                connection,
+                CustomersQueries.GetProfile,
+                [new SqlParam("customerId", customerId, SqlDbType.NChar)],
+                CustomerProfile.Map)
+                ?? throw new InvalidOperationException($"No customer profile for '{customerId}'.");
             return Results.Ok(profile);
         });
 
@@ -32,18 +36,20 @@ internal static class MeEndpoints
 
             var customerId = http.Request.Headers["X-Demo-Customer"].ToString();
             using var connection = connections.Create();
-            await connection.ExecuteAsync(CustomersQueries.UpdateProfile, new
-            {
-                customerId,
-                contactName = profile.ContactName,
-                address = profile.Address,
-                city = profile.City,
-                region = profile.Region,
-                postalCode = profile.PostalCode,
-                country = profile.Country,
-                phone = profile.Phone,
-                fax = profile.Fax,
-            });
+            await SqlQuery.ExecuteAsync(
+                connection,
+                CustomersQueries.UpdateProfile,
+                [
+                    new SqlParam("customerId", customerId, SqlDbType.NChar),
+                    new SqlParam("contactName", profile.ContactName),
+                    new SqlParam("address", profile.Address),
+                    new SqlParam("city", profile.City),
+                    new SqlParam("region", profile.Region),
+                    new SqlParam("postalCode", profile.PostalCode),
+                    new SqlParam("country", profile.Country),
+                    new SqlParam("phone", profile.Phone),
+                    new SqlParam("fax", profile.Fax),
+                ]);
             return Results.Ok(profile);
         });
     }

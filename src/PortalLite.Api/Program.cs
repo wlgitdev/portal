@@ -12,5 +12,6 @@ var app = builder.Build();
 app.MapCustomersEndpoints();
 app.MapOrdersEndpoints();
 app.MapMeEndpoints();
+app.MapReferenceDataEndpoints();
 
 app.Run();

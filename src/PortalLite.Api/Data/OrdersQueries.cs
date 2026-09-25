@@ -1,3 +1,5 @@
+using Microsoft.Data.SqlClient;
+
 namespace PortalLite.Api.Data;
 
 internal sealed record OrderSummary(
@@ -8,7 +10,18 @@ internal sealed record OrderSummary(
     string Status,
     int ItemCount,
     decimal Total,
-    string? ShipTo);
+    string? ShipTo)
+{
+    public static OrderSummary Map(SqlDataReader reader) => new(
+        reader.GetInt32(reader.GetOrdinal("Id")),
+        reader.GetDateTime(reader.GetOrdinal("OrderedOn")),
+        reader.IsDBNull(reader.GetOrdinal("ShippedOn")) ? null : reader.GetDateTime(reader.GetOrdinal("ShippedOn")),
+        reader.GetDateTime(reader.GetOrdinal("DueOn")),
+        reader.GetString(reader.GetOrdinal("Status")),
+        reader.GetInt32(reader.GetOrdinal("ItemCount")),
+        reader.GetDecimal(reader.GetOrdinal("Total")),
+        reader.IsDBNull(reader.GetOrdinal("ShipTo")) ? null : reader.GetString(reader.GetOrdinal("ShipTo")));
+}
 
 internal sealed record OrderHeaderRow(
     int Id,
@@ -23,7 +36,23 @@ internal sealed record OrderHeaderRow(
     string? ShipToPostalCode,
     string? ShipToCountry,
     decimal Freight,
-    decimal Total);
+    decimal Total)
+{
+    public static OrderHeaderRow Map(SqlDataReader reader) => new(
+        reader.GetInt32(reader.GetOrdinal("Id")),
+        reader.GetDateTime(reader.GetOrdinal("OrderedOn")),
+        reader.IsDBNull(reader.GetOrdinal("ShippedOn")) ? null : reader.GetDateTime(reader.GetOrdinal("ShippedOn")),
+        reader.GetDateTime(reader.GetOrdinal("DueOn")),
+        reader.GetString(reader.GetOrdinal("Status")),
+        reader.IsDBNull(reader.GetOrdinal("ShipToName")) ? null : reader.GetString(reader.GetOrdinal("ShipToName")),
+        reader.IsDBNull(reader.GetOrdinal("ShipToAddress")) ? null : reader.GetString(reader.GetOrdinal("ShipToAddress")),
+        reader.IsDBNull(reader.GetOrdinal("ShipToCity")) ? null : reader.GetString(reader.GetOrdinal("ShipToCity")),
+        reader.IsDBNull(reader.GetOrdinal("ShipToRegion")) ? null : reader.GetString(reader.GetOrdinal("ShipToRegion")),
+        reader.IsDBNull(reader.GetOrdinal("ShipToPostalCode")) ? null : reader.GetString(reader.GetOrdinal("ShipToPostalCode")),
+        reader.IsDBNull(reader.GetOrdinal("ShipToCountry")) ? null : reader.GetString(reader.GetOrdinal("ShipToCountry")),
+        reader.GetDecimal(reader.GetOrdinal("Freight")),
+        reader.GetDecimal(reader.GetOrdinal("Total")));
+}
 
 internal sealed record OrderLine(
     int ProductId,
@@ -31,7 +60,40 @@ internal sealed record OrderLine(
     decimal UnitPrice,
     short Quantity,
     float Discount,
-    decimal LineTotal);
+    decimal LineTotal)
+{
+    public static OrderLine Map(SqlDataReader reader) => new(
+        reader.GetInt32(reader.GetOrdinal("ProductId")),
+        reader.GetString(reader.GetOrdinal("ProductName")),
+        reader.GetDecimal(reader.GetOrdinal("UnitPrice")),
+        reader.GetInt16(reader.GetOrdinal("Quantity")),
+        reader.GetFloat(reader.GetOrdinal("Discount")),
+        reader.GetDecimal(reader.GetOrdinal("LineTotal")));
+}
+
+// Every line of one customer's orders, across all of them (item 6's master-detail
+// and preview rows, item 9's Top 5 products) — unlike OrderLine, which is scoped
+// to a single already-known order.
+internal sealed record OrderLineRow(
+    int OrderId,
+    int ProductId,
+    string ProductName,
+    string CategoryName,
+    decimal UnitPrice,
+    short Quantity,
+    float Discount,
+    decimal LineTotal)
+{
+    public static OrderLineRow Map(SqlDataReader reader) => new(
+        reader.GetInt32(reader.GetOrdinal("OrderId")),
+        reader.GetInt32(reader.GetOrdinal("ProductId")),
+        reader.GetString(reader.GetOrdinal("ProductName")),
+        reader.GetString(reader.GetOrdinal("CategoryName")),
+        reader.GetDecimal(reader.GetOrdinal("UnitPrice")),
+        reader.GetInt16(reader.GetOrdinal("Quantity")),
+        reader.GetFloat(reader.GetOrdinal("Discount")),
+        reader.GetDecimal(reader.GetOrdinal("LineTotal")));
+}
 
 // Mirrors db/portal-lite.sql, which is the standalone, hand-run copy used to
 // verify P1's data and status derivation before any of this code existed.
@@ -111,5 +173,25 @@ internal static class OrdersQueries
         JOIN dbo.Products p ON p.ProductID = od.ProductID
         WHERE od.OrderID = @orderId
         ORDER BY p.ProductName;
+        """;
+
+    // Same rounded-per-line total as DetailLines, joined out to every one of the
+    // customer's orders rather than one order at a time.
+    public const string LinesForCustomer = """
+        SELECT
+            od.OrderID AS OrderId,
+            od.ProductID AS ProductId,
+            p.ProductName AS ProductName,
+            c.CategoryName AS CategoryName,
+            od.UnitPrice AS UnitPrice,
+            od.Quantity AS Quantity,
+            od.Discount AS Discount,
+            CAST(od.UnitPrice * od.Quantity * (1 - od.Discount) AS decimal(19,2)) AS LineTotal
+        FROM dbo.[Order Details] od
+        JOIN dbo.Orders o ON o.OrderID = od.OrderID
+        JOIN dbo.Products p ON p.ProductID = od.ProductID
+        JOIN dbo.Categories c ON c.CategoryID = p.CategoryID
+        WHERE o.CustomerID = @customerId
+        ORDER BY od.OrderID DESC, p.ProductName;
         """;
 }

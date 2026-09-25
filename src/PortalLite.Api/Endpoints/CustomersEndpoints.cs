@@ -1,4 +1,3 @@
-using Dapper;
 using PortalLite.Api.Data;
 
 namespace PortalLite.Api.Endpoints;
@@ -11,8 +10,8 @@ internal static class CustomersEndpoints
         app.MapGet("/api/customers", async (string? search, SqlConnectionFactory connections) =>
         {
             using var connection = connections.Create();
-            var customers = await connection.QueryAsync<CustomerSummary>(
-                CustomersQueries.Search, new { search = search ?? "" });
+            var customers = await SqlQuery.ListAsync(
+                connection, CustomersQueries.Search, [new SqlParam("search", search ?? "")], CustomerSummary.Map);
             return Results.Ok(customers);
         });
     }

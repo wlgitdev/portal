@@ -59,3 +59,27 @@ export interface OrderDetail {
   total: number;
   lines: OrderLine[];
 }
+
+export interface OrderLineRow {
+  orderId: number;
+  productId: number;
+  productName: string;
+  categoryName: string;
+  unitPrice: number;
+  quantity: number;
+  discount: number;
+  lineTotal: number;
+}
+
+export interface Shipper {
+  id: number;
+  companyName: string;
+  phone: string | null;
+}
+
+export interface Product {
+  id: number;
+  name: string;
+  categoryName: string;
+  discontinued: boolean;
+}
