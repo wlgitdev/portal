@@ -1,0 +1,20 @@
+<span data-testid="grid-status-count">{{ totalCount() }} {{ rowNoun() }}</span>
+
+@if (selectedRows().length > 0) {
+  <span data-testid="grid-status-selected">{{ selectedRows().length }} selected</span>
+}
+@if (sum() !== null) {
+  <span data-testid="grid-status-sum">Sum {{ formatMoney(sum()!) }}</span>
+  <span data-testid="grid-status-avg">Avg {{ formatMoney(average()!) }}</span>
+}
+
+<span class="spacer"></span>
+
+<span data-testid="grid-status-sort">
+  @if (sortSummary(); as summary) {
+    {{ summary }}
+    <button type="button" (click)="clearSort.emit()">Clear sort</button>
+  } @else {
+    Shift+click a header to add a sort
+  }
+</span>

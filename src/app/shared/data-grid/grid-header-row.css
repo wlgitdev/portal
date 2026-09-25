@@ -1,0 +1,120 @@
+:host {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 1;
+}
+
+.grid-header-cell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: none;
+  block-size: 38px;
+  padding-inline: var(--space-3);
+  background: var(--mat-sys-surface-container-low);
+  border-block-end: 1px solid var(--color-line-soft);
+  font: 600 var(--text-sm) var(--font-body);
+  color: var(--mat-sys-on-surface-variant);
+  white-space: nowrap;
+  flex: none;
+}
+
+.grid-header-cell.align-end {
+  justify-content: flex-end;
+}
+
+.grid-header-cell.mono {
+  font-family: var(--font-mono);
+}
+
+.grid-header-cell.frozen {
+  position: sticky;
+  inset-inline-start: 0;
+  z-index: 1;
+}
+
+.grid-header-click {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-inline-size: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.grid-header-click:disabled {
+  cursor: default;
+}
+
+.grid-header-click span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sort-arrow {
+  color: var(--color-fjord);
+}
+
+[data-testid='sort-rank'] {
+  font: 600 var(--text-xs) var(--font-mono);
+  color: var(--mat-sys-on-primary);
+  background: var(--color-fjord);
+  border-radius: var(--radius-sm);
+  padding-inline: var(--space-1);
+  line-height: 1.4;
+}
+
+.grid-header-menu-trigger {
+  margin-inline-start: auto;
+  padding-inline-start: var(--space-2);
+  border: 0;
+  background: none;
+  color: var(--mat-sys-on-surface-variant);
+  cursor: pointer;
+  flex: none;
+}
+
+.grid-column-menu {
+  display: flex;
+  flex-direction: column;
+  min-inline-size: 200px;
+  padding-block: var(--space-2);
+}
+
+.grid-column-menu button {
+  display: block;
+  inline-size: 100%;
+  text-align: start;
+  padding: var(--space-2) var(--space-4);
+  border: 0;
+  background: none;
+  font: var(--text-sm) var(--font-body);
+  color: var(--mat-sys-on-surface);
+  cursor: pointer;
+}
+
+.grid-column-menu button:disabled {
+  color: var(--mat-sys-outline);
+  cursor: default;
+}
+
+.grid-column-menu button:not(:disabled):hover {
+  background: var(--color-fjord-wash);
+}
+
+.grid-resize-handle {
+  position: absolute;
+  inset-block: 6px;
+  inset-inline-end: -4px;
+  inline-size: 8px;
+  cursor: col-resize;
+  touch-action: none;
+}

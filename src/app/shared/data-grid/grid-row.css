@@ -1,0 +1,115 @@
+:host {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  min-block-size: var(--data-grid-row-height, var(--row-height-comfortable));
+  border-block-end: 1px solid var(--color-line-soft);
+  position: relative;
+}
+
+:host([data-row-kind='group']) {
+  background: var(--mat-sys-surface-container-low);
+  font-weight: 600;
+  font-size: var(--text-sm);
+  min-block-size: 36px;
+}
+
+:host([data-row-kind='footer']) {
+  background: var(--mat-sys-surface-container-low);
+  font-weight: 600;
+  border-block-start: 1px solid var(--color-line-soft);
+  border-block-end: 0;
+}
+
+:host([data-row-kind='preview']) {
+  min-block-size: 22px;
+  font-size: var(--text-xs);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+:host([data-row-kind='detail']) {
+  min-block-size: auto;
+  padding: var(--space-2) var(--space-4) var(--space-3) 48px;
+}
+
+:host([data-highlighted='true']) {
+  background: #fbf4e2;
+}
+
+/* The tow line: a fjord guide rule down from a parent row, marking every
+   nested/grouped level the same way (design "signature"). */
+:host([aria-level]):not([aria-level='']) {
+  background-image: linear-gradient(var(--tow-line), var(--tow-line));
+  background-size: 2px 100%;
+  background-repeat: no-repeat;
+  background-position: 20px 0;
+}
+
+.grid-cell {
+  display: flex;
+  align-items: center;
+  flex: none;
+  padding-inline: var(--space-3);
+  overflow: hidden;
+}
+
+.grid-cell.align-end {
+  justify-content: flex-end;
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+
+.grid-cell.mono {
+  font-family: var(--font-mono);
+}
+
+.grid-cell.frozen {
+  position: sticky;
+  inset-inline-start: 0;
+  background: inherit;
+  z-index: 1;
+}
+
+[data-testid='cell-value'] {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.grid-cell-spacer {
+  flex: none;
+}
+
+.grid-select-cell {
+  inline-size: 40px;
+  justify-content: center;
+  padding-inline: 0;
+}
+
+.grid-group-toggle,
+.grid-expand-toggle {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: none;
+  color: var(--mat-sys-on-surface-variant);
+  cursor: pointer;
+}
+
+.grid-expand-toggle {
+  inline-size: 24px;
+}
+
+.grid-group-label,
+.grid-footer-label {
+  font: inherit;
+}
+
+.grid-preview-text {
+  padding-inline-start: 74px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

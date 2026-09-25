@@ -27,13 +27,24 @@
   --top-bar-height: 64px;
   --bottom-nav-height: 56px;
 
-  /* z-index scale (R18) — page chrome above ordinary content (AG Grid
-     headers included), the order drawer above page chrome. CDK overlays
-     (Filters, Group by, account menu, bottom sheets) manage their own via
-     the Angular CDK overlay container, already well above this scale. */
+  /* z-index scale (R18) — page chrome above ordinary content (grid headers
+     included), the order drawer above page chrome. CDK overlays (Filters,
+     Group by, account menu, bottom sheets) manage their own via the
+     Angular CDK overlay container, already well above this scale. */
   --z-top-bar: 1;
   --z-drawer-backdrop: 2;
   --z-drawer: 3;
+  /* Fixed-position, not a CDK overlay, so it needs its own slot above
+     everything in normal flow, including an open drawer. */
+  --z-grid-tooltip: 4;
+
+  /* Added in design Revision 5 (showcase 2, item 6) — the grid's own scale.
+     Row heights are the only density values in the codebase; every grid
+     instance reads them so Comfortable/Compact stay consistent everywhere. */
+  --row-height-comfortable: 52px;
+  --row-height-compact: 34px;
+  --grid-group-indent: 20px;
+  --tow-line: color-mix(in oklch, var(--color-fjord) 45%, transparent);
 
   /* Type */
   --font-display: 'Big Shoulders Display', sans-serif;

@@ -1,0 +1,94 @@
+@for (column of columns(); track column.id) {
+  <div
+    ngGridCell
+    role="columnheader"
+    class="grid-header-cell"
+    [class.mono]="column.mono"
+    [class.align-end]="column.align === 'end'"
+    [class.frozen]="column.frozen"
+    [attr.data-grid-id]="gridId()"
+    [attr.data-col-id]="column.id"
+    [style.inline-size.px]="widths()[column.id] ?? column.width"
+    [style.min-inline-size.px]="column.minWidth"
+    [attr.data-sort]="sortKeyFor(column.id)?.dir ?? null"
+    [attr.data-sort-rank]="
+      sort().length > 1 ? (sortKeyFor(column.id) ? sortRank(column.id) : null) : null
+    "
+    [attr.aria-sort]="
+      sortKeyFor(column.id) && sortRank(column.id) === 1
+        ? sortKeyFor(column.id)!.dir === 'asc'
+          ? 'ascending'
+          : 'descending'
+        : null
+    "
+  >
+    <button
+      type="button"
+      class="grid-header-click"
+      [disabled]="!column.sortable"
+      (click)="column.sortable && onHeaderClick(column.id, $event)"
+    >
+      <span data-testid="column-header-text" [gridTooltipText]="column.headerTooltip ?? null">{{
+        column.header
+      }}</span>
+      @if (sortKeyFor(column.id); as key) {
+        <span class="sort-arrow" aria-hidden="true">{{ key.dir === 'asc' ? '↑' : '↓' }}</span>
+        @if (sort().length > 1) {
+          <span data-testid="sort-rank">{{ sortRank(column.id) }}</span>
+        }
+      }
+    </button>
+
+    <button
+      type="button"
+      class="grid-header-menu-trigger"
+      [attr.aria-label]="column.header + ' column menu'"
+      [cdkMenuTriggerFor]="colMenu"
+      [cdkMenuPosition]="menuPosition"
+    >
+      ⋮
+    </button>
+
+    <ng-template #colMenu>
+      <div
+        cdkMenu
+        class="popover-surface grid-column-menu"
+        data-testid="popover-surface"
+        [attr.aria-label]="column.header + ' column'"
+      >
+        @if (column.sortable) {
+          <button type="button" cdkMenuItem (click)="onSortDirect(column.id, 'asc')">
+            Sort ascending
+          </button>
+          <button type="button" cdkMenuItem (click)="onSortDirect(column.id, 'desc')">
+            Sort descending
+          </button>
+          <button type="button" cdkMenuItem (click)="onAddToSort(column.id)">Add to sort</button>
+        }
+        @if (column.groupable) {
+          <button
+            type="button"
+            cdkMenuItem
+            [disabled]="!canGroup(column.id)"
+            (click)="groupByColumn.emit(column.id)"
+          >
+            Group by this column
+          </button>
+        }
+        <button type="button" cdkMenuItem (click)="onMove(column.id, 'left')">Move left</button>
+        <button type="button" cdkMenuItem (click)="onMove(column.id, 'right')">Move right</button>
+        <button type="button" cdkMenuItem (click)="columnHiddenChanged.emit(column.id)">
+          Hide column
+        </button>
+      </div>
+    </ng-template>
+
+    <app-grid-resize-handle
+      [header]="column.header"
+      [width]="widths()[column.id] ?? column.width"
+      [minWidth]="column.minWidth"
+      (widthChange)="columnResized.emit({ colId: column.id, width: $event })"
+      (fitContent)="columnFitted.emit(column.id)"
+    />
+  </div>
+}

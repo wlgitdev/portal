@@ -1,0 +1,72 @@
+<div
+  ngGrid
+  [enableSelection]="false"
+  focusMode="roving"
+  rowWrap="nowrap"
+  colWrap="nowrap"
+  class="grid-scroll-area"
+  data-testid="data-grid"
+  [attr.data-grid-id]="gridId()"
+  [attr.aria-rowcount]="visibleRows().length + 1"
+>
+  <app-grid-header-row
+    ngGridRow
+    [gridId]="gridId()"
+    [columns]="visibleColumns()"
+    [columnOrder]="viewState().columnOrder"
+    [sort]="viewState().sort"
+    [widths]="viewState().widths"
+    [groupByIds]="viewState().groupBy"
+    (sortChanged)="onSortChanged($event)"
+    (groupByColumn)="onGroupByColumn($event)"
+    (columnOrderChanged)="onColumnOrderChanged($event)"
+    (columnHiddenChanged)="toggleColumnHidden($event)"
+    (columnResized)="onColumnResized($event)"
+    (columnFitted)="onColumnFitted($event)"
+  />
+
+  @for (visible of visibleRows(); track visible.id) {
+    <app-grid-row
+      ngGridRow
+      [gridId]="gridId()"
+      [visible]="visible"
+      [columns]="visibleColumns()"
+      [widths]="viewState().widths"
+      [rowNoun]="rowNoun()"
+      [selectable]="selectable()"
+      [selected]="visible.row ? selectedIds().has(rowId()(visible.row)) : false"
+      [density]="viewState().density"
+      [detailTemplate]="detailTemplate()"
+      [detailButtonLabel]="detailButtonLabel()"
+      [previewText]="previewText()"
+      (rowActivated)="rowActivated.emit($event)"
+      (selectionToggled)="onSelectionToggled($event)"
+      (groupToggled)="onGroupToggled($event)"
+      (detailToggled)="onDetailToggled($event)"
+    />
+  }
+</div>
+
+<app-grid-status-bar
+  [rowNoun]="rowNoun()"
+  [totalCount]="rows().length"
+  [selectedRows]="selectedRows()"
+  [statusBarColumn]="statusBarColumn()"
+  [columns]="visibleColumns()"
+  [sort]="viewState().sort"
+  (clearSort)="onClearSort()"
+/>
+
+@if (ownsTooltip) {
+  @if (tooltip.position(); as pos) {
+    <div
+      role="tooltip"
+      data-testid="grid-tooltip"
+      class="grid-tooltip-bubble"
+      [style.top.px]="pos.top"
+      [style.left.px]="pos.left"
+    >
+      {{ pos.text }}
+    </div>
+  }
+}

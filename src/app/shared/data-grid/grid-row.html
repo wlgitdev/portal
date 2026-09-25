@@ -1,0 +1,119 @@
+@switch (visible().kind) {
+  @case ('group') {
+    @if (selectable()) {
+      <div class="grid-cell-spacer" style="inline-size: 40px"></div>
+    }
+    <button
+      type="button"
+      class="grid-group-toggle"
+      [style.inline-size.px]="24"
+      [attr.aria-expanded]="visible().expanded"
+      [attr.aria-label]="(visible().expanded ? 'Collapse ' : 'Expand ') + visible().label"
+      (click)="groupToggled.emit(visible().id)"
+    >
+      <span class="chevron" aria-hidden="true">{{ visible().expanded ? '▾' : '▸' }}</span>
+    </button>
+    <div
+      class="grid-cell grid-group-label"
+      [attr.data-testid]="rowNoun() + '-group'"
+      [style.inline-size.px]="labelSpanWidth() - 24"
+    >
+      {{ groupLabelText() }}
+    </div>
+    @for (column of columns(); track column.id; let index = $index) {
+      @if (index >= firstAggregateIndex()) {
+        <div
+          role="gridcell"
+          class="grid-cell"
+          [class.align-end]="column.align === 'end'"
+          [class.mono]="column.mono"
+          [attr.data-col-id]="column.id"
+          [style.inline-size.px]="widthOf(column)"
+        >
+          {{ aggregateText(column) }}
+        </div>
+      }
+    }
+  }
+  @case ('footer') {
+    @if (selectable()) {
+      <div class="grid-cell-spacer" style="inline-size: 40px"></div>
+    }
+    <div class="grid-cell grid-footer-label" [style.inline-size.px]="labelSpanWidth()">
+      {{ visible().label }}
+    </div>
+    @for (column of columns(); track column.id; let index = $index) {
+      @if (index >= firstAggregateIndex()) {
+        <div
+          role="gridcell"
+          class="grid-cell"
+          [class.align-end]="column.align === 'end'"
+          [class.mono]="column.mono"
+          [attr.data-col-id]="column.id"
+          [style.inline-size.px]="widthOf(column)"
+        >
+          {{ aggregateText(column) }}
+        </div>
+      }
+    }
+  }
+  @case ('preview') {
+    <div class="grid-preview-text">{{ previewText()?.(visible().row!) }}</div>
+  }
+  @case ('detail') {
+    <ng-container
+      *ngTemplateOutlet="detailTemplate() ?? null; context: cellContext(visible().row!)"
+    />
+  }
+  @default {
+    @if (selectable()) {
+      <div class="grid-cell grid-select-cell" role="gridcell">
+        <input
+          type="checkbox"
+          [checked]="selected()"
+          [attr.aria-label]="'Select row'"
+          (click)="onSelectClick($event)"
+        />
+      </div>
+    }
+    @if (detailTemplate()) {
+      <button
+        type="button"
+        class="grid-expand-toggle"
+        [attr.aria-expanded]="visible().expanded"
+        [attr.aria-label]="detailButtonLabel()?.(visible().row!)"
+        (click)="detailToggled.emit(visible().row!)"
+      >
+        <span class="chevron" aria-hidden="true">{{ visible().expanded ? '▾' : '▸' }}</span>
+      </button>
+    }
+    @for (column of columns(); track column.id) {
+      <div
+        ngGridCell
+        role="gridcell"
+        class="grid-cell"
+        [class.align-end]="column.align === 'end'"
+        [class.mono]="column.mono"
+        [class.frozen]="column.frozen"
+        [attr.data-grid-id]="gridId()"
+        [attr.data-col-id]="column.id"
+        [style.inline-size.px]="widthOf(column)"
+        (keydown.enter)="onEnter()"
+        (keydown.space)="onSpace($event)"
+      >
+        @if (column.cellTemplate) {
+          <ng-container
+            *ngTemplateOutlet="column.cellTemplate; context: cellContext(visible().row!)"
+          />
+        } @else {
+          <span
+            data-testid="cell-value"
+            [gridTooltipText]="column.text(visible().row!)"
+            [onlyWhenTruncated]="true"
+            >{{ column.text(visible().row!) }}</span
+          >
+        }
+      </div>
+    }
+  }
+}
