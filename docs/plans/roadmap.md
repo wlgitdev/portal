@@ -100,6 +100,8 @@ One fix beyond P4 itself: the shared `Skeleton` component (built at P3) never ac
 
 `.skip` removed from `e2e/spend-schedule.spec.ts` only, assertions unchanged; all 8 pass. Full suite re-run clean otherwise (twice): items 1/2/4 unaffected, item 5 still correctly pending, the two P7 flaky tests are still just flaky (each passes alone, independent of this build).
 
+PR: https://github.com/wlgitdev/portal/pull/6
+
 Same Node-version gotcha as the P6/P7 notes below (`ng serve`/Playwright's webServer need ≥22.22.3, the sandbox pins 22.22.2) — fixed at the session level this time (`/usr/bin`'s 24.x first on `PATH`, via `/root/.portal-lite-env`) rather than a one-off workaround, so it should hold for the rest of this session.
 
 ### Pre-existing, not fixed here
