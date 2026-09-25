@@ -4,6 +4,7 @@ import {
   TALL_DESKTOP,
   cellsInColumn,
   headerCell,
+  headerText,
   textRightGap,
   visibleOrderIds,
   waitForGrid,
@@ -327,7 +328,7 @@ test.describe('finding orders on desktop', () => {
     await waitForGrid(page);
 
     for (const colId of ['itemCount', 'total'] as const) {
-      const header = headerCell(page, colId).locator('.ag-header-cell-text');
+      const header = headerText(page, colId);
       expect(await textRightGap(headerCell(page, colId)), `${colId} header`).toBeLessThanOrEqual(
         40,
       );

@@ -1,0 +1,426 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Showcase 2 mockup</title>
+<!--
+  Design reference for showcase-2-design.md (25/09/2026). Static and hand-drawn:
+  DEV builds from the spec and tests, not by copying this markup. Fonts load
+  from public/fonts once P1 vendors them, and from node_modules until then.
+-->
+<style>
+  @font-face { font-family: 'Big Shoulders Display'; font-weight: 600; src: url(../../../public/fonts/big-shoulders-display-latin-600-normal.woff2), url(../../../node_modules/@fontsource/big-shoulders-display/files/big-shoulders-display-latin-600-normal.woff2); }
+  @font-face { font-family: 'Big Shoulders Display'; font-weight: 700; src: url(../../../public/fonts/big-shoulders-display-latin-700-normal.woff2), url(../../../node_modules/@fontsource/big-shoulders-display/files/big-shoulders-display-latin-700-normal.woff2); }
+  @font-face { font-family: 'IBM Plex Sans'; font-weight: 400; src: url(../../../public/fonts/ibm-plex-sans-latin-400-normal.woff2), url(../../../node_modules/@fontsource/ibm-plex-sans/files/ibm-plex-sans-latin-400-normal.woff2); }
+  @font-face { font-family: 'IBM Plex Sans'; font-weight: 500; src: url(../../../public/fonts/ibm-plex-sans-latin-500-normal.woff2), url(../../../node_modules/@fontsource/ibm-plex-sans/files/ibm-plex-sans-latin-500-normal.woff2); }
+  @font-face { font-family: 'IBM Plex Sans'; font-weight: 600; src: url(../../../public/fonts/ibm-plex-sans-latin-600-normal.woff2), url(../../../node_modules/@fontsource/ibm-plex-sans/files/ibm-plex-sans-latin-600-normal.woff2); }
+  @font-face { font-family: 'IBM Plex Mono'; font-weight: 400; src: url(../../../public/fonts/ibm-plex-mono-latin-400-normal.woff2), url(../../../node_modules/@fontsource/ibm-plex-mono/files/ibm-plex-mono-latin-400-normal.woff2); }
+  @font-face { font-family: 'IBM Plex Mono'; font-weight: 500; src: url(../../../public/fonts/ibm-plex-mono-latin-500-normal.woff2), url(../../../node_modules/@fontsource/ibm-plex-mono/files/ibm-plex-mono-latin-500-normal.woff2); }
+
+  :root {
+    --fjord: #1f3a5f; --fjord-tint: #d9e2ec; --fjord-wash: #eef3f8;
+    --ink: #14202e; --ink-2: #45525e; --mist: #eef2f5; --surface: #ffffff;
+    --line: #c6ced3; --line-soft: #e1e6ea; --outline: #76838f; --head: #f8fafb;
+    --sea: #3e8e7e; --amber: #e0a526; --amber-text: #8a5a00; --red: #c2413b;
+    --tow: color-mix(in oklch, var(--fjord) 45%, transparent);
+    --display: 'Big Shoulders Display', sans-serif; --body: 'IBM Plex Sans', sans-serif; --mono: 'IBM Plex Mono', monospace;
+    --r-sm: 4px; --r-md: 8px; --r-lg: 16px;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #d5dce2; font-family: var(--body); color: var(--ink); padding: 32px; }
+  .board { display: flex; flex-direction: column; gap: 40px; }
+  .frame-label { font: 600 13px var(--mono); color: var(--ink-2); margin: 0 0 8px; letter-spacing: .02em; }
+  .desk { width: 1280px; height: 780px; background: var(--mist); border-radius: 12px; overflow: hidden; position: relative; display: flex; box-shadow: 0 20px 40px -20px rgba(20,32,46,.35); }
+  .rail { width: 88px; background: var(--fjord); display: flex; flex-direction: column; align-items: center; gap: 22px; padding-top: 16px; color: #fff; flex: none; }
+  .rail .wm { font: 700 22px var(--display); }
+  .rail .nav { display: grid; justify-items: center; gap: 2px; font: 500 12px var(--body); opacity: .82; width: 100%; padding: 6px 0; }
+  .rail .nav.on { opacity: 1; box-shadow: inset 3px 0 0 #fff; }
+  .rail .nav i { width: 20px; height: 20px; border: 2px solid currentColor; border-radius: 5px; }
+  .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+  .top { height: 64px; flex: none; display: flex; align-items: center; justify-content: flex-end; padding: 0 24px; background: var(--surface); border-bottom: 1px solid var(--line-soft); }
+  .acct { display: flex; align-items: center; gap: 10px; font: 500 14px var(--body); }
+  .mono-g { width: 32px; height: 32px; border-radius: 8px; background: var(--fjord); color: #fff; display: grid; place-items: center; font: 700 15px var(--display); }
+  .page { padding: 18px 28px 0; display: flex; flex-direction: column; min-height: 0; flex: 1; }
+  .head { display: flex; align-items: center; gap: 16px; }
+  h1 { font: 600 36px/1 var(--display); margin: 0; letter-spacing: .005em; }
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); padding: 2px; }
+  .seg span { padding: 5px 14px; border-radius: 999px; font: 500 13px var(--body); color: var(--ink-2); }
+  .seg span.on { background: var(--fjord); color: #fff; }
+  .spacer { flex: 1; }
+  .search { display: flex; align-items: center; gap: 8px; height: 40px; width: 320px; padding: 0 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 999px; color: var(--outline); font-size: 14px; }
+  .toolbar { display: flex; align-items: center; gap: 8px; margin-top: 14px; }
+  .tabs { display: flex; gap: 20px; border-bottom: 1px solid var(--line); margin-right: 8px; }
+  .tab { padding: 8px 0 9px; font: 500 14px var(--body); color: var(--ink-2); display: flex; gap: 6px; align-items: baseline; position: relative; }
+  .tab .n { font: 500 12px var(--mono); color: var(--outline); }
+  .tab.on { color: var(--fjord); font-weight: 600; }
+  .tab.on::after { content: ''; position: absolute; left: 0; right: 0; bottom: -1px; height: 3px; border-radius: 3px 3px 0 0; background: var(--fjord); }
+  .dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; align-self: center; }
+  .dot.late { background: var(--red); } .dot.await { background: var(--amber); } .dot.ship { background: var(--sea); }
+  .pill { height: 34px; display: inline-flex; align-items: center; gap: 6px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); font: 500 13px var(--body); color: var(--ink); }
+  .pill.active { border-color: var(--fjord); background: var(--fjord-wash); color: var(--fjord); }
+  .pill .k { color: var(--ink-2); font-weight: 400; }
+
+  /* grid */
+  .grid { margin-top: 12px; background: var(--surface); border: 1px solid var(--line-soft); border-radius: var(--r-md); display: flex; flex-direction: column; min-height: 0; flex: 1; overflow: hidden; }
+  .groupbox { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-bottom: 1px dashed var(--line); background: var(--fjord-wash); font: 400 13px var(--body); color: var(--ink-2); }
+  .gchip { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 6px 0 10px; border-radius: 999px; background: var(--surface); border: 1px solid var(--fjord-tint); color: var(--fjord); font: 500 13px var(--body); }
+  .gchip .lv { font: 600 11px var(--mono); color: var(--outline); }
+  .gchip .x { width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; color: var(--ink-2); }
+  .arrow { color: var(--outline); font-size: 12px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th { text-align: left; font: 600 13px var(--body); color: var(--ink-2); padding: 0 12px; height: 38px; background: var(--head); border-bottom: 1px solid var(--line-soft); white-space: nowrap; position: relative; }
+  th .s { color: var(--fjord); font-size: 11px; margin-left: 4px; }
+  th .rk { font: 600 10px var(--mono); color: #fff; background: var(--fjord); border-radius: 4px; padding: 0 4px; margin-left: 2px; }
+  th::after { content: ''; position: absolute; right: 0; top: 10px; bottom: 10px; width: 1px; background: var(--line-soft); }
+  td { padding: 0 12px; height: 34px; border-bottom: 1px solid var(--line-soft); white-space: nowrap; }
+  .num { text-align: right; font-family: var(--mono); }
+  .mono { font-family: var(--mono); }
+  .cb { width: 16px; height: 16px; border: 2px solid var(--outline); border-radius: 3px; display: inline-block; vertical-align: middle; }
+  .cb.on { background: var(--fjord); border-color: var(--fjord); box-shadow: inset 0 0 0 2px #fff; }
+  tr.sel td { background: var(--fjord-wash); }
+  tr.hl td { background: #fbf4e2; }
+  .grp td { background: #f6f8f9; font-weight: 600; font-size: 13px; }
+  .grp .lbl { display: inline-flex; align-items: center; gap: 8px; }
+  .chev { display: inline-block; width: 14px; color: var(--ink-2); font-size: 11px; }
+  .indent1 { padding-left: 32px; } .indent2 { padding-left: 52px; }
+  .stop { width: 6px; height: 6px; border-radius: 50%; background: var(--fjord); display: inline-block; }
+  .tow > td:first-child { background-image: linear-gradient(var(--tow), var(--tow)); background-size: 2px 100%; background-repeat: no-repeat; background-position: 20px 0; }
+  .tow2 > td:first-child { background-image: linear-gradient(var(--tow), var(--tow)), linear-gradient(var(--tow), var(--tow)); background-size: 2px 100%, 2px 100%; background-position: 20px 0, 38px 0; }
+  .cnt { font: 500 12px var(--mono); color: var(--ink-2); font-weight: 500; }
+  .trk { display: inline-flex; align-items: center; gap: 0; }
+  .trk b { width: 8px; height: 8px; border-radius: 50%; border: 2px solid var(--line); background: var(--surface); }
+  .trk i { width: 16px; height: 2px; background: var(--line); }
+  .trk b.done { background: var(--fjord); border-color: var(--fjord); } .trk i.done { background: var(--fjord); }
+  .trk b.late { background: var(--red); border-color: var(--red); } .trk b.await { background: var(--amber); border-color: var(--amber); } .trk b.ship { background: var(--sea); border-color: var(--sea); }
+  .trk-l { font-size: 12px; color: var(--ink-2); margin-left: 8px; }
+  .nest td { background: #fbfcfd; font-size: 13px; height: 30px; }
+  .nest .nh td { color: var(--ink-2); font: 600 12px var(--body); height: 28px; }
+  .nest .nf td { font-weight: 600; }
+  .preview td { height: 22px; font-size: 12px; color: var(--ink-2); border-bottom-color: var(--line-soft); padding-top: 0; }
+  table.fixed { table-layout: fixed; }
+  .nestrow > td { padding: 4px 16px 10px 74px; height: auto; background: #fbfcfd; }
+  .nest { border: 1px solid var(--line-soft); border-radius: 6px; background: var(--surface); width: auto; }
+  .nest td { background: transparent; }
+  .hasprev td { border-bottom: 0; }
+  .foot td { background: var(--head); font-weight: 600; border-bottom: 0; border-top: 1px solid var(--line); }
+  .status { display: flex; gap: 16px; align-items: center; padding: 0 12px; height: 34px; border-top: 1px solid var(--line-soft); background: var(--head); font: 400 12px var(--mono); color: var(--ink-2); flex: none; }
+  .status b { color: var(--ink); font-weight: 500; }
+  .status .lnk { color: var(--fjord); text-decoration: underline; text-underline-offset: 2px; font-family: var(--body); }
+  .scroll { overflow: hidden; flex: 1; }
+
+  /* workspace */
+  .ws { flex: 1; display: grid; grid-template-columns: 1fr 8px 380px; margin-top: 12px; min-height: 0; }
+  .col { display: grid; grid-template-rows: 1fr 8px 250px; min-height: 0; }
+  .pane { background: var(--surface); border: 1px solid var(--line-soft); border-radius: var(--r-md); display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+  .ptitle { height: 36px; display: flex; align-items: center; gap: 8px; padding: 0 8px 0 12px; border-bottom: 1px solid var(--line-soft); font: 600 13px var(--body); flex: none; }
+  .ptitle .pi { width: 26px; height: 26px; border-radius: 6px; display: grid; place-items: center; color: var(--ink-2); font-size: 13px; }
+  .ptabs { display: flex; gap: 2px; align-self: stretch; }
+  .ptab { padding: 0 12px; display: flex; align-items: center; gap: 6px; font: 500 13px var(--body); color: var(--ink-2); position: relative; }
+  .ptab.on { color: var(--fjord); font-weight: 600; }
+  .ptab.on::after { content: ''; position: absolute; left: 8px; right: 8px; bottom: -1px; height: 3px; border-radius: 3px 3px 0 0; background: var(--fjord); }
+  .split-h { position: relative; }
+  .split-h::before { content: ''; position: absolute; left: 0; right: 0; top: 3px; height: 2px; background: var(--tow); }
+  .split-h::after { content: ''; position: absolute; left: 50%; top: 1px; width: 6px; height: 6px; border-radius: 50%; background: var(--fjord); }
+  .split-v { position: relative; }
+  .split-v::before { content: ''; position: absolute; top: 0; bottom: 0; left: 3px; width: 2px; background: var(--line-soft); }
+  .edge { display: flex; flex-direction: column; align-items: center; gap: 8px; padding-top: 12px; }
+  .edge span { writing-mode: vertical-rl; font: 500 12px var(--body); color: var(--ink-2); background: var(--surface); border: 1px solid var(--line-soft); border-radius: 6px; padding: 10px 4px; }
+  .props { padding: 14px 16px; display: grid; grid-template-columns: 96px 1fr; gap: 10px 12px; font-size: 13px; align-content: start; }
+  .props dt { color: var(--ink-2); } .props dd { margin: 0; }
+  .bigtrk { grid-column: 1 / -1; display: flex; align-items: center; padding: 6px 0 12px; border-bottom: 1px solid var(--line-soft); margin-bottom: 4px; }
+  .bigtrk b { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--line); background: var(--surface); }
+  .bigtrk i { flex: 1; height: 3px; background: var(--line); }
+  .bigtrk .done { background: var(--fjord); border-color: var(--fjord); } .bigtrk .await { background: var(--amber); border-color: var(--amber); }
+  .bigtrk-l { grid-column: 1 / -1; display: flex; justify-content: space-between; font-size: 12px; color: var(--ink-2); margin-top: -8px; }
+  .btn { height: 36px; display: inline-flex; align-items: center; justify-content: center; padding: 0 16px; border-radius: 999px; background: var(--fjord); color: #fff; font: 500 13px var(--body); }
+  .btn.ghost { background: var(--surface); color: var(--fjord); border: 1px solid var(--fjord); }
+
+  /* calendar */
+  .cal { flex: 1; display: grid; grid-template-columns: 240px 1fr; gap: 20px; margin-top: 14px; min-height: 0; }
+  .side { display: flex; flex-direction: column; gap: 16px; }
+  .mini { background: var(--surface); border: 1px solid var(--line-soft); border-radius: var(--r-md); padding: 12px; font-size: 12px; }
+  .mini .t { font-weight: 600; margin-bottom: 8px; display: flex; justify-content: space-between; }
+  .mini .g { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; text-align: center; font-family: var(--mono); }
+  .mini .g span { padding: 4px 0; border-radius: 50%; }
+  .mini .g .h { color: var(--outline); font-family: var(--body); }
+  .mini .g .today { outline: 2px solid var(--fjord); }
+  .mini .g .rng { background: var(--fjord-wash); border-radius: 0; }
+  .legend { background: var(--surface); border: 1px solid var(--line-soft); border-radius: var(--r-md); padding: 8px; font-size: 13px; }
+  .legend div { display: flex; align-items: center; gap: 8px; padding: 6px; border-radius: 6px; }
+  .legend .off { color: var(--outline); text-decoration: line-through; }
+  .legend .c { margin-left: auto; font: 500 12px var(--mono); color: var(--ink-2); }
+  .sw { width: 12px; height: 12px; border-radius: 3px; }
+  .tl { background: var(--surface); border: 1px solid var(--line-soft); border-radius: var(--r-md); display: flex; flex-direction: column; overflow: hidden; }
+  .tlhead { display: grid; grid-template-columns: 170px repeat(13, 1fr); border-bottom: 1px solid var(--line-soft); background: var(--head); font: 600 12px var(--body); color: var(--ink-2); }
+  .tlhead span { padding: 8px 6px; border-left: 1px solid var(--line-soft); }
+  .tlrow { display: grid; grid-template-columns: 170px 1fr; border-bottom: 1px solid var(--line-soft); height: 38px; align-items: center; font-size: 13px; }
+  .tlrow .nm { padding: 0 12px; display: flex; gap: 8px; align-items: center; }
+  .tlrow .lane { position: relative; height: 100%; background-image: repeating-linear-gradient(90deg, transparent 0 calc(100%/13 - 1px), var(--line-soft) calc(100%/13 - 1px) calc(100%/13)); }
+  .bar { position: absolute; top: 11px; height: 16px; border-radius: 8px; background: var(--fjord); display: flex; align-items: center; }
+  .bar.ship { background: var(--sea); } .bar.await { background: var(--fjord); } .bar .over { position: absolute; right: -40px; width: 40px; height: 16px; border-radius: 0 8px 8px 0; background: repeating-linear-gradient(135deg, var(--red) 0 5px, #d86a65 5px 10px); }
+  .bar.late { border-radius: 8px 0 0 8px; }
+  .todayrule { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--red); }
+  .tlgrp { padding: 6px 12px; background: #f6f8f9; font: 600 12px var(--body); color: var(--ink-2); border-bottom: 1px solid var(--line-soft); display: flex; gap: 8px; align-items: center; }
+  .card { position: absolute; width: 250px; background: var(--surface); border: 1px solid var(--line-soft); border-radius: 12px; box-shadow: 0 24px 48px -16px rgba(20,32,46,.45); padding: 12px 14px; font-size: 13px; display: grid; gap: 8px; }
+
+  /* form */
+  .formwrap { flex: 1; display: grid; grid-template-columns: 1fr 320px; gap: 24px; margin-top: 12px; min-height: 0; }
+  .form { background: var(--surface); border: 1px solid var(--line-soft); border-radius: var(--r-md); padding: 18px 22px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px 28px; align-content: start; overflow: hidden; }
+  .form h2 { grid-column: 1 / -1; font: 600 15px var(--body); margin: 4px 0 -6px; }
+  .f { display: grid; gap: 6px; font-size: 13px; }
+  .f label { font: 500 12px var(--body); color: var(--ink-2); }
+  .in { height: 40px; border: 1px solid var(--outline); border-radius: 6px; display: flex; align-items: center; padding: 0 12px; gap: 8px; font-size: 14px; }
+  .in .aux { margin-left: auto; color: var(--ink-2); font-size: 12px; }
+  .in.err { border-color: var(--red); border-width: 2px; }
+  .errmsg { color: var(--red); font-size: 12px; }
+  .days { display: flex; gap: 6px; }
+  .days span { width: 40px; height: 34px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 6px; font-size: 13px; }
+  .days span.on { background: var(--fjord-wash); border-color: var(--fjord); color: var(--fjord); font-weight: 600; }
+  .radio { display: flex; gap: 16px; font-size: 14px; align-items: center; }
+  .rb { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--outline); display: inline-block; vertical-align: -4px; margin-right: 6px; }
+  .rb.on { border-color: var(--fjord); box-shadow: inset 0 0 0 3px #fff; background: var(--fjord); }
+  .slider { position: relative; height: 24px; }
+  .slider .tr { position: absolute; top: 11px; left: 0; right: 0; height: 3px; background: var(--line); border-radius: 2px; }
+  .slider .fl { position: absolute; top: 11px; left: 0; width: 22%; height: 3px; background: var(--fjord); border-radius: 2px; }
+  .slider .th { position: absolute; left: 22%; top: 2px; width: 20px; height: 20px; margin-left: -10px; border-radius: 50%; background: var(--fjord); }
+  .slider .val { position: absolute; left: 22%; top: -26px; transform: translateX(-50%); background: var(--fjord); color: #fff; font: 500 12px var(--mono); padding: 2px 6px; border-radius: 4px; }
+  .tog { display: flex; align-items: center; gap: 10px; font-size: 14px; }
+  .tog .sw2 { width: 40px; height: 22px; border-radius: 11px; background: var(--fjord); position: relative; }
+  .tog .sw2::after { content: ''; position: absolute; right: 3px; top: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; min-height: 40px; border: 1px solid var(--outline); border-radius: 6px; padding: 4px 8px; }
+  .chip { height: 26px; display: inline-flex; align-items: center; gap: 6px; padding: 0 4px 0 10px; border-radius: 999px; background: var(--fjord-tint); font-size: 12px; }
+  .chip .x { width: 18px; height: 18px; display: grid; place-items: center; font-size: 11px; color: var(--fjord); }
+  .bt { display: inline-flex; border: 1px solid var(--outline); border-radius: 6px; overflow: hidden; }
+  .bt span { padding: 8px 16px; font-size: 13px; border-left: 1px solid var(--outline); }
+  .bt span:first-child { border-left: 0; }
+  .bt span.on { background: var(--fjord-tint); color: var(--fjord); font-weight: 600; }
+  .drop { border: 2px dashed var(--line); border-radius: 8px; height: 64px; display: flex; align-items: center; gap: 12px; padding: 0 12px; font-size: 13px; color: var(--ink-2); }
+  .thumb { width: 44px; height: 44px; border-radius: 6px; background: linear-gradient(135deg, var(--fjord-tint), var(--mist)); border: 1px solid var(--line-soft); }
+  .summary { background: var(--surface); border: 1px solid var(--line-soft); border-radius: var(--r-md); padding: 16px 18px; font-size: 14px; line-height: 1.55; align-self: start; }
+  .summary h3 { font: 600 20px var(--display); margin: 0 0 8px; letter-spacing: .01em; }
+  .summary b { font-weight: 600; }
+  .devpanel { margin-top: 12px; background: #f6f8f9; border: 1px solid var(--line-soft); border-radius: 6px; padding: 10px; font: 400 11.5px/1.5 var(--mono); color: var(--ink-2); white-space: pre; overflow: hidden; font-size: 11px; }
+  .devpanel .ok { color: var(--sea); } .devpanel .bad { color: var(--red); }
+  .savebar { grid-column: 1 / -1; display: flex; justify-content: flex-end; gap: 8px; border-top: 1px solid var(--line-soft); padding-top: 12px; }
+</style>
+</head>
+<body>
+<div class="board">
+
+<!-- 1. Orders — List view -->
+<div>
+<p class="frame-label">1 · Orders, List view — 2-level group box, 2-key sort, one order expanded to its lines, preview on, 3 selected (1280×780)</p>
+<div class="desk">
+  <nav class="rail"><span class="wm">NW</span><span class="nav"><i></i>Overview</span><span class="nav on"><i></i>Orders</span><span class="nav"><i></i>Spend</span><span class="nav"><i></i>Schedule</span><span class="nav"><i></i>Account</span></nav>
+  <div class="main">
+    <div class="top"><span class="acct"><span class="mono-g">EH</span>Ernst Handel ▾</span></div>
+    <div class="page">
+      <div class="head"><h1>Orders</h1><span class="seg"><span class="on">List</span><span>Workspace</span></span><span class="spacer"></span><span class="search">⌕ Search all columns</span></div>
+      <div class="toolbar">
+        <div class="tabs"><span class="tab on">All <span class="n">30</span></span><span class="tab"><span class="dot late"></span>Late <span class="n">2</span></span><span class="tab"><span class="dot await"></span>Awaiting dispatch <span class="n">1</span></span><span class="tab"><span class="dot ship"></span>Shipped <span class="n">27</span></span></div>
+        <span class="spacer"></span>
+        <span class="pill">Filters</span><span class="pill active">Group by <span class="k">Status +1</span></span><span class="pill">Columns</span><span class="pill">View</span>
+      </div>
+      <div class="grid">
+        <div class="groupbox"><span class="gchip"><span class="lv">1</span>Status<span class="x">✕</span></span><span class="arrow">›</span><span class="gchip"><span class="lv">2</span>Ordered month<span class="x">✕</span></span><span style="margin-left:8px">Drag a column here to group by it</span><span class="spacer"></span><span class="pill" style="height:28px">Expand all</span><span class="pill" style="height:28px">Collapse all</span></div>
+        <div class="scroll">
+        <table class="fixed">
+          <colgroup><col style="width:44px"><col style="width:170px"><col style="width:130px"><col style="width:210px"><col style="width:90px"><col style="width:150px"><col></colgroup>
+          <thead><tr><th><span class="cb"></span></th><th>Order no</th><th>Ordered</th><th>Status<span class="s">▲</span><span class="rk">1</span></th><th class="num">Items</th><th class="num">Total<span class="s">▼</span><span class="rk">2</span></th><th>Ship to</th></tr></thead>
+          <tbody>
+            <tr class="grp"><td></td><td colspan="3"><span class="lbl"><span class="chev">▾</span><span class="stop" style="background:var(--red)"></span>Late · <span class="cnt">2 orders</span></span></td><td class="num">6</td><td class="num">£4,213.30</td><td></td></tr>
+            <tr class="grp tow"><td></td><td colspan="3" class="indent1"><span class="lbl"><span class="chev">▾</span>September 2026 · <span class="cnt">2 orders</span></span></td><td class="num">6</td><td class="num">£4,213.30</td><td></td></tr>
+            <tr class="sel tow tow2"><td><span class="cb on"></span></td><td class="mono indent2"><span class="chev">▾</span>#11008</td><td class="mono">08/09/2026</td><td><span class="trk"><b class="done"></b><i class="done"></i><b class="late"></b><i></i><b></b></span><span class="trk-l">Late</span></td><td class="num">3</td><td class="num">£4,153.50</td><td>Ernst Handel</td></tr>
+            <tr class="tow tow2 nestrow"><td></td><td colspan="6">
+              <table class="nest fixed">
+                <colgroup><col style="width:240px"><col style="width:130px"><col style="width:80px"><col style="width:100px"><col style="width:130px"></colgroup>
+                <tr class="nh"><td>Product</td><td class="num">Unit price</td><td class="num">Qty</td><td class="num">Discount</td><td class="num">Amount</td></tr>
+                <tr><td><span class="stop"></span>&nbsp; Chai</td><td class="num">£18.00</td><td class="num">60</td><td class="num">5%</td><td class="num">£1,026.00</td></tr>
+                <tr><td><span class="stop"></span>&nbsp; Mishi Kobe Niku</td><td class="num">£97.00</td><td class="num">20</td><td class="num">—</td><td class="num">£1,940.00</td></tr>
+                <tr><td><span class="stop"></span>&nbsp; Gorgonzola Telino</td><td class="num">£12.50</td><td class="num">100</td><td class="num">5%</td><td class="num">£1,187.50</td></tr>
+                <tr class="nf"><td>3 lines</td><td></td><td class="num">180</td><td></td><td class="num">£4,153.50</td></tr>
+              </table>
+            </td></tr>
+            <tr class="tow tow2 hasprev"><td><span class="cb"></span></td><td class="mono indent2"><span class="chev">▸</span>#11005</td><td class="mono">01/09/2026</td><td><span class="trk"><b class="done"></b><i class="done"></i><b class="late"></b><i></i><b></b></span><span class="trk-l">Late</span></td><td class="num">3</td><td class="num">£59.80</td><td>Ernst Handel</td></tr>
+            <tr class="preview tow tow2"><td></td><td colspan="6" class="indent2" style="padding-left:74px">Grandma's Boysenberry Spread, Queso Cabrales, Boston Crab Meat</td></tr>
+            <tr class="grp"><td></td><td colspan="3"><span class="lbl"><span class="chev">▸</span><span class="stop" style="background:var(--amber)"></span>Awaiting dispatch · <span class="cnt">1 order</span></span></td><td class="num">4</td><td class="num">£2,467.00</td><td></td></tr>
+            <tr class="grp"><td></td><td colspan="3"><span class="lbl"><span class="chev">▸</span><span class="stop" style="background:var(--sea)"></span>Shipped · <span class="cnt">27 orders</span></span></td><td class="num">71</td><td class="num">£97,523.27</td><td></td></tr>
+          </tbody>
+          <tfoot><tr class="foot"><td></td><td colspan="3">Total of 30 shown</td><td class="num">81</td><td class="num">£104,203.57</td><td></td></tr></tfoot>
+        </table>
+        </div>
+        </div>
+        <div class="status"><span><b>30</b> orders</span><span><b>3</b> selected</span><span>Sum <b>£6,680.30</b></span><span>Avg <b>£2,226.77</b></span><span class="spacer"></span><span>Sorted by Status ↑, Total ↓ · <span class="lnk">Clear</span></span><span>Shift+click a header to add a sort</span></div>
+      </div>
+      <div style="height:18px"></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- 2. Workspace -->
+<div>
+<p class="frame-label">2 · Orders, Workspace — master grid, Lines/Products bought tab group, Order details pane, Products bought highlights matching orders (amber) (1280×780)</p>
+<div class="desk">
+  <nav class="rail"><span class="wm">NW</span><span class="nav"><i></i>Overview</span><span class="nav on"><i></i>Orders</span><span class="nav"><i></i>Spend</span><span class="nav"><i></i>Schedule</span><span class="nav"><i></i>Account</span></nav>
+  <div class="main">
+    <div class="top"><span class="acct"><span class="mono-g">AF</span>Alfreds Futterkiste ▾</span></div>
+    <div class="page">
+      <div class="head"><h1>Orders</h1><span class="seg"><span>List</span><span class="on">Workspace</span></span><span class="spacer"></span><span class="pill">Reset layout</span><span class="search" style="width:260px">⌕ Search all columns</span></div>
+      <div class="ws">
+        <div class="col">
+          <div class="pane">
+            <div class="ptitle">Orders <span class="cnt">6</span><span class="gchip" style="height:24px;margin-left:8px;background:#fbf4e2;border-color:#f0dca8;color:var(--amber-text)">Highlighting orders with Vegie-spread<span class="x">✕</span></span><span class="spacer"></span><span class="pi" title="Maximise">⤢</span><span class="pi" title="Auto-hide">⇤</span><span class="pi">⋯</span></div>
+            <table>
+              <thead><tr><th>Order no</th><th>Ordered<span class="s">▼</span></th><th>Status</th><th class="num">Items</th><th class="num">Total</th></tr></thead>
+              <tbody>
+                <tr><td class="mono">#11011</td><td class="mono">09/09/2026</td><td><span class="trk"><b class="done"></b><i class="done"></i><b class="done"></b><i class="done"></i><b class="ship"></b></span><span class="trk-l">Shipped</span></td><td class="num">2</td><td class="num">£933.50</td></tr>
+                <tr><td class="mono">#10952</td><td class="mono">16/07/2026</td><td><span class="trk"><b class="done"></b><i class="done"></i><b class="done"></b><i class="done"></i><b class="ship"></b></span><span class="trk-l">Shipped</span></td><td class="num">2</td><td class="num">£471.20</td></tr>
+                <tr class="hl"><td class="mono">#10835</td><td class="mono">15/06/2026</td><td><span class="trk"><b class="done"></b><i class="done"></i><b class="done"></b><i class="done"></i><b class="ship"></b></span><span class="trk-l">Shipped</span></td><td class="num">2</td><td class="num">£845.80</td></tr>
+                <tr><td class="mono">#10702</td><td class="mono">13/03/2026</td><td><span class="trk"><b class="done"></b><i class="done"></i><b class="done"></b><i class="done"></i><b class="ship"></b></span><span class="trk-l">Shipped</span></td><td class="num">2</td><td class="num">£330.00</td></tr>
+                <tr class="hl"><td class="mono">#10692</td><td class="mono">03/03/2026</td><td><span class="trk"><b class="done"></b><i class="done"></i><b class="done"></b><i class="done"></i><b class="ship"></b></span><span class="trk-l">Shipped</span></td><td class="num">1</td><td class="num">£878.00</td></tr>
+                <tr class="sel"><td class="mono">#10643</td><td class="mono">25/08/2025</td><td><span class="trk"><b class="done"></b><i class="done"></i><b class="done"></b><i class="done"></i><b class="ship"></b></span><span class="trk-l">Shipped</span></td><td class="num">3</td><td class="num">£814.50</td></tr>
+              </tbody>
+            </table>
+            <div class="status" style="margin-top:auto"><span><b>6</b> orders</span><span>2 contain <b>Vegie-spread</b></span><span class="spacer"></span><span>Sum <b>£4,273.00</b></span></div>
+          </div>
+          <div class="split-h" title="Drag or use ↑ ↓"></div>
+          <div class="pane">
+            <div class="ptitle" style="padding-left:0"><div class="ptabs"><span class="ptab on">Lines <span class="cnt">3</span></span><span class="ptab">Products bought <span class="cnt">11</span></span></div><span class="spacer"></span><span class="pi">⤢</span><span class="pi">⇤</span><span class="pi">⋯</span></div>
+            <table>
+              <thead><tr><th>Product</th><th>Category</th><th class="num">Unit price</th><th class="num">Qty</th><th class="num">Discount</th><th class="num">Amount</th></tr></thead>
+              <tbody>
+                <tr><td>Rössle Sauerkraut</td><td>Produce</td><td class="num">£45.60</td><td class="num">15</td><td class="num">25%</td><td class="num">£513.00</td></tr>
+                <tr><td>Chartreuse verte</td><td>Beverages</td><td class="num">£18.00</td><td class="num">21</td><td class="num">25%</td><td class="num">£283.50</td></tr>
+                <tr><td>Spegesild</td><td>Seafood</td><td class="num">£12.00</td><td class="num">2</td><td class="num">25%</td><td class="num">£18.00</td></tr>
+                <tr class="foot"><td>3 lines · order #10643</td><td></td><td></td><td class="num">38</td><td></td><td class="num">£814.50</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="split-v"></div>
+        <div class="pane">
+          <div class="ptitle">Order #10643<span class="spacer"></span><span class="pi">⤢</span><span class="pi">⇥</span><span class="pi">⋯</span></div>
+          <dl class="props">
+            <div class="bigtrk"><b class="done"></b><i style="background:var(--fjord)"></i><b class="done"></b><i style="background:var(--fjord)"></i><b class="done" style="background:var(--sea);border-color:var(--sea)"></b></div>
+            <div class="bigtrk-l"><span>Ordered</span><span>Awaiting dispatch</span><span style="color:var(--sea);font-weight:600">Shipped</span></div>
+            <dt>Ordered</dt><dd class="mono">25/08/2025</dd>
+            <dt>Shipped</dt><dd class="mono">02/09/2025</dd>
+            <dt>Due</dt><dd class="mono">22/09/2025</dd>
+            <dt>Ship to</dt><dd>Alfreds Futterkiste<br>Obere Str. 57<br>12209 Berlin, Germany</dd>
+            <dt>Lines</dt><dd class="mono">3</dd>
+            <dt>Goods</dt><dd class="mono">£814.50</dd>
+            <dt>Freight</dt><dd class="mono">£29.46</dd>
+            <dt></dt><dd><span class="btn ghost">Delivery note</span></dd>
+          </dl>
+        </div>
+      </div>
+      <div style="height:18px"></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- 3. Schedule — Timeline -->
+<div>
+<p class="frame-label">3 · Schedule, Timeline view — navigator, legend toggles (Shipped off), late overrun, preview card on hover (1280×780)</p>
+<div class="desk">
+  <nav class="rail"><span class="wm">NW</span><span class="nav"><i></i>Overview</span><span class="nav"><i></i>Orders</span><span class="nav"><i></i>Spend</span><span class="nav on"><i></i>Schedule</span><span class="nav"><i></i>Account</span></nav>
+  <div class="main">
+    <div class="top"><span class="acct"><span class="mono-g">EH</span>Ernst Handel ▾</span></div>
+    <div class="page">
+      <div class="head"><h1>Schedule</h1><span class="spacer"></span><span class="pill">‹</span><span class="pill">Today</span><span class="pill">›</span><span style="font:600 18px var(--body);margin:0 12px">Jul – Sep 2026</span><span class="seg"><span>Month</span><span>Week</span><span>Agenda</span><span class="on">Timeline</span></span><span class="seg" style="margin-left:8px"><span class="on">Month</span><span>Quarter</span></span></div>
+      <div class="cal">
+        <div class="side">
+          <div class="mini"><div class="t"><span>September 2026</span><span>‹ ›</span></div>
+            <div class="g"><span class="h">M</span><span class="h">T</span><span class="h">W</span><span class="h">T</span><span class="h">F</span><span class="h">S</span><span class="h">S</span>
+              <span></span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span>
+              <span>7</span><span>8</span><span>9</span><span>10</span><span>11</span><span>12</span><span>13</span>
+              <span>14</span><span>15</span><span>16</span><span>17</span><span>18</span><span>19</span><span>20</span>
+              <span class="rng">21</span><span class="rng">22</span><span class="rng">23</span><span class="rng">24</span><span class="today">25</span><span class="rng">26</span><span class="rng">27</span>
+              <span>28</span><span>29</span><span>30</span><span></span><span></span><span></span><span></span></div></div>
+          <div class="legend">
+            <div><span class="sw" style="background:var(--fjord)"></span>Ordered<span class="c">30</span></div>
+            <div><span class="sw" style="background:var(--amber)"></span>Due<span class="c">1</span></div>
+            <div><span class="sw" style="background:var(--red)"></span>Late<span class="c">2</span></div>
+            <div class="off"><span class="sw" style="background:var(--sea);opacity:.35"></span>Shipped<span class="c">27</span></div>
+          </div>
+        </div>
+        <div class="tl" style="position:relative">
+          <div class="tlhead"><span>Order</span><span>30 Jun</span><span>7 Jul</span><span>14</span><span>21</span><span>28</span><span>4 Aug</span><span>11</span><span>18</span><span>25</span><span>1 Sep</span><span>8</span><span>15</span><span>22</span></div>
+          <div class="tlgrp"><span class="stop" style="background:var(--red)"></span>Late · 2</div>
+          <div class="tlrow"><span class="nm mono">#11008</span><div class="lane"><div class="bar late" style="left:54%;width:23%"><span class="over" style="width:20%;right:-20%;width:calc(100% * 20/23)"></span></div><div class="todayrule" style="left:97%"></div></div></div>
+          <div class="tlrow"><span class="nm mono">#11005</span><div class="lane"><div class="bar late" style="left:70%;width:8%"><span class="over" style="width:78px;right:-78px"></span></div><div class="todayrule" style="left:97%"></div></div></div>
+          <div class="tlgrp"><span class="stop" style="background:var(--amber)"></span>Awaiting dispatch · 1</div>
+          <div class="tlrow"><span class="nm mono">#11017</span><div class="lane"><div class="bar await" style="left:88%;width:16%;border-radius:8px 0 0 8px"></div><div class="todayrule" style="left:97%"></div></div></div>
+          <div class="tlgrp"><span class="stop" style="background:var(--sea)"></span>Shipped · 27 <span style="font-weight:400">(hidden by legend)</span></div>
+          <div class="card" style="left:520px;top:92px">
+            <div style="display:flex;justify-content:space-between"><b class="mono">#11008</b><span style="color:var(--red);font-weight:600">Late · 17 days</span></div>
+            <div><span class="trk"><b class="done"></b><i class="done"></i><b class="late"></b><i></i><b></b></span></div>
+            <div style="display:grid;grid-template-columns:70px 1fr;gap:4px;color:var(--ink-2)"><span>Ordered</span><span class="mono" style="color:var(--ink)">11/08/2026</span><span>Due</span><span class="mono" style="color:var(--ink)">08/09/2026</span><span>Items</span><span class="mono" style="color:var(--ink)">3</span><span>Total</span><span class="mono" style="color:var(--ink)">£4,153.50</span></div>
+            <div style="color:var(--fjord);font-size:12px">Enter or click to open the order</div>
+          </div>
+        </div>
+      </div>
+      <div style="height:18px"></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- 4. Delivery preferences -->
+<div>
+<p class="frame-label">4 · Account, Delivery preferences — every Material form control, one cross-field error, live summary, developer details on (1280×780)</p>
+<div class="desk">
+  <nav class="rail"><span class="wm">NW</span><span class="nav"><i></i>Overview</span><span class="nav"><i></i>Orders</span><span class="nav"><i></i>Spend</span><span class="nav"><i></i>Schedule</span><span class="nav on"><i></i>Account</span></nav>
+  <div class="main">
+    <div class="top"><span class="acct"><span class="mono-g">AF</span>Alfreds Futterkiste ▾</span></div>
+    <div class="page">
+      <div class="head"><h1>Account</h1></div>
+      <div class="tabs" style="margin-top:12px;align-self:start"><span class="tab">Contact details</span><span class="tab on">Delivery preferences</span></div>
+      <div class="formwrap">
+        <div class="form">
+          <h2>How we deliver</h2>
+          <div class="f"><label>Preferred carrier</label><div class="in">Speedy Express<span class="aux">(503) 555-9831 ▾</span></div></div>
+          <div class="f"><label>Unloading</label><div class="radio" style="height:40px"><span><span class="rb"></span>Loading dock</span><span><span class="rb on"></span>Tail-lift needed</span><span><span class="rb"></span>By hand</span></div></div>
+          <div class="f"><label>Delivery days</label><div class="radio" style="height:40px;gap:12px"><span><span class="cb on"></span> Mon</span><span><span class="cb on"></span> Tue</span><span><span class="cb on"></span> Wed</span><span><span class="cb on"></span> Thu</span><span><span class="cb on"></span> Fri</span><span><span class="cb"></span> Sat</span></div></div>
+          <div class="f"><label>Delivery window</label><div style="display:flex;gap:8px;align-items:center"><div class="in" style="flex:1">08:00<span class="aux">◷</span></div>–<div class="in err" style="flex:1">09:00<span class="aux">◷</span></div></div><span class="errmsg">End the window at least 2 hours after it starts.</span></div>
+          <div class="f"><label>Pallets per delivery</label><div class="slider" style="margin-top:22px"><span class="tr"></span><span class="fl"></span><span class="th"></span><span class="val">6</span></div></div>
+          <div class="f"><label>Chilled goods</label><div style="display:flex;gap:16px;align-items:center"><span class="tog"><span class="sw2"></span>Yes</span><div class="in" style="width:170px">4 °C max<span class="aux">− +</span></div></div></div>
+          <div class="f"><label>Closed for deliveries</label><div class="in">22/12/2026 – 02/01/2027<span class="aux">▦</span></div></div>
+          <div class="f"><label>Invoice format</label><div class="bt" style="align-self:start"><span class="on">PDF</span><span>Paper</span><span>Both</span></div></div>
+          <h2>Who to tell, and what</h2>
+          <div class="f"><label>Also notify</label><div class="chips"><span class="chip">goods-in@alfreds.de<span class="x">✕</span></span><span class="chip">m.anders@alfreds.de<span class="x">✕</span></span><span style="color:var(--outline)">Add email…</span></div></div>
+          <div class="f"><label>Standing order products</label><div class="chips"><span class="chip">Chai · Beverages<span class="x">✕</span></span><span class="chip">Spegesild · Seafood<span class="x">✕</span></span><span style="color:var(--outline)">Search 77 products…</span></div></div>
+          <div class="f"><label>Delivery instructions</label><div class="in" style="height:40px">Ring bell at gate B; forklift until 11:00.</div><span style="text-align:right;font-size:12px;color:var(--ink-2)">42 / 500</span></div>
+          <div class="f"><label>Site map for drivers</label><div class="drop"><span class="thumb"></span><span>site-map.png · 184 KB</span><span class="spacer"></span><span style="color:var(--fjord)">Remove</span></div></div>
+        </div>
+        <div>
+          <div class="summary">
+            <h3>Your deliveries</h3>
+            <b>Speedy Express</b>, <b>Mon–Fri</b> <span style="color:var(--red)">(delivery window needs fixing)</span>, <b>tail-lift</b>, up to <b>6 pallets</b>, chilled at <b>4 °C</b> or below. Closed <b>22/12–02/01</b>. Invoices by <b>PDF</b>.
+            <div style="display:flex;gap:8px;margin-top:14px"><span class="btn">Save changes</span><span class="btn ghost">Discard</span></div>
+          </div>
+          <div class="devpanel">Form state            <span class="bad">INVALID</span> · dirty · touched
+carrier        1          <span class="ok">valid</span>
+days           [1,2,3,4,5] <span class="ok">valid</span>
+windowFrom     "08:00"    <span class="ok">valid</span>
+windowTo       "09:00"    <span class="bad">windowTooShort</span>
+pallets        6          <span class="ok">valid</span>
+chilled        true       <span class="ok">valid</span>
+maxTempC       4          <span class="ok">valid</span>
+closed         {22/12..02/01} <span class="ok">valid</span>
+notifyEmails   [2]        <span class="ok">valid</span>
+products       [1,45]     <span class="ok">valid</span></div>
+        </div>
+      </div>
+      <div style="height:18px"></div>
+    </div>
+  </div>
+</div>
+</div>
+
+</div>
+</body>
+</html>

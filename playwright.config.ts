@@ -17,11 +17,10 @@ export default defineConfig({
       ? { executablePath: process.env.PW_CHROMIUM_PATH }
       : {},
   },
-  // Orders renders as AG Grid at >=720px and a plain-HTML card list below it
-  // (design's own "hand over a phone" breakpoint). AG Grid virtualises and
-  // owns its row DOM, so it doesn't carry stable per-row test hooks the way
-  // plain markup does; the card list does, and exercises the same
-  // OrdersStore/search/filter/drawer behaviour AG Grid renders on desktop.
+  // Orders renders as a grid at >=720px and a plain-HTML card list below it
+  // (design's own "hand over a phone" breakpoint). The default phone viewport
+  // drives the card list; grid tests set a desktop viewport and reach the
+  // grid's DOM only through e2e/support/grid.ts.
   projects: [
     {
       name: 'chromium',

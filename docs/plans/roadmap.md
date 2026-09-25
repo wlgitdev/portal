@@ -14,6 +14,20 @@ Show sales and testers a customer portal they can click through. Done means ever
 | 4 | Edit your contact details | Waiting for Release (T) | Enter letters in Phone and try saving; fix it, save, reload and check it stuck. |
 | 5 | Switch brand and dark mode | Waiting for Dev | Pick each brand under Brand preview in light and dark; check everything stays readable, including on a phone. |
 
+## Now — PM showcase round 2 (25/09/2026)
+Show the PM deeper tables, calendars, forms and order-and-lines views, all built only from Angular's own parts. Done means every item below is Ready for Release.
+**Status:** Waiting for Dev
+
+| # | Item | Status | To test |
+|---|---|---|---|
+| 6 | Sort and group orders like a desktop grid | Waiting for Dev | On a desktop, click Status then Shift+click Total and check the order and the 1/2 marks. Drag Ship to into the grouping strip, then group by Status and Ordered and check each group's totals. Hide a column, reload, then Reset view. Switch to Compact, tick two orders and read the sum at the bottom. Expand an order to see its lines, turn on Show preview, and export to CSV. On a phone, sort by Total then Order no and open a card's lines. |
+| 7 | Work with an order and its lines side by side | Waiting for Dev | On a desktop, switch Orders to Workspace and pick an order: its lines and details fill in, and survive a reload. Drag the divider, hide and pin Order details, maximise Orders and press Esc. Open Products bought, pick a product and check the matching orders light up. Move a panel, reload, then Reset layout and Undo. |
+| 8 | Plan deliveries on a richer calendar | Waiting for Dev | Open Schedule and try Month, Week, Agenda and Timeline. Untick Shipped in the key. Use Today and the arrows, pick a date in the small calendar, hover an entry, and check late orders run red past their due date on Timeline. |
+| 9 | Explore spending in a richer chart | Waiting for Dev | Open Spend, switch between 12 and 24 months, hover a bar, then click it and check Orders shows only that month. Check the top 5 products. |
+| 10 | Set your delivery preferences | Waiting for Dev | Under Account, open Delivery preferences and fill in every field. Try a 1-hour window, no delivery days and a 12 °C limit, and read the messages. Save, reload and check it all stuck. |
+| 11 | Print a delivery note or save it as PDF | Waiting for Dev | Open an order and press Delivery note. Check the totals match, then print or save it as PDF and check it fits A4. |
+| 12 | See what the portal is built from | Waiting for Dev | From the account menu open About this build and check every part is listed with who makes it. |
+
 ## Next — if the demo is won
 - Real sign-in with email and password, staying signed in safely
 - Delivery notes produced by the server, not the browser
@@ -68,6 +82,8 @@ Item 2:
    → Every menu item shows a picture and its name, on phone and desktop. (P6 R7)
 
 ## DEV next step
+Showcase round 2 (items 6–12) is planned and ready to build: `showcase-2-spec.md` phases S1–S10 (design `showcase-2-design.md`, picture `mockups/showcase-2.html`). Build in this order: item 6, item 7, then 8–11 in any order, and item 12 last. Its tests are pending in the files the spec's "Bundles" table names. Item 11 replaces item 2's download with a print-ready page, so item 2 goes back to testing once item 11 lands.
+
 Items 1, 2, 3 and 4 are now built (see build notes below). Still outstanding, next once picked back up: item 5 (brand/dark mode, bundle B5) — still **Waiting for Dev**, untouched this round.
 
 Previous build note (P7, 23/09/2026), kept for the record: two tests were reported flaky, independent of the build: `e2e/orders-table.spec.ts` "a cut-off cell shows its full text on hover" and `e2e/orders.spec.ts` "filter Late and open one whose lines sum to its total". Still just flaky as of the P8 build below (each passes alone; whichever of the two trips varies by run) — not fixed, wants its own item.
