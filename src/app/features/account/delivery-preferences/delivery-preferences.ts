@@ -10,7 +10,7 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatAutocompleteModule, type MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
 import { MatCheckboxModule } from '@angular/material/checkbox';
@@ -24,7 +24,7 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { CdkTextareaAutosize } from '@angular/cdk/text-field';
 import { COMMA, ENTER } from '@angular/cdk/keycodes';
-import { firstValueFrom, merge, startWith } from 'rxjs';
+import { firstValueFrom, merge } from 'rxjs';
 import { DeveloperDetails } from '../../../core/developer-details';
 import { PortalApi } from '../../../core/api/portal-api';
 import type {
@@ -119,11 +119,19 @@ export class DeliveryPreferences {
 
   // Reactive Forms controls aren't signals; this ticks whenever the form
   // changes so every computed below can read live control state (.value,
-  // .invalid, .errors) and stay in sync without polling.
-  private readonly formVersion = toSignal(merge(this.form.valueChanges, this.form.statusChanges).pipe(startWith(null)), {
-    initialValue: null,
-  });
-  private readonly productSearchText = toSignal(this.productSearch.valueChanges.pipe(startWith('')), { initialValue: '' });
+  // .invalid, .errors) and stay in sync without polling. A plain counter
+  // bumped from a subscription, not toSignal(merge(...)) — the latter
+  // stopped notifying its dependents after the form's first couple of
+  // emissions in practice, even though the source observables kept firing.
+  private readonly formVersion = signal(0);
+  private readonly productSearchText = signal('');
+
+  constructor() {
+    merge(this.form.valueChanges, this.form.statusChanges)
+      .pipe(takeUntilDestroyed())
+      .subscribe(() => this.formVersion.update((n) => n + 1));
+    this.productSearch.valueChanges.pipe(takeUntilDestroyed()).subscribe((value) => this.productSearchText.set(value));
+  }
 
   readonly dirty = computed(() => {
     this.formVersion();
